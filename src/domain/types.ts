@@ -96,6 +96,8 @@ export interface ConversationMessage {
   protocol: string
   /** どこへ届くか。BACnet の要求自体に相手の識別子は入らず、宛先は IP が決める */
   transport: string
+  /** このメッセージで話し手が何をするか（「次へ ▸ 〇〇が〜する」の後半） */
+  action: string
   /** いま何が起きているかの解説（1 通ずつ進めるときに読ませる） */
   explain: string
   /** 補足（「認証確認なし」など） */

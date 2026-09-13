@@ -7,7 +7,11 @@ import type {
   PlaybackState,
 } from '../domain/types'
 import { BROADCAST } from '../domain/types'
-import { canSendNext, playbackProgress } from '../logic/conversation'
+import {
+  canSendNext,
+  nextMessage,
+  playbackProgress,
+} from '../logic/conversation'
 
 interface Props {
   conversation: Conversation
@@ -22,16 +26,16 @@ function nameOf(nodes: DiagramNodeSpec[], id: NodeId): string {
   return nodes.find((node) => node.id === id)?.label ?? id
 }
 
-function buttonLabel(
+/** 押すと何が起きるかを、押す前に見せる */
+function nextLabel(
+  nodes: DiagramNodeSpec[],
   playback: PlaybackState,
-  sent: number,
-  total: number,
+  conversation: Conversation,
 ): string {
-  if (playback.inFlight !== null) return '送信中…'
-  if (sent >= total) return 'この会話はここまで'
-  return sent === 0
-    ? '1 通目を送る'
-    : `次の 1 通を送る（${sent + 1} / ${total}）`
+  if (playback.inFlight !== null) return '通信中…'
+  const next = nextMessage(playback, conversation)
+  if (!next) return 'この会話はここまで'
+  return `次へ ▸ ${nameOf(nodes, next.from)}が${next.action}`
 }
 
 /**
@@ -79,7 +83,8 @@ export function PlaybackControls({
         </div>
       ) : (
         <p className="pacer__idle">
-          ボタンを押すと 1 通だけ飛びます。読み終えてから次を送ってください。
+          ボタンには、押すと次に何が起きるかが書いてあります。1
+          通ずつ進めてください。
         </p>
       )}
 
@@ -89,7 +94,14 @@ export function PlaybackControls({
         onClick={onSend}
         disabled={!sendable}
       >
-        {buttonLabel(playback, sent, total)}
+        <span className="pacer__next-label">
+          {nextLabel(nodes, playback, conversation)}
+        </span>
+        {sendable && (
+          <span className="pacer__next-count">
+            {sent + 1} / {total}
+          </span>
+        )}
       </button>
     </section>
   )

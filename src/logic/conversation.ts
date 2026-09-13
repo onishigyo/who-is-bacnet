@@ -95,6 +95,15 @@ export function canSendNext(
   )
 }
 
+/** 次に送られるメッセージ。飛んでいる最中と、終わったあとは null */
+export function nextMessage(
+  state: PlaybackState,
+  conversation: Conversation,
+): ConversationMessage | null {
+  if (!canSendNext(state, conversation)) return null
+  return conversation.messages[state.delivered] ?? null
+}
+
 /** 直前に着信したメッセージ。なければ null */
 export function lastDeliveredMessage(
   state: PlaybackState,

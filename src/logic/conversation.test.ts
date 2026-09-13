@@ -6,6 +6,7 @@ import { BROADCAST } from '../domain/types'
 import {
   advancePlayback,
   canSendNext,
+  nextMessage,
   conversationById,
   currentMessage,
   deliveredMessages,
@@ -28,6 +29,9 @@ describe('会話データ', () => {
         expect(message.protocol.length).toBeGreaterThan(0)
         expect(message.explain.length).toBeGreaterThan(0)
         expect(message.transport.length).toBeGreaterThan(0)
+        // ボタンは「〇〇が{action}」と読ませるので、主語を含めない短い動作にする
+        expect(message.action.length).toBeGreaterThan(0)
+        expect(message.action.length).toBeLessThan(25)
       }
     }
   })
@@ -92,6 +96,8 @@ describe('会話データ', () => {
     expect(attackWrite?.from).toBe('attacker')
     expect(normalWrite?.to).toBe(attackWrite?.to)
     expect(normalWrite?.kind).toBe(attackWrite?.kind)
+    // ボタンの予告も同じ文言にして、「違うのは話し手だけ」を画面上でも揃える
+    expect(normalWrite?.action).toBe(attackWrite?.action)
   })
 
   it('存在しない会話 id は例外', () => {
@@ -144,6 +150,7 @@ describe('図の上の飛び方', () => {
         plain: '',
         protocol: '',
         transport: '',
+        action: '',
         explain: '',
       },
       NETWORK_NODE_ID,
@@ -161,6 +168,7 @@ describe('図の上の飛び方', () => {
         plain: '',
         protocol: '',
         transport: '',
+        action: '',
         explain: '',
       },
       NETWORK_NODE_ID,
@@ -216,5 +224,33 @@ describe('1 通ずつ進める操作', () => {
     expect(inFlightMessage(landed, normal)).toBeNull()
     expect(lastDeliveredMessage(landed, normal)?.id).toBe('n1')
     expect(currentMessage(landed, normal)?.id).toBe('n1')
+  })
+})
+
+describe('次に何が起きるかの予告', () => {
+  it('次に送られるメッセージを、送る前に取り出せる', () => {
+    expect(nextMessage(IDLE_PLAYBACK, normal)?.id).toBe('n1')
+
+    const flying = advancePlayback(IDLE_PLAYBACK, normal)
+    // 飛んでいる最中は「次」を出さない（ボタンは通信中になる）
+    expect(nextMessage(flying, normal)).toBeNull()
+
+    const landed = advancePlayback(flying, normal)
+    expect(nextMessage(landed, normal)?.id).toBe('n2')
+  })
+
+  it('最後まで送り終えたら、次はない', () => {
+    let state = IDLE_PLAYBACK
+    for (let i = 0; i < normal.messages.length * 2; i += 1) {
+      state = advancePlayback(state, normal)
+    }
+    expect(nextMessage(state, normal)).toBeNull()
+  })
+
+  it('予告は「話し手 + が + 動作」として読める', () => {
+    const first = nextMessage(IDLE_PLAYBACK, normal)!
+    expect(`${first.from}が${first.action}`).toBe(
+      'supervisorがネットワーク全体に呼びかける',
+    )
   })
 })
