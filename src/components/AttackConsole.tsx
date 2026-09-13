@@ -23,7 +23,8 @@ export function AttackConsole({ actions, state, busy, onRun, onReset }: Props) {
     <section className="console">
       <h3 className="console__title">持ち込まれた PC のコンソール</h3>
       <p className="console__note">
-        上から順に選べます。選ぶと、やり取りが図の下に流れます。特別な道具も、パスワードも要りません。
+        上から順に選べます。選ぶと 1 通目が飛び、あとは「次へ」で 1
+        通ずつ進みます。特別な道具も、パスワードも要りません。
       </p>
 
       <ol className="console__list">

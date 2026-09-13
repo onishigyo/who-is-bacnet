@@ -9,8 +9,8 @@ interface Props {
   /** 着信済みのメッセージ。会話をまたいで積み上がる */
   messages: ConversationMessage[]
   nodes: DiagramNodeSpec[]
-  /** いま帯に出しているメッセージ */
-  activeId: string | null
+  /** いま帯に出しているメッセージ（まとめて飛んだものは複数） */
+  activeIds: string[]
   /** 過去のやり取りを見直す */
   onSelect: (id: string) => void
   emptyText: string
@@ -27,7 +27,7 @@ function nameOf(nodes: DiagramNodeSpec[], id: NodeId): string {
 export function ConversationTrack({
   messages,
   nodes,
-  activeId,
+  activeIds,
   onSelect,
   emptyText,
 }: Props) {
@@ -40,7 +40,7 @@ export function ConversationTrack({
       block: 'nearest',
       inline: 'nearest',
     })
-  }, [messages.length, activeId])
+  }, [messages.length, activeIds])
 
   if (messages.length === 0) {
     return (
@@ -54,12 +54,14 @@ export function ConversationTrack({
     <section className="track" aria-label="ここまでのやり取り">
       <ol className="track__list">
         {messages.map((message, index) => {
-          const selected = message.id === activeId
+          const selected = activeIds.includes(message.id)
           return (
             <li key={message.id}>
               <button
                 type="button"
-                ref={selected ? active : null}
+                ref={
+                  message.id === activeIds[activeIds.length - 1] ? active : null
+                }
                 className={`track__item track__item--${message.kind} ${
                   selected ? 'is-active' : ''
                 } ${message.annotationTone === 'alert' ? 'is-alert' : ''}`}

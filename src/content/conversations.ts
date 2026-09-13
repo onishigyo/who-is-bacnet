@@ -36,8 +36,9 @@ export const conversations: Conversation[] = [
         protocol: 'I-Am device,3056930',
         transport: 'UDP → 192.168.1.10:47808（送信元 192.168.1.11）',
         action: '名乗る',
+        groupId: 'normal-i-am',
         explain:
-          '機器が自分の ID を名乗って返事をします。ここで大事なのは、I-Am の中身に IP は入っていないこと。「192.168.1.11 に device,3056930 がいる」と分かるのは、この返事が届いたパケットの送信元アドレスからです。',
+          '呼びかけを受け取った機器が、いっせいに名乗り返します。1 回の呼びかけで、3 台ぶんの返事がまとめて返ってくる ── これが Who-Is の正体です。なお I-Am の中身に IP は入っていません。「192.168.1.11 に device,3056930 がいる」と分かるのは、返事が届いたパケットの送信元アドレスからです。',
       },
       {
         id: 'n3',
@@ -48,6 +49,7 @@ export const conversations: Conversation[] = [
         protocol: 'I-Am device,100201',
         transport: 'UDP → 192.168.1.10:47808（送信元 192.168.1.12）',
         action: '名乗る',
+        groupId: 'normal-i-am',
         explain:
           '続いて照明コントローラ。メーカーが違っても、同じ呼びかけに同じ形で答えます。これが共通語であることの意味です。',
         annotation: 'メーカーが違っても、同じ呼びかけに同じ形で答える',
@@ -61,6 +63,7 @@ export const conversations: Conversation[] = [
         protocol: 'I-Am device,100305',
         transport: 'UDP → 192.168.1.10:47808（送信元 192.168.1.13）',
         action: '名乗る',
+        groupId: 'normal-i-am',
         explain:
           '電力計も返事をします。呼びかけ 1 回で「どの IP に、どの ID の機器がいるか」の対応表ができあがりました。',
       },
@@ -72,7 +75,7 @@ export const conversations: Conversation[] = [
         plain: 'いまの室温を教えて',
         protocol: 'ReadProperty analog-input,0 present-value',
         transport: 'UDP ユニキャスト → 192.168.1.11:47808',
-        action: '室温を尋ねる',
+        action: '室温を聞く',
         explain:
           'ここからは名指しです。といっても要求の中身は「analog-input,0 の present-value を読ませて」だけで、相手が誰かは書かれていません。宛先 IP（192.168.1.11:47808）に直接送ることで、相手を決めています。',
       },
@@ -84,7 +87,7 @@ export const conversations: Conversation[] = [
         plain: '22.0 ℃です',
         protocol: 'ComplexACK → 22.0',
         transport: 'UDP ユニキャスト → 192.168.1.10:47808',
-        action: '室温を答える',
+        action: '室温を返す',
         explain:
           '機器が値を返します。読み取りの応答は、値を含んだ ComplexACK という形で、頼んできた IP へ返ります。',
       },
@@ -96,7 +99,7 @@ export const conversations: Conversation[] = [
         plain: '設定温度を 24.0 ℃にして',
         protocol: 'WriteProperty analog-value,0 present-value 24.0',
         transport: 'UDP ユニキャスト → 192.168.1.11:47808',
-        action: '設定温度の変更を頼む',
+        action: '書き換えを頼む',
         explain:
           '今度は書き込みです。analog-value,0 は設定値を持つオブジェクトで、そこに 24.0 を書きます。読むときと同じく、届け先は宛先 IP で決まります。',
       },
@@ -108,7 +111,7 @@ export const conversations: Conversation[] = [
         plain: '了解しました',
         protocol: 'SimpleACK',
         transport: 'UDP ユニキャスト → 192.168.1.10:47808',
-        action: '書き換えを受け入れる',
+        action: '受け入れる',
         explain:
           '書き込みが成功すると SimpleACK が返ります。これだけで、中央監視から設備の設定を変えられました。',
       },
@@ -140,8 +143,9 @@ export const conversations: Conversation[] = [
         protocol: 'I-Am device,3056930',
         transport: 'UDP → 192.168.1.66:47808（送信元 192.168.1.11）',
         action: '名乗る',
+        groupId: 'attack-i-am',
         explain:
-          '機器は「誰が尋ねたのか」を確かめる手順を持っていません。中央監視に返したのと同じ返事が、そのまま 192.168.1.66 に届きます。',
+          '機器は「誰が尋ねたのか」を確かめる手順を持っていません。中央監視に返すのとまったく同じ返事が、4 台ぶんまとめて持ち込まれた PC に届きます。呼びかけ 1 回で、監視している側の居場所まで含めた一覧が手に入りました。',
         annotation: '誰が尋ねたのかを確かめる手順がない',
         annotationTone: 'alert',
       },
@@ -154,6 +158,7 @@ export const conversations: Conversation[] = [
         protocol: 'I-Am device,100201',
         transport: 'UDP → 192.168.1.66:47808（送信元 192.168.1.12）',
         action: '名乗る',
+        groupId: 'attack-i-am',
         explain: '照明コントローラも同じように名乗ります。',
       },
       {
@@ -165,6 +170,7 @@ export const conversations: Conversation[] = [
         protocol: 'I-Am device,100305',
         transport: 'UDP → 192.168.1.66:47808（送信元 192.168.1.13）',
         action: '名乗る',
+        groupId: 'attack-i-am',
         explain: '電力計も名乗ります。',
       },
       {
@@ -176,6 +182,7 @@ export const conversations: Conversation[] = [
         protocol: 'I-Am device,260001',
         transport: 'UDP → 192.168.1.66:47808（送信元 192.168.1.10）',
         action: '名乗る',
+        groupId: 'attack-i-am',
         explain:
           '中央監視装置も BACnet 機器なので、同じように名乗ります。呼びかけ 1 回で「どの IP に、どの ID の機器がいるか」の対応表ができあがりました。監視している側がどこにいるかまで、そこに載っています。',
         annotation: '呼びかけ 1 回で、中央監視まで含めた機器一覧が手に入る',
@@ -195,7 +202,7 @@ export const conversations: Conversation[] = [
         plain: 'いまの室温を教えて',
         protocol: 'ReadProperty analog-input,0 present-value',
         transport: 'UDP ユニキャスト → 192.168.1.11:47808',
-        action: '室温を尋ねる',
+        action: '室温を聞く',
         explain:
           '返事から分かった IP へ、直接送ります。中身はステップ3で中央監視が送ったものと同じ。宛先 IP に届けば、それで相手は決まります。',
       },
@@ -207,7 +214,7 @@ export const conversations: Conversation[] = [
         plain: '22.0 ℃です',
         protocol: 'ComplexACK → 22.0',
         transport: 'UDP ユニキャスト → 192.168.1.66:47808',
-        action: '室温を答える',
+        action: '室温を返す',
         explain:
           '値がそのまま返ってきます。ここまでは「見ているだけ」ですが、建物がいまどういう状態かは筒抜けです。',
         annotation: '中央監視に返したのと同じ値を、そのまま返す',
@@ -227,7 +234,7 @@ export const conversations: Conversation[] = [
         plain: '設定温度を 99.0 ℃にして',
         protocol: 'WriteProperty analog-value,0 present-value 99.0',
         transport: 'UDP ユニキャスト → 192.168.1.11:47808',
-        action: '設定温度の変更を頼む',
+        action: '書き換えを頼む',
         explain:
           'ここからが書き込みです。読むのと同じ気軽さで、同じ宛先 IP に、今度は 99.0 を書きにいきます。',
       },
@@ -239,7 +246,7 @@ export const conversations: Conversation[] = [
         plain: '了解しました',
         protocol: 'SimpleACK',
         transport: 'UDP ユニキャスト → 192.168.1.66:47808',
-        action: '書き換えを受け入れる',
+        action: '受け入れる',
         explain:
           '機器は受け入れました。届いた先が 192.168.1.10 だろうと 192.168.1.66 だろうと、中央監視からの指示と区別する材料がないので、断る理由がありません。',
         annotation:
