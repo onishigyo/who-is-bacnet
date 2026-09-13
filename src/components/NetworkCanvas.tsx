@@ -22,7 +22,9 @@ import { BacnetNode, type BacnetFlowNode } from './nodes/BacnetNode'
 
 const nodeTypes: NodeTypes = { bacnet: BacnetNode }
 
-const FIT_VIEW_OPTIONS = { padding: 0.18 }
+// 自動フィットでは拡大しすぎない（機器が 1 台だけのステップ1 で巨大になるため）。
+// 手動のホイール操作では maxZoom まで寄れる
+const FIT_VIEW_OPTIONS = { padding: 0.18, maxZoom: 1.2 }
 
 /** 画面幅が変わっても図全体が見えるようにする（ReactFlow の内側でのみ使える） */
 function FitViewOnResize() {
