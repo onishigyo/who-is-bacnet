@@ -723,93 +723,103 @@ button:disabled {
   color: var(--alert);
 }
 
-/* ---------- 1 通ずつ送るコントロール ---------- */
+/* ---------- 図の下に固定する会話バー ---------- */
 
-.pacer {
-  padding: 14px 16px;
-  border-radius: 12px;
-  border: 1px solid var(--accent);
-  background: var(--bg-raise);
-}
-
-.pacer__head {
+.stagebar {
   display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 10px;
-  margin-bottom: 10px;
-}
-
-.pacer__title {
-  font-size: 13px;
-}
-
-.pacer__progress {
-  font-family: var(--mono);
-  font-size: 11px;
-  color: var(--muted);
-  white-space: nowrap;
-}
-
-.pacer__idle {
-  font-size: 13px;
-  color: var(--muted);
-  padding: 12px 0;
-}
-
-.pacer__now {
-  padding: 10px 12px;
-  border-radius: 10px;
+  border-top: 1px solid var(--line);
   background: var(--bg-soft);
-  border-left: 3px solid var(--accent);
+  /* 位置を動かさないのがこの帯の役目。中身の量で高さを変えない */
+  height: 156px;
+  flex: 0 0 auto;
 }
 
-.pacer__now--response {
+.stagebar--idle {
+  height: 88px;
+  align-items: center;
+}
+
+.stagebar__idle {
+  padding: 12px 20px;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.stagebar__message {
+  flex: 1 1 0;
+  min-width: 0;
+  padding: 12px 18px;
+  border-left: 3px solid var(--accent);
+  overflow-y: auto;
+}
+
+.stagebar__message--response {
   border-left-color: #2f6350;
 }
 
-.pacer__from {
+.stagebar__meta {
   font-size: 11px;
   color: var(--muted);
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
-.pacer__plain {
-  font-size: 16px;
+.stagebar__count {
+  font-family: var(--mono);
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--bg-raise);
+  color: var(--text);
+}
+
+.stagebar__plain {
+  font-size: 17px;
   color: var(--text-strong);
-  margin-top: 2px;
+  margin: 4px 0 6px;
 }
 
-.pacer__protocol {
+.stagebar__protocol,
+.stagebar__transport {
   display: block;
-  margin-top: 4px;
+  word-break: break-all;
+}
+
+.stagebar__protocol {
   font-size: 12px;
   color: var(--accent);
-  word-break: break-all;
 }
 
-.pacer__transport {
-  display: block;
-  margin-top: 2px;
+.stagebar__transport {
   font-size: 11px;
   color: var(--muted);
-  word-break: break-all;
 }
 
-.pacer__explain {
-  margin-top: 10px;
-  padding-top: 10px;
-  border-top: 1px solid var(--line);
+.stagebar__explain {
+  flex: 1.15 1 0;
+  min-width: 0;
+  padding: 14px 18px;
+  border-left: 1px solid var(--line);
   font-size: 13px;
+  overflow-y: auto;
 }
 
-.pacer__controls {
+.stagebar__controls {
+  width: 280px;
+  flex: 0 0 auto;
+  padding: 12px 18px;
+  border-left: 1px solid var(--line);
   display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-top: 12px;
+  flex-direction: column;
+  justify-content: center;
+  gap: 8px;
 }
 
-.pacer__toggle {
+.stagebar__toggle,
+.stagebar__next {
+  width: 100%;
   padding: 10px 14px;
   border-radius: 10px;
   border: 1px solid var(--accent);
@@ -817,59 +827,49 @@ button:disabled {
   color: var(--text-strong);
   font-size: 13px;
   font-weight: 600;
-  white-space: nowrap;
-}
-
-.pacer__preview {
-  flex: 1;
-  font-size: 12px;
-  color: var(--muted);
-}
-
-.pacer__done {
-  margin-top: 12px;
-  padding: 10px;
-  border-radius: 10px;
-  border: 1px dashed var(--line);
   text-align: center;
+}
+
+.stagebar__next {
   font-size: 12px;
-  color: var(--muted);
 }
 
-.pacer__next {
-  flex: 1;
-  padding: 12px 16px;
-  border-radius: 10px;
-  border: 1px solid var(--accent);
-  background: var(--accent-soft);
-  color: var(--text-strong);
-  font-size: 14px;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  text-align: left;
-}
-
-.pacer__next-label {
-  flex: 1;
-  font-size: 13px;
-  line-height: 1.5;
-}
-
-.pacer__next-count {
-  font-family: var(--mono);
-  font-size: 11px;
-  font-weight: 400;
-  color: var(--muted);
-  white-space: nowrap;
-}
-
-.pacer__next:disabled {
+.stagebar__next:disabled {
   opacity: 0.45;
   border-color: var(--line);
   background: transparent;
+}
+
+.stagebar__preview,
+.stagebar__hint {
+  font-size: 12px;
+  color: var(--muted);
+  text-align: center;
+}
+
+@media (max-width: 1080px) {
+  .stagebar,
+  .stagebar--idle {
+    flex-direction: column;
+    height: auto;
+  }
+
+  /* 縦並びでは基準高さ 0 で潰れてしまうので、内容なりの高さにする */
+  .stagebar__message,
+  .stagebar__explain {
+    flex: 0 0 auto;
+    overflow: visible;
+  }
+
+  .stagebar__explain,
+  .stagebar__controls {
+    border-left: none;
+    border-top: 1px solid var(--line);
+  }
+
+  .stagebar__controls {
+    width: 100%;
+  }
 }
 
 /* ---------- 攻撃コンソール ---------- */

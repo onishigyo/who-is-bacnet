@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { AttackConsole } from './components/AttackConsole'
 import { CaptureEvidenceCard } from './components/CaptureEvidenceCard'
+import { ConversationBar } from './components/ConversationBar'
 import { ConversationLog } from './components/ConversationLog'
 import { NetworkCanvas } from './components/NetworkCanvas'
-import { PlaybackControls } from './components/PlaybackControls'
 import { StepNav } from './components/StepNav'
 import { StepNotes } from './components/StepNotes'
 import { StepPanel } from './components/StepPanel'
@@ -190,6 +190,35 @@ export default function App() {
               durationMs={FLIGHT_MS}
             />
           </div>
+
+          {order >= 3 && (
+            <ConversationBar
+              conversation={activeConversation}
+              playback={playback}
+              current={current}
+              nodes={diagramNodes}
+              autoPlay={autoPlay}
+              onToggleAuto={toggleAuto}
+              onSend={sendNext}
+              idle={
+                order === 3 ? (
+                  <button
+                    type="button"
+                    className="play"
+                    onClick={startNormalConversation}
+                  >
+                    {activeConversation ? 'もう一度、最初から' : '会話を始める'}
+                  </button>
+                ) : (
+                  <p className="stagebar__hint">
+                    右の「持ち込まれた PC
+                    のコンソール」で操作を選ぶと、ここに流れます。
+                  </p>
+                )
+              }
+            />
+          )}
+
           <StepNav steps={steps} current={order} onChange={goToStep} />
         </div>
 
@@ -200,31 +229,11 @@ export default function App() {
 
           {order === 3 && (
             <>
-              {(!activeConversation || !busy) && (
-                <button
-                  type="button"
-                  className="play"
-                  onClick={startNormalConversation}
-                >
-                  {activeConversation ? 'もう一度、最初から' : '会話を始める'}
-                </button>
-              )}
-              {activeConversation && (
-                <PlaybackControls
-                  conversation={activeConversation}
-                  playback={playback}
-                  current={current}
-                  nodes={diagramNodes}
-                  autoPlay={autoPlay}
-                  onToggleAuto={toggleAuto}
-                  onSend={sendNext}
-                />
-              )}
               <ConversationLog
                 title="ここまでの会話"
                 messages={transcript}
                 nodes={diagramNodes}
-                emptyText="「会話を始める」を押すと、中央監視と機器のやり取りが流れます。"
+                emptyText="図の下にある「会話を始める」を押すと、中央監視と機器のやり取りが流れます。"
               />
               <StepNotes notes={step.notes} />
             </>
@@ -239,22 +248,11 @@ export default function App() {
                 onRun={runAttack}
                 onReset={resetAttack}
               />
-              {activeConversation && (
-                <PlaybackControls
-                  conversation={activeConversation}
-                  playback={playback}
-                  current={current}
-                  nodes={diagramNodes}
-                  autoPlay={autoPlay}
-                  onToggleAuto={toggleAuto}
-                  onSend={sendNext}
-                />
-              )}
               <ConversationLog
                 title="ここまでの会話"
                 messages={transcript}
                 nodes={diagramNodes}
-                emptyText="コンソールの操作を選ぶと、やり取りが流れます。ステップ3の会話と見比べてください。"
+                emptyText="コンソールの操作を選ぶと、やり取りが図の下に流れます。ステップ3の会話と見比べてください。"
               />
               {attack.completed.length > 0 &&
                 captures.map((capture) => (
