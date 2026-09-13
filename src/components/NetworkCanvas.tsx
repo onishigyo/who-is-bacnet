@@ -1,5 +1,6 @@
 import {
   Background,
+  BackgroundVariant,
   Controls,
   ReactFlow,
   useReactFlow,
@@ -8,7 +9,7 @@ import {
   type NodeTypes,
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
-import { useEffect, useMemo, type CSSProperties } from 'react'
+import { useEffect, useMemo, useState, type CSSProperties } from 'react'
 import { NETWORK_NODE_ID } from '../content/diagram'
 import type {
   ConversationMessage,
@@ -36,6 +37,25 @@ function FitViewOnResize() {
 
 /** ブロードキャストで、ネットワークに着いてから広がり始めるまでの割合 */
 const FAN_SPLIT = 0.45
+
+/** 縦積みレイアウトになる幅。ここではページのスクロールを優先する */
+const NARROW = '(max-width: 1080px)'
+
+/** 画面幅が狭いかどうか（狭いときはホイールでページを送りたい） */
+function useNarrowScreen(): boolean {
+  const [narrow, setNarrow] = useState(
+    () => typeof window !== 'undefined' && window.matchMedia(NARROW).matches,
+  )
+
+  useEffect(() => {
+    const query = window.matchMedia(NARROW)
+    const update = (event: MediaQueryListEvent) => setNarrow(event.matches)
+    query.addEventListener('change', update)
+    return () => query.removeEventListener('change', update)
+  }, [])
+
+  return narrow
+}
 
 interface Props {
   diagram: DiagramState
@@ -116,6 +136,7 @@ export function NetworkCanvas({
     [diagram.edges, litEdges],
   )
 
+  const narrow = useNarrowScreen()
   const broadcasting = fanOut.length > 0
   const path = flight
     ? withMidpoint(
@@ -153,13 +174,28 @@ export function NetworkCanvas({
       nodesConnectable={false}
       edgesFocusable={false}
       minZoom={0.6}
-      maxZoom={1.4}
-      /* 狭い画面では図を縮めきらず、指でスクロール・移動できるようにする */
-      preventScrolling={false}
+      maxZoom={2}
+      zoomOnScroll={!narrow}
+      /* 広い画面ではホイールで拡大縮小、狭い画面ではページのスクロールを優先する */
+      preventScrolling={!narrow}
       className="canvas"
     >
       <FitViewOnResize />
-      <Background gap={28} size={1} />
+      {/* 方眼紙のように、細かい格子の上に太い格子を重ねる */}
+      <Background
+        id="fine"
+        variant={BackgroundVariant.Lines}
+        gap={14}
+        lineWidth={1}
+        color="#e6ecf2"
+      />
+      <Background
+        id="coarse"
+        variant={BackgroundVariant.Lines}
+        gap={70}
+        lineWidth={1}
+        color="#d3dde7"
+      />
       <Controls showInteractive={false} />
 
       {inFlight && path && (

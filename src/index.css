@@ -1,24 +1,29 @@
 :root {
-  --bg: #0e1116;
-  --bg-soft: #151a22;
-  --bg-raise: #1b222c;
-  --line: #262f3d;
-  --text: #c3ccd9;
-  --text-strong: #f1f5fa;
-  --muted: #8795a8;
-  --accent: #4cb2ff;
-  --accent-soft: rgba(76, 178, 255, 0.14);
-  --ok: #4ade80;
-  --alert: #ff6b6b;
-  --alert-soft: rgba(255, 107, 107, 0.14);
-  --warn: #f5b544;
+  /* 設備図面の比喩でそろえる。紙・方眼・製図線・書き込み */
+  --bg: #f4f6f8;
+  --bg-soft: #eef1f5;
+  --bg-raise: #ffffff;
+  --line: #d5dee7;
+  --line-strong: #94a6b8;
+  --text: #44525f;
+  --text-strong: #14202b;
+  --muted: #6b7a89;
+  --accent: #1f6feb;
+  --accent-soft: rgba(31, 111, 235, 0.1);
+  --ok: #147d64;
+  --ok-soft: rgba(20, 125, 100, 0.1);
+  --alert: #d1242f;
+  --alert-soft: rgba(209, 36, 47, 0.09);
+  --warn: #9a6700;
+  --warn-soft: rgba(154, 103, 0, 0.12);
+  --shadow: 0 1px 2px rgba(20, 32, 43, 0.06), 0 6px 16px rgba(20, 32, 43, 0.06);
 
   --sans:
     system-ui, -apple-system, 'Hiragino Sans', 'Noto Sans JP', 'Segoe UI',
     sans-serif;
   --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 
-  color-scheme: dark;
+  color-scheme: light;
   font: 15px/1.7 var(--sans);
   color: var(--text);
   background: var(--bg);
@@ -221,15 +226,23 @@ button:disabled {
 
 .react-flow__attribution {
   background: transparent;
-  font-size: 10px;
+  font-size: 9px;
+  padding: 0 6px 2px 0;
+  opacity: 0.35;
+  transition: opacity 0.2s;
+}
+
+.react-flow__attribution:hover {
+  opacity: 0.8;
 }
 
 .react-flow__attribution a {
   color: var(--muted);
+  text-decoration: none;
 }
 
 .react-flow__edge.link .react-flow__edge-path {
-  stroke: #3a4557;
+  stroke: var(--line-strong);
   stroke-width: 2;
 }
 
@@ -249,7 +262,7 @@ button:disabled {
   display: flex;
   flex-direction: column;
   gap: 2px;
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
+  box-shadow: var(--shadow);
   transition:
     border-color 0.2s,
     box-shadow 0.2s;
@@ -292,7 +305,7 @@ button:disabled {
   font-size: 10px;
   padding: 1px 6px;
   border-radius: 5px;
-  background: rgba(255, 255, 255, 0.06);
+  background: #eef2f6;
   color: var(--text);
 }
 
@@ -312,7 +325,7 @@ button:disabled {
   padding: 6px 10px;
   border-radius: 8px;
   border: 1px dashed var(--line);
-  background: rgba(0, 0, 0, 0.35);
+  background: #f7f9fb;
   font-family: var(--mono);
   font-size: 11px;
 }
@@ -323,11 +336,11 @@ button:disabled {
 }
 
 .node--controller {
-  border-color: #2f4a63;
+  border-color: #b9cbdd;
 }
 
 .node--supervisor {
-  border-color: #2f6350;
+  border-color: var(--ok);
 }
 
 .node--switch {
@@ -342,7 +355,7 @@ button:disabled {
   background-color: var(--bg-raise);
   background-image: linear-gradient(
     180deg,
-    rgba(255, 107, 107, 0.16),
+    rgba(209, 36, 47, 0.08),
     transparent
   );
 }
@@ -380,7 +393,7 @@ button:disabled {
     transform: translate(var(--x0), var(--y0));
     opacity: 0;
   }
-  12% {
+  6% {
     opacity: 1;
   }
   50% {
@@ -407,7 +420,7 @@ button:disabled {
     transform: translate(var(--x0), var(--y0));
     opacity: 0;
   }
-  15% {
+  8% {
     opacity: 1;
   }
   50% {
@@ -435,15 +448,16 @@ button:disabled {
 
 .packet__bubble {
   transform: translate(-50%, -50%);
+  background: #f0f6ff;
   width: 260px;
   padding: 8px 12px;
   border-radius: 12px;
   border: 1px solid var(--accent);
-  background: #0b2233;
+  background: var(--bg-raise);
   display: flex;
   flex-direction: column;
   gap: 4px;
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 8px 22px rgba(20, 32, 43, 0.16);
 }
 
 .packet--response .packet--fan {
@@ -458,7 +472,7 @@ button:disabled {
     transform: translate(var(--x0), var(--y0));
     opacity: 0;
   }
-  15% {
+  8% {
     opacity: 1;
   }
   50% {
@@ -485,8 +499,8 @@ button:disabled {
 }
 
 .packet__bubble {
-  border-color: #2f6350;
-  background: #0d2620;
+  border-color: var(--ok);
+  background: var(--bg-raise);
 }
 
 .packet__plain {
@@ -582,7 +596,7 @@ button:disabled {
 }
 
 .note__badge--standard {
-  background: rgba(74, 222, 128, 0.14);
+  background: var(--ok-soft);
   color: var(--ok);
 }
 
@@ -591,7 +605,7 @@ button:disabled {
 }
 
 .note__badge--interpretation {
-  background: rgba(245, 181, 68, 0.14);
+  background: var(--warn-soft);
   color: var(--warn);
 }
 
@@ -668,7 +682,7 @@ button:disabled {
 }
 
 .stagebar__message--response {
-  border-left-color: #2f6350;
+  border-left-color: var(--ok);
 }
 
 .stagebar__meta {
@@ -860,7 +874,7 @@ button:disabled {
 }
 
 .track__item--response {
-  border-left: 3px solid #2f6350;
+  border-left: 3px solid var(--ok);
 }
 
 .track__item.is-alert {
@@ -888,6 +902,9 @@ button:disabled {
 .track__from {
   font-size: 10px;
   color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .track__plain {
@@ -914,11 +931,7 @@ button:disabled {
   padding: 16px;
   border-radius: 12px;
   border: 1px solid var(--alert);
-  background: linear-gradient(
-    180deg,
-    rgba(255, 107, 107, 0.08),
-    var(--bg-raise)
-  );
+  background: linear-gradient(180deg, rgba(209, 36, 47, 0.06), var(--bg-raise));
 }
 
 .console__note {
@@ -958,7 +971,7 @@ button:disabled {
 }
 
 .console__button.is-done {
-  border-color: #2f6350;
+  border-color: var(--ok);
 }
 
 .console__label {
@@ -1023,7 +1036,7 @@ button:disabled {
   border: 1px dashed var(--line);
   border-radius: 10px;
   padding: 10px;
-  background: rgba(0, 0, 0, 0.3);
+  background: #f7f9fb;
 }
 
 .capture__placeholder-label {

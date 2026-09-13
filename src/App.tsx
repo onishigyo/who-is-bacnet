@@ -46,6 +46,8 @@ import { buildDiagramState, stepByOrder } from './logic/steps'
 const FLIGHT_MS = 1800
 /** 着信してから次を送り出すまでの間。解説を読む時間 */
 const DWELL_MS = 2400
+/** 会話を始めてから 1 通目が出るまでの間。待たせない */
+const START_MS = 500
 
 export default function App() {
   const [order, setOrder] = useState<StepOrder>(1)
@@ -102,9 +104,12 @@ export default function App() {
 
     if (!autoPlay || !canSendNext(playback, activeConversation)) return
 
-    const timer = setTimeout(() => {
-      setPlayback((current) => advancePlayback(current, activeConversation))
-    }, DWELL_MS)
+    const timer = setTimeout(
+      () => {
+        setPlayback((current) => advancePlayback(current, activeConversation))
+      },
+      playback.delivered === 0 ? START_MS : DWELL_MS,
+    )
     return () => clearTimeout(timer)
   }, [playback, activeConversation, activeActionId, autoPlay])
 
