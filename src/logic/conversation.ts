@@ -49,6 +49,34 @@ export function messageGroups(
 }
 
 /**
+ * そのメッセージが属するまとまり（前後の、同じ groupId が続く範囲）。
+ * まとめて飛んだものは、読み直すときもまとめて扱うために使う。
+ */
+export function groupOf(
+  messages: ConversationMessage[],
+  id: string,
+): ConversationMessage[] {
+  const index = messages.findIndex((message) => message.id === id)
+  if (index < 0) return []
+
+  const target = messages[index]
+  if (!target.groupId) return [target]
+
+  let start = index
+  while (start > 0 && messages[start - 1].groupId === target.groupId) start -= 1
+
+  let end = index
+  while (
+    end < messages.length - 1 &&
+    messages[end + 1].groupId === target.groupId
+  ) {
+    end += 1
+  }
+
+  return messages.slice(start, end + 1)
+}
+
+/**
  * 再生をひとコマ進める。時間は持たず、呼ばれた回数だけ進む純粋関数。
  *
  * idle → 1 つ目のまとまりが飛ぶ → 着信してログに載る → 次が飛ぶ → … → finished

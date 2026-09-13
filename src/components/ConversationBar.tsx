@@ -109,6 +109,8 @@ export function ConversationBar({
     nameOf(nodes, id),
   )
   const together = current.length > 1
+  // 読み直しのときは、まとめて飛んだ分も 1 通ずつ詳しく出す
+  const compact = together && !reviewing
 
   return (
     <section className="stagebar" aria-live="polite">
@@ -124,13 +126,17 @@ export function ConversationBar({
           )}
         </p>
 
-        <div className={`stagebar__lines ${together ? 'is-together' : ''}`}>
+        <div
+          className={`stagebar__lines ${compact ? 'is-together' : ''} ${
+            reviewing ? 'is-review' : ''
+          }`}
+        >
           {current.map((message) => (
             <MessageLine
               key={message.id}
               message={message}
               nodes={nodes}
-              compact={together}
+              compact={compact}
             />
           ))}
         </div>

@@ -160,7 +160,10 @@ button:disabled {
     border-bottom: 1px solid var(--line);
   }
   .app__canvas {
+    /* 縦積みでは flex の基準値が height を上書きしてしまうので、伸縮を止める */
+    flex: 0 0 auto;
     height: 58svh;
+    min-height: 320px;
   }
   .app__panel {
     padding: 20px 16px;
@@ -702,6 +705,9 @@ button:disabled {
   padding: 12px 18px;
   border-left: 3px solid var(--accent);
   overflow-y: auto;
+  /* 読み直しで 4 通ぶん並ぶときに、続きがあると分かるように出しておく */
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-strong) transparent;
 }
 
 .stagebar__message--response {
@@ -726,6 +732,38 @@ button:disabled {
   color: var(--muted);
 }
 
+.stagebar__count {
+  font-family: var(--mono);
+  font-size: 11px;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: var(--bg-raise);
+  color: var(--text);
+  white-space: nowrap;
+}
+
+.stagebar__count.is-review {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+
+.stagebar__plain {
+  font-size: 17px;
+  color: var(--text-strong);
+  margin: 4px 0 6px;
+}
+
+/* まとまりを読み直しているときは、1 通ずつ詳しく出す */
+.stagebar__lines .stagebar__line + .stagebar__line {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--line);
+}
+
+.stagebar__lines.is-review .stagebar__plain {
+  font-size: 15px;
+}
+
 /* まとめて飛んだ分は、1 通 1 行の一覧にする */
 .stagebar__lines.is-together {
   display: flex;
@@ -748,6 +786,22 @@ button:disabled {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.stagebar__protocol,
+.stagebar__transport {
+  display: block;
+  word-break: break-all;
+}
+
+.stagebar__protocol {
+  font-size: 12px;
+  color: var(--accent);
+}
+
+.stagebar__transport {
+  font-size: 11px;
+  color: var(--muted);
 }
 
 .stagebar__row .stagebar__protocol {

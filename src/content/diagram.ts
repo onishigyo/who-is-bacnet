@@ -10,6 +10,10 @@ export const ATTACKER_ID: NodeId = 'attacker'
 /**
  * 1つのネットワーク図を、ステップごとに育てていく。
  * appearsAt は「このステップから図に出る」という意味。
+ *
+ * 配置は横長（およそ 4:1）に保つ。会話バーとトラックが下に固定で入るため、
+ * 図に使える高さは横幅に比べて小さく、縦に広い配置だと 13 インチで
+ * 縮みすぎる（＝文字が読めなくなる）。
  */
 export const diagramNodes: DiagramNodeSpec[] = [
   {
@@ -20,7 +24,7 @@ export const diagramNodes: DiagramNodeSpec[] = [
     deviceInstance: 3056930,
     ip: '192.168.1.11',
     appearsAt: 1,
-    position: { x: 60, y: 180 },
+    position: { x: 0, y: 0 },
   },
   {
     id: NETWORK_NODE_ID,
@@ -28,7 +32,7 @@ export const diagramNodes: DiagramNodeSpec[] = [
     label: 'L2 スイッチ',
     sublabel: '同じネットワーク（192.168.1.0/24）',
     appearsAt: 2,
-    position: { x: 400, y: 300 },
+    position: { x: 390, y: 180 },
   },
   {
     id: 'lighting',
@@ -38,7 +42,7 @@ export const diagramNodes: DiagramNodeSpec[] = [
     deviceInstance: 100201,
     ip: '192.168.1.12',
     appearsAt: 3,
-    position: { x: 60, y: 440 },
+    position: { x: 260, y: 0 },
   },
   {
     id: 'meter',
@@ -48,7 +52,7 @@ export const diagramNodes: DiagramNodeSpec[] = [
     deviceInstance: 100305,
     ip: '192.168.1.13',
     appearsAt: 3,
-    position: { x: 400, y: 560 },
+    position: { x: 520, y: 0 },
   },
   {
     id: SUPERVISOR_ID,
@@ -58,7 +62,7 @@ export const diagramNodes: DiagramNodeSpec[] = [
     deviceInstance: 260001,
     ip: '192.168.1.10',
     appearsAt: 3,
-    position: { x: 740, y: 180 },
+    position: { x: 800, y: 0 },
   },
   {
     id: ATTACKER_ID,
@@ -67,7 +71,7 @@ export const diagramNodes: DiagramNodeSpec[] = [
     sublabel: '認証なしで会話に入れる',
     ip: '192.168.1.66',
     appearsAt: 4,
-    position: { x: 740, y: 470 },
+    position: { x: 800, y: 180 },
   },
 ]
 

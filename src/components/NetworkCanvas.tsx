@@ -199,7 +199,7 @@ export function NetworkCanvas({
       nodesDraggable={false}
       nodesConnectable={false}
       edgesFocusable={false}
-      minZoom={0.6}
+      minZoom={0.35}
       maxZoom={2}
       zoomOnScroll={!narrow}
       /* 広い画面ではホイールで拡大縮小、狭い画面ではページのスクロールを優先する */

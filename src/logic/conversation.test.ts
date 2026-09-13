@@ -10,6 +10,7 @@ import {
   conversationById,
   currentGroup,
   deliveredMessages,
+  groupOf,
   flightPath,
   IDLE_PLAYBACK,
   inFlightMessages,
@@ -328,5 +329,40 @@ describe('ブロードキャストの広がり', () => {
     expect(broadcastTargets(step2Nodes, 'supervisor', NETWORK_NODE_ID)).toEqual(
       ['ahu'],
     )
+  })
+})
+
+describe('読み直しの単位', () => {
+  const transcript = conversationById(conversations, 'attack-discover').messages
+
+  it('まとめて飛んだ 1 通を選ぶと、まとまり全体が返る', () => {
+    expect(groupOf(transcript, 'a3').map((m) => m.id)).toEqual([
+      'a2',
+      'a3',
+      'a4',
+      'a5',
+    ])
+  })
+
+  it('まとまりに属さないメッセージは、それ 1 通だけ', () => {
+    expect(groupOf(transcript, 'a1').map((m) => m.id)).toEqual(['a1'])
+  })
+
+  it('会話をまたいで積んだ記録でも、まとまりを取り違えない', () => {
+    const mixed = [
+      ...conversationById(conversations, 'attack-discover').messages,
+      ...conversationById(conversations, 'attack-read').messages,
+    ]
+    expect(groupOf(mixed, 'a5').map((m) => m.id)).toEqual([
+      'a2',
+      'a3',
+      'a4',
+      'a5',
+    ])
+    expect(groupOf(mixed, 'a6').map((m) => m.id)).toEqual(['a6'])
+  })
+
+  it('知らない id なら空', () => {
+    expect(groupOf(transcript, 'nope')).toEqual([])
   })
 })

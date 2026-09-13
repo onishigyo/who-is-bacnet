@@ -27,6 +27,7 @@ import {
   advancePlayback,
   conversationById,
   currentGroup,
+  groupOf,
   IDLE_PLAYBACK,
   inFlightMessages,
   isPlaybackFinished,
@@ -143,12 +144,11 @@ export default function App() {
   const liveGroup = activeConversation
     ? currentGroup(playback, activeConversation)
     : []
-  // トラックから選んでいるときは、その 1 通だけを帯に出す
-  const reviewed = reviewId
-    ? transcript.find((message) => message.id === reviewId)
-    : undefined
-  const current = reviewed ? [reviewed] : liveGroup
-  const reviewing = reviewed !== undefined
+  // トラックから選んでいるときは、そのまとまりを帯に出す。
+  // まとめて送ったものは、読み直すときもまとめて見せる
+  const reviewed = reviewId ? groupOf(transcript, reviewId) : []
+  const current = reviewed.length > 0 ? reviewed : liveGroup
+  const reviewing = reviewed.length > 0
   /** 会話が途中（送り終えていない）なら、ほかの操作は止めておく */
   const busy = activeConversation
     ? !isPlaybackFinished(playback, activeConversation)
