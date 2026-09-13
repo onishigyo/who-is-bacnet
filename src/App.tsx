@@ -3,6 +3,7 @@ import { AttackConsole } from './components/AttackConsole'
 import { CaptureEvidenceCard } from './components/CaptureEvidenceCard'
 import { ConversationLog } from './components/ConversationLog'
 import { NetworkCanvas } from './components/NetworkCanvas'
+import { PlaybackControls } from './components/PlaybackControls'
 import { StepNav } from './components/StepNav'
 import { StepPanel } from './components/StepPanel'
 import { captures } from './content/captures'
@@ -29,19 +30,16 @@ import { INITIAL_DEVICE, initialAttackState, runAction } from './logic/attack'
 import {
   advancePlayback,
   conversationById,
-  deliveredMessages,
+  currentMessage,
   flightPath,
   IDLE_PLAYBACK,
   inFlightMessage,
+  isPlaybackFinished,
 } from './logic/conversation'
 import { buildDiagramState, stepByOrder } from './logic/steps'
 
-/** パケットが図の上を飛ぶ時間 */
-const FLIGHT_MS = 1400
-/** 着信してから次のメッセージを送り出すまでの間 */
-const PAUSE_MS = 500
-/** 再生ボタンを押してから 1 通目が飛び出すまでの間 */
-const START_MS = 250
+/** パケットが図の上を飛ぶ時間。目で追える速さにしている */
+const FLIGHT_MS = 2200
 
 export default function App() {
   const [order, setOrder] = useState<StepOrder>(1)
@@ -52,7 +50,8 @@ export default function App() {
     null,
   )
   const [playback, setPlayback] = useState(IDLE_PLAYBACK)
-  const [normalPlayed, setNormalPlayed] = useState(false)
+  /** 着信済みのメッセージ。会話をまたいで積み上がる */
+  const [transcript, setTranscript] = useState<ConversationMessage[]>([])
   const [attack, setAttack] = useState(initialAttackState)
 
   const step = stepByOrder(steps, order)
@@ -65,51 +64,46 @@ export default function App() {
     ? conversationById(conversations, activeConversationId)
     : null
 
-  // 会話が終わったときの後始末（結果を状態に反映して、再生を止める）
-  const finishConversation = useCallback(() => {
-    if (activeActionId) {
-      setAttack((current) => runAction(attackActions, current, activeActionId))
-    }
-    if (activeConversationId === NORMAL_CONVERSATION_ID) {
-      setNormalPlayed(true)
-    }
-    setActiveActionId(null)
-    setActiveConversationId(null)
-    setPlayback(IDLE_PLAYBACK)
-  }, [activeActionId, activeConversationId])
-
-  // 会話を 1 コマずつ進める。進め方の判断はロジック層、ここは時間を与えるだけ
+  /**
+   * 進むのは利用者がボタンを押したときだけ。
+   * タイマーが面倒を見るのは「飛んでいるパケットを着信させる」ところだけで、
+   * 着信したらそこで止まり、次は押されるまで送らない。
+   */
   useEffect(() => {
-    if (!activeConversation || playback.status === 'finished') return
-    const delay =
-      playback.inFlight !== null
-        ? FLIGHT_MS
-        : playback.status === 'idle'
-          ? START_MS
-          : PAUSE_MS
+    if (!activeConversation || playback.inFlight === null) return
 
+    const landing = inFlightMessage(playback, activeConversation)
     const timer = setTimeout(() => {
       const next = advancePlayback(playback, activeConversation)
-      if (next.status === 'finished') {
-        finishConversation()
-      } else {
-        setPlayback(next)
+      setPlayback(next)
+      if (landing) setTranscript((current) => [...current, landing])
+      if (next.status === 'finished' && activeActionId) {
+        setAttack((current) =>
+          runAction(attackActions, current, activeActionId),
+        )
       }
-    }, delay)
+    }, FLIGHT_MS)
 
     return () => clearTimeout(timer)
-  }, [playback, activeConversation, finishConversation])
+  }, [playback, activeConversation, activeActionId])
+
+  const sendNext = useCallback(() => {
+    if (!activeConversation) return
+    setPlayback((current) => advancePlayback(current, activeConversation))
+  }, [activeConversation])
 
   const goToStep = useCallback((next: StepOrder) => {
     setOrder(next)
     setActiveConversationId(null)
     setActiveActionId(null)
     setPlayback(IDLE_PLAYBACK)
+    setTranscript([])
   }, [])
 
-  const playNormal = useCallback(() => {
-    setNormalPlayed(false)
+  const startNormalConversation = useCallback(() => {
     setPlayback(IDLE_PLAYBACK)
+    setTranscript([])
+    setActiveActionId(null)
     setActiveConversationId(NORMAL_CONVERSATION_ID)
   }, [])
 
@@ -126,35 +120,20 @@ export default function App() {
     setActiveConversationId(null)
     setActiveActionId(null)
     setPlayback(IDLE_PLAYBACK)
+    setTranscript([])
   }, [])
 
   const inFlight = activeConversation
     ? inFlightMessage(playback, activeConversation)
     : null
   const flight = inFlight ? flightPath(inFlight, NETWORK_NODE_ID) : null
-  const busy = activeConversationId !== null
-
-  // ログに出す会話。済んだ会話はまるごと、再生中の会話は着信した分だけ
-  const transcript = useMemo<ConversationMessage[]>(() => {
-    const finishedIds =
-      order === 4
-        ? attack.completed.map(
-            (id) =>
-              attackActions.find((action) => action.id === id)!.conversationId,
-          )
-        : normalPlayed
-          ? [NORMAL_CONVERSATION_ID]
-          : []
-
-    return [
-      ...finishedIds.flatMap(
-        (id) => conversationById(conversations, id).messages,
-      ),
-      ...(activeConversation
-        ? deliveredMessages(playback, activeConversation)
-        : []),
-    ]
-  }, [order, attack.completed, normalPlayed, activeConversation, playback])
+  const current = activeConversation
+    ? currentMessage(playback, activeConversation)
+    : null
+  /** 会話が途中（送り終えていない）なら、ほかの操作は止めておく */
+  const busy = activeConversation
+    ? !isPlaybackFinished(playback, activeConversation)
+    : false
 
   const deviceReadouts = useMemo<Record<NodeId, DeviceState>>(() => {
     if (order < 3) return {}
@@ -191,23 +170,29 @@ export default function App() {
 
           {order === 3 && (
             <>
-              <button
-                type="button"
-                className="play"
-                onClick={playNormal}
-                disabled={busy}
-              >
-                {busy
-                  ? '再生中…'
-                  : normalPlayed
-                    ? 'もう一度再生する'
-                    : '会話を再生する'}
-              </button>
+              {(!activeConversation || !busy) && (
+                <button
+                  type="button"
+                  className="play"
+                  onClick={startNormalConversation}
+                >
+                  {activeConversation ? 'もう一度、最初から' : '会話を始める'}
+                </button>
+              )}
+              {activeConversation && (
+                <PlaybackControls
+                  conversation={activeConversation}
+                  playback={playback}
+                  current={current}
+                  nodes={diagramNodes}
+                  onSend={sendNext}
+                />
+              )}
               <ConversationLog
-                title="流れている会話"
+                title="ここまでの会話"
                 messages={transcript}
                 nodes={diagramNodes}
-                emptyText="「会話を再生する」を押すと、中央監視と機器のやり取りがここに並びます。"
+                emptyText="「会話を始める」を押すと、中央監視と機器のやり取りを 1 通ずつ送れます。"
               />
             </>
           )}
@@ -221,11 +206,20 @@ export default function App() {
                 onRun={runAttack}
                 onReset={resetAttack}
               />
+              {activeConversation && (
+                <PlaybackControls
+                  conversation={activeConversation}
+                  playback={playback}
+                  current={current}
+                  nodes={diagramNodes}
+                  onSend={sendNext}
+                />
+              )}
               <ConversationLog
-                title="流れている会話"
+                title="ここまでの会話"
                 messages={transcript}
                 nodes={diagramNodes}
-                emptyText="コンソールの操作を実行すると、やり取りがここに並びます。ステップ3の会話と見比べてください。"
+                emptyText="コンソールの操作を選ぶと、やり取りを 1 通ずつ送れます。ステップ3の会話と見比べてください。"
               />
               {attack.completed.length > 0 &&
                 captures.map((capture) => (

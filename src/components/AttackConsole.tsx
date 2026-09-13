@@ -23,7 +23,8 @@ export function AttackConsole({ actions, state, busy, onRun, onReset }: Props) {
     <section className="console">
       <h3 className="console__title">持ち込まれた PC のコンソール</h3>
       <p className="console__note">
-        上から順に実行できます。特別な道具も、パスワードも要りません。
+        上から順に選べます。選んだあとは 1
+        通ずつ送って確かめてください。特別な道具も、パスワードも要りません。
       </p>
 
       <ol className="console__list">

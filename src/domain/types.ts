@@ -94,6 +94,8 @@ export interface ConversationMessage {
   plain: string
   /** 実コマンド／プロトコル用語 */
   protocol: string
+  /** いま何が起きているかの解説（1 通ずつ進めるときに読ませる） */
+  explain: string
   /** 補足（「認証確認なし」など） */
   annotation?: string
   annotationTone?: 'neutral' | 'alert'

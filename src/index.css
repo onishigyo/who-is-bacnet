@@ -422,6 +422,28 @@ button:disabled {
   word-break: break-all;
 }
 
+/* 動きを減らす設定なら、飛ばさずに宛先へ置く */
+@media (prefers-reduced-motion: reduce) {
+  .packet {
+    animation-name: packet-appear;
+  }
+
+  @keyframes packet-appear {
+    from {
+      transform: translate(var(--x2), var(--y2));
+      opacity: 0;
+    }
+    to {
+      transform: translate(var(--x2), var(--y2));
+      opacity: 1;
+    }
+  }
+
+  .react-flow__edge.link.is-active .react-flow__edge-path {
+    animation: none;
+  }
+}
+
 /* ---------- 解説パネル ---------- */
 
 .steppanel {
@@ -579,6 +601,95 @@ button:disabled {
 
 .log__annotation.is-alert {
   color: var(--alert);
+}
+
+/* ---------- 1 通ずつ送るコントロール ---------- */
+
+.pacer {
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid var(--accent);
+  background: var(--bg-raise);
+}
+
+.pacer__head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.pacer__title {
+  font-size: 13px;
+}
+
+.pacer__progress {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.pacer__idle {
+  font-size: 13px;
+  color: var(--muted);
+  padding: 12px 0;
+}
+
+.pacer__now {
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--bg-soft);
+  border-left: 3px solid var(--accent);
+}
+
+.pacer__now--response {
+  border-left-color: #2f6350;
+}
+
+.pacer__from {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.pacer__plain {
+  font-size: 16px;
+  color: var(--text-strong);
+  margin-top: 2px;
+}
+
+.pacer__protocol {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--accent);
+  word-break: break-all;
+}
+
+.pacer__explain {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+  font-size: 13px;
+}
+
+.pacer__next {
+  width: 100%;
+  margin-top: 12px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  border: 1px solid var(--accent);
+  background: var(--accent-soft);
+  color: var(--text-strong);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.pacer__next:disabled {
+  opacity: 0.45;
+  border-color: var(--line);
+  background: transparent;
 }
 
 /* ---------- 攻撃コンソール ---------- */

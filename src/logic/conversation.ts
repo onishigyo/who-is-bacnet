@@ -74,6 +74,50 @@ export function deliveredMessages(
   return conversation.messages.slice(0, state.delivered)
 }
 
+/** 送信済み（飛んでいる分を含む）と総数。進み具合の表示に使う */
+export function playbackProgress(
+  state: PlaybackState,
+  conversation: Conversation,
+): { sent: number; total: number } {
+  return {
+    sent: state.delivered + (state.inFlight === null ? 0 : 1),
+    total: conversation.messages.length,
+  }
+}
+
+/** 次の 1 通を送れるか。飛んでいる最中と、終わったあとは送れない */
+export function canSendNext(
+  state: PlaybackState,
+  conversation: Conversation,
+): boolean {
+  return (
+    state.inFlight === null && state.delivered < conversation.messages.length
+  )
+}
+
+/** 直前に着信したメッセージ。なければ null */
+export function lastDeliveredMessage(
+  state: PlaybackState,
+  conversation: Conversation,
+): ConversationMessage | null {
+  if (state.delivered === 0) return null
+  return conversation.messages[state.delivered - 1] ?? null
+}
+
+/**
+ * いま画面で解説すべきメッセージ。飛んでいるならそれ、
+ * 止まっているなら直前に着信したもの（読む時間を確保するため消さない）。
+ */
+export function currentMessage(
+  state: PlaybackState,
+  conversation: Conversation,
+): ConversationMessage | null {
+  return (
+    inFlightMessage(state, conversation) ??
+    lastDeliveredMessage(state, conversation)
+  )
+}
+
 /** いま飛んでいるメッセージ。なければ null */
 export function inFlightMessage(
   state: PlaybackState,

@@ -5,25 +5,46 @@ import type { Conversation } from '../domain/types'
 import { BROADCAST } from '../domain/types'
 import {
   advancePlayback,
+  canSendNext,
   conversationById,
+  currentMessage,
   deliveredMessages,
   flightPath,
   IDLE_PLAYBACK,
   inFlightMessage,
   isPlaybackFinished,
+  lastDeliveredMessage,
+  playbackProgress,
   speakersOf,
 } from './conversation'
 
 const normal = conversationById(conversations, NORMAL_CONVERSATION_ID)
 
 describe('会話データ', () => {
-  it('すべてのメッセージが意訳と実コマンドの二層を持つ', () => {
+  it('すべてのメッセージが意訳と実コマンドの二層、および解説を持つ', () => {
     for (const conversation of conversations) {
       for (const message of conversation.messages) {
         expect(message.plain.length).toBeGreaterThan(0)
         expect(message.protocol.length).toBeGreaterThan(0)
+        expect(message.explain.length).toBeGreaterThan(0)
       }
     }
+  })
+
+  it('Who-Is には、図に出ている機器が全台返事をする', () => {
+    const responders = (id: string) =>
+      conversationById(conversations, id)
+        .messages.filter((message) => message.protocol.startsWith('I-Am'))
+        .map((message) => message.from)
+        .sort()
+
+    expect(responders(NORMAL_CONVERSATION_ID)).toEqual([
+      'ahu',
+      'lighting',
+      'meter',
+    ])
+    // 攻撃側でも同じ顔ぶれが返事をする（違うのは話し手だけ）
+    expect(responders('attack-discover')).toEqual(['ahu', 'lighting', 'meter'])
   })
 
   it('メッセージ id はアプリ全体で一意', () => {
@@ -94,6 +115,7 @@ describe('図の上の飛び方', () => {
         kind: 'request',
         plain: '',
         protocol: '',
+        explain: '',
       },
       NETWORK_NODE_ID,
     )
@@ -109,6 +131,7 @@ describe('図の上の飛び方', () => {
         kind: 'request',
         plain: '',
         protocol: '',
+        explain: '',
       },
       NETWORK_NODE_ID,
     )
@@ -116,6 +139,52 @@ describe('図の上の飛び方', () => {
   })
 
   it('話し手を重複なく取り出せる', () => {
-    expect(speakersOf(normal)).toEqual(['supervisor', 'ahu', 'lighting'])
+    expect(speakersOf(normal)).toEqual([
+      'supervisor',
+      'ahu',
+      'lighting',
+      'meter',
+    ])
+  })
+})
+
+describe('1 通ずつ進める操作', () => {
+  it('飛んでいる最中は次を送れない', () => {
+    expect(canSendNext(IDLE_PLAYBACK, normal)).toBe(true)
+    const flying = advancePlayback(IDLE_PLAYBACK, normal)
+    expect(canSendNext(flying, normal)).toBe(false)
+    expect(canSendNext(advancePlayback(flying, normal), normal)).toBe(true)
+  })
+
+  it('最後まで送ったら、それ以上は送れない', () => {
+    let state = IDLE_PLAYBACK
+    for (let i = 0; i < normal.messages.length * 2; i += 1) {
+      state = advancePlayback(state, normal)
+    }
+    expect(canSendNext(state, normal)).toBe(false)
+  })
+
+  it('進み具合は「飛んでいる分」も送信済みに数える', () => {
+    expect(playbackProgress(IDLE_PLAYBACK, normal)).toEqual({
+      sent: 0,
+      total: normal.messages.length,
+    })
+    const flying = advancePlayback(IDLE_PLAYBACK, normal)
+    expect(playbackProgress(flying, normal).sent).toBe(1)
+    expect(playbackProgress(advancePlayback(flying, normal), normal).sent).toBe(
+      1,
+    )
+  })
+
+  it('解説は、飛んでいる間はそのメッセージ、着いたあとも消えない', () => {
+    expect(currentMessage(IDLE_PLAYBACK, normal)).toBeNull()
+
+    const flying = advancePlayback(IDLE_PLAYBACK, normal)
+    expect(currentMessage(flying, normal)?.id).toBe('n1')
+
+    const landed = advancePlayback(flying, normal)
+    expect(inFlightMessage(landed, normal)).toBeNull()
+    expect(lastDeliveredMessage(landed, normal)?.id).toBe('n1')
+    expect(currentMessage(landed, normal)?.id).toBe('n1')
   })
 })
