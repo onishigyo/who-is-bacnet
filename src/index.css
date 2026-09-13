@@ -753,7 +753,7 @@ button:disabled {
 }
 
 .stagebar__explain {
-  flex: 0.95 1 0;
+  flex: 1.1 1 0;
   min-width: 0;
   padding: 14px 18px;
   border-left: 1px solid var(--line);
@@ -762,9 +762,8 @@ button:disabled {
 }
 
 .stagebar__controls {
-  /* いちばん長い予告「次へ ▸ 持ち込まれた PCが設定温度の変更を頼む」が
-     1 行で収まる幅。折り返すと不格好なので、ここは中央の解説より優先する */
-  width: 360px;
+  /* 予告が 1 行で収まる幅。上限は logic のテストで縛っている */
+  width: 300px;
   flex: 0 0 auto;
   padding: 12px 16px;
   border-left: 1px solid var(--line);

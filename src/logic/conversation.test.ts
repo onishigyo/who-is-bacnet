@@ -267,7 +267,8 @@ describe('次に何が起きるかの予告', () => {
         const speaker = labels.get(message.from)!
         expect(message.action).not.toContain(speaker)
         expect(message.action.startsWith('が')).toBe(false)
-        expect(`${speaker}が${message.action}`.length).toBeLessThan(30)
+        // ボタンは「▸ 〇〇が〜する」の 1 行。長いと折り返して不格好になる
+        expect(`▸ ${speaker}が${message.action}`.length).toBeLessThanOrEqual(20)
       }
     }
   })

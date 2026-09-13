@@ -72,7 +72,7 @@ export const conversations: Conversation[] = [
         plain: 'いまの室温を教えて',
         protocol: 'ReadProperty analog-input,0 present-value',
         transport: 'UDP ユニキャスト → 192.168.1.11:47808',
-        action: '室温を尋ねる',
+        action: '室温を聞く',
         explain:
           'ここからは名指しです。といっても要求の中身は「analog-input,0 の present-value を読ませて」だけで、相手が誰かは書かれていません。宛先 IP（192.168.1.11:47808）に直接送ることで、相手を決めています。',
       },
@@ -84,7 +84,7 @@ export const conversations: Conversation[] = [
         plain: '22.0 ℃です',
         protocol: 'ComplexACK → 22.0',
         transport: 'UDP ユニキャスト → 192.168.1.10:47808',
-        action: '室温を答える',
+        action: '室温を返す',
         explain:
           '機器が値を返します。読み取りの応答は、値を含んだ ComplexACK という形で、頼んできた IP へ返ります。',
       },
@@ -96,7 +96,7 @@ export const conversations: Conversation[] = [
         plain: '設定温度を 24.0 ℃にして',
         protocol: 'WriteProperty analog-value,0 present-value 24.0',
         transport: 'UDP ユニキャスト → 192.168.1.11:47808',
-        action: '設定温度の変更を頼む',
+        action: '書き換えを頼む',
         explain:
           '今度は書き込みです。analog-value,0 は設定値を持つオブジェクトで、そこに 24.0 を書きます。読むときと同じく、届け先は宛先 IP で決まります。',
       },
@@ -108,7 +108,7 @@ export const conversations: Conversation[] = [
         plain: '了解しました',
         protocol: 'SimpleACK',
         transport: 'UDP ユニキャスト → 192.168.1.10:47808',
-        action: '書き換えを受け入れる',
+        action: '受け入れる',
         explain:
           '書き込みが成功すると SimpleACK が返ります。これだけで、中央監視から設備の設定を変えられました。',
       },
@@ -195,7 +195,7 @@ export const conversations: Conversation[] = [
         plain: 'いまの室温を教えて',
         protocol: 'ReadProperty analog-input,0 present-value',
         transport: 'UDP ユニキャスト → 192.168.1.11:47808',
-        action: '室温を尋ねる',
+        action: '室温を聞く',
         explain:
           '返事から分かった IP へ、直接送ります。中身はステップ3で中央監視が送ったものと同じ。宛先 IP に届けば、それで相手は決まります。',
       },
@@ -207,7 +207,7 @@ export const conversations: Conversation[] = [
         plain: '22.0 ℃です',
         protocol: 'ComplexACK → 22.0',
         transport: 'UDP ユニキャスト → 192.168.1.66:47808',
-        action: '室温を答える',
+        action: '室温を返す',
         explain:
           '値がそのまま返ってきます。ここまでは「見ているだけ」ですが、建物がいまどういう状態かは筒抜けです。',
         annotation: '中央監視に返したのと同じ値を、そのまま返す',
@@ -227,7 +227,7 @@ export const conversations: Conversation[] = [
         plain: '設定温度を 99.0 ℃にして',
         protocol: 'WriteProperty analog-value,0 present-value 99.0',
         transport: 'UDP ユニキャスト → 192.168.1.11:47808',
-        action: '設定温度の変更を頼む',
+        action: '書き換えを頼む',
         explain:
           'ここからが書き込みです。読むのと同じ気軽さで、同じ宛先 IP に、今度は 99.0 を書きにいきます。',
       },
@@ -239,7 +239,7 @@ export const conversations: Conversation[] = [
         plain: '了解しました',
         protocol: 'SimpleACK',
         transport: 'UDP ユニキャスト → 192.168.1.66:47808',
-        action: '書き換えを受け入れる',
+        action: '受け入れる',
         explain:
           '機器は受け入れました。届いた先が 192.168.1.10 だろうと 192.168.1.66 だろうと、中央監視からの指示と区別する材料がないので、断る理由がありません。',
         annotation:

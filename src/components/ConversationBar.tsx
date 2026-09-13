@@ -121,7 +121,7 @@ export function ConversationBar({
             onClick={onSend}
             disabled={!canSendNext(playback, conversation)}
           >
-            {preview ? `次へ ▸ ${preview}` : '通信中…'}
+            {preview ? `▸ ${preview}` : '通信中…'}
           </button>
         )}
       </div>
