@@ -1,75 +1,58 @@
-# React + TypeScript + Vite
+# Who is BACnet?
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+ビル設備の制御プロトコル **BACnet** が、**同じネットワークにいるだけで認証なしに操作できてしまう**という事実を、1 枚のネットワーク図の上で体験する学習教材です。ブラウザだけで動きます。
 
-Currently, two official plugins are available:
+## 学習の順序
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+危険性から入りません。まず対象を理解してから、その足元にある落とし穴を見せます。
 
-## React Compiler
+1. **BACnet とは** ── 設備機器が同じ言葉で会話するための共通語
+2. **BACnet/IP とは** ── その言葉を、ふだんの IP ネットワークの上で喋れるようにしたもの
+3. **便利な側面** ── 中央監視と機器の会話を、意訳と実コマンドの二層で再生する
+4. **危険性** ── 同じネットワークに現れた PC が、まったく同じ言葉で割り込む
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+全ステップで 1 枚の図を育て、最後にそこへ攻撃者が現れます。
 
-## Expanding the ESLint configuration
+## 大事な前提
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- **実際の BACnet 通信は発生しません。** このアプリはブラウザ内で完結する再現です。バックエンドを持ちません。
+- **防御を学ぶための教材です。** 許可のないシステムへの操作を推奨するものではありません。
+- **制作者はこの分野の専門家ではありません。** 学んだ内容を教材としてまとめたものであり、誤りを含みうります。規格で確立している事柄と、制作者の理解・要検証の事柄は、本文中でバッジによって区別しています（「規格で確立」／「制作者の理解・要検証」）。誤りを見つけたら Issue で指摘してください。
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+## 開発
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+パッケージマネージャは pnpm。
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-
+```bash
+pnpm install
+pnpm dev           # Vite dev サーバ
+pnpm build         # 型チェック → バンドル
+pnpm lint          # ESLint
+pnpm format:check  # Prettier（CI と同じ）
+pnpm test          # Vitest
 ```
 
-You can also install [eslint-plugin-react-x](https://npmx.dev/package/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://npmx.dev/package/eslint-plugin-react-dom) for React-specific lint rules:
+## 構成
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+| ディレクトリ      | 責務                                                                                            |
+| ----------------- | ----------------------------------------------------------------------------------------------- |
+| `src/domain/`     | 型定義のみ                                                                                      |
+| `src/logic/`      | ステップ遷移・会話再生・攻撃進行・図の座標計算。React も DOM も触らない純粋関数。テストの主対象 |
+| `src/content/`    | 解説文・会話・図のノード配置・Wireshark 素材の参照（データとして分離）                          |
+| `src/components/` | React Flow の描画とイベント配線のみ                                                             |
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+文言を直したいときは `src/content/` だけを触れば済みます。
 
-```
+## Wireshark 素材の差し替え
+
+ステップ4の答え合わせは、実験で取得した Wireshark キャプチャのスクリーンショットを使います。現在は Info 欄のテキスト再現をプレースホルダとして表示しています。
+
+1. スクリーンショットを `src/assets/captures/` に置く（**公開して問題ない情報だけが写っているか必ず確認する**）
+2. `src/content/captures.ts` で import し、該当エントリの `imageSrc` に渡す
+
+表示側の変更は不要です。秘密鍵・証明書（`*.key` / `*.pem` / `certs/`）はコミットしません（`.gitignore` 済み）。
+
+## ライセンス・参考
+
+- 規格の一次情報: ANSI/ASHRAE Standard 135（BACnet）/ ISO 16484-5
+- 設計の詳細は [docs/DESIGN.md](docs/DESIGN.md)、開発方針は [CLAUDE.md](CLAUDE.md) を参照
