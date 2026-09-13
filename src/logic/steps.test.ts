@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { confidenceDescriptions, confidenceLabels } from '../content/confidence'
 import { diagramEdges, diagramNodes } from '../content/diagram'
 import { steps } from '../content/steps'
 import {
@@ -42,6 +43,35 @@ describe('ステップ内容', () => {
 
   it('存在しない order は例外', () => {
     expect(() => stepByOrder([], 1)).toThrow()
+  })
+})
+
+describe('注記の確からしさ', () => {
+  it('本文に添える注記は、すべてバッジの種類を持つ', () => {
+    for (const step of steps) {
+      for (const note of step.notes) {
+        expect(['standard', 'interpretation']).toContain(note.confidence)
+        expect(confidenceLabels[note.confidence].length).toBeGreaterThan(0)
+        expect(confidenceDescriptions[note.confidence].length).toBeGreaterThan(
+          0,
+        )
+      }
+    }
+  })
+
+  it('規格として書く注記には、必ず出典を添える', () => {
+    const standards = steps.flatMap((step) =>
+      step.notes.filter((note) => note.confidence === 'standard'),
+    )
+    expect(standards.length).toBeGreaterThan(0)
+    for (const note of standards) {
+      expect(note.source).toBeTruthy()
+    }
+  })
+
+  it('注記の id はアプリ全体で一意', () => {
+    const ids = steps.flatMap((step) => step.notes.map((note) => note.id))
+    expect(new Set(ids).size).toBe(ids.length)
   })
 })
 

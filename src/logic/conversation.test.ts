@@ -5,6 +5,7 @@ import type { Conversation } from '../domain/types'
 import { BROADCAST } from '../domain/types'
 import {
   advancePlayback,
+  broadcastTargets,
   canSendNext,
   nextMessage,
   conversationById,
@@ -247,10 +248,40 @@ describe('次に何が起きるかの予告', () => {
     expect(nextMessage(state, normal)).toBeNull()
   })
 
-  it('予告は「話し手 + が + 動作」として読める', () => {
-    const first = nextMessage(IDLE_PLAYBACK, normal)!
-    expect(`${first.from}が${first.action}`).toBe(
-      'supervisorがネットワーク全体に呼びかける',
+  it('予告は「話し手 + が + 動作」として読める（動作に主語を含めない）', () => {
+    const labels = new Map(diagramNodes.map((node) => [node.id, node.label]))
+
+    for (const conversation of conversations) {
+      for (const message of conversation.messages) {
+        const speaker = labels.get(message.from)!
+        expect(message.action).not.toContain(speaker)
+        expect(message.action.startsWith('が')).toBe(false)
+        expect(`${speaker}が${message.action}`.length).toBeLessThan(30)
+      }
+    }
+  })
+})
+
+describe('ブロードキャストの広がり', () => {
+  it('ネットワークから、送信元以外のすべての機器へ広がる', () => {
+    const targets = broadcastTargets(
+      diagramNodes,
+      'supervisor',
+      NETWORK_NODE_ID,
+    )
+    expect(targets).toEqual(['ahu', 'lighting', 'meter', 'attacker'])
+  })
+
+  it('送信元とネットワーク自身は含まない', () => {
+    const targets = broadcastTargets(diagramNodes, 'attacker', NETWORK_NODE_ID)
+    expect(targets).not.toContain('attacker')
+    expect(targets).not.toContain(NETWORK_NODE_ID)
+  })
+
+  it('図に出ているノードだけが対象（ステップごとに変わる）', () => {
+    const step2Nodes = diagramNodes.filter((node) => node.appearsAt <= 2)
+    expect(broadcastTargets(step2Nodes, 'supervisor', NETWORK_NODE_ID)).toEqual(
+      ['ahu'],
     )
   })
 })

@@ -154,6 +154,20 @@ export function flightPath(
   }
 }
 
+/**
+ * ブロードキャストが、ネットワークから先どこへ広がるか。
+ * 送信元とネットワーク自身を除いた、図に出ているすべてのノード。
+ */
+export function broadcastTargets(
+  nodes: { id: NodeId }[],
+  from: NodeId,
+  networkId: NodeId,
+): NodeId[] {
+  return nodes
+    .map((node) => node.id)
+    .filter((id) => id !== from && id !== networkId)
+}
+
 /** そのステップの会話に登場する話し手（図の強調に使う） */
 export function speakersOf(conversation: Conversation): NodeId[] {
   return [...new Set(conversation.messages.map((message) => message.from))]

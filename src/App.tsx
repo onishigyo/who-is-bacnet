@@ -29,11 +29,13 @@ import type {
 import { INITIAL_DEVICE, initialAttackState, runAction } from './logic/attack'
 import {
   advancePlayback,
+  broadcastTargets,
   conversationById,
   currentMessage,
   flightPath,
   IDLE_PLAYBACK,
   inFlightMessage,
+  isBroadcast,
   isPlaybackFinished,
 } from './logic/conversation'
 import { buildDiagramState, stepByOrder } from './logic/steps'
@@ -127,6 +129,11 @@ export default function App() {
     ? inFlightMessage(playback, activeConversation)
     : null
   const flight = inFlight ? flightPath(inFlight, NETWORK_NODE_ID) : null
+  // ブロードキャストは、ネットワークに着いてから図にいる全員へ広がる
+  const fanOut =
+    inFlight && isBroadcast(inFlight.to)
+      ? broadcastTargets(diagram.nodes, inFlight.from, NETWORK_NODE_ID)
+      : []
   const current = activeConversation
     ? currentMessage(playback, activeConversation)
     : null
@@ -158,6 +165,7 @@ export default function App() {
               deviceReadouts={deviceReadouts}
               inFlight={inFlight}
               flight={flight}
+              fanOut={fanOut}
               flightKey={`${activeConversationId ?? 'none'}-${playback.inFlight ?? -1}`}
               durationMs={FLIGHT_MS}
             />

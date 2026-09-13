@@ -34,6 +34,9 @@ function FitViewOnResize() {
   return null
 }
 
+/** ブロードキャストで、ネットワークに着いてから広がり始めるまでの割合 */
+const FAN_SPLIT = 0.45
+
 interface Props {
   diagram: DiagramState
   /** 値を表示させたい機器の id → 状態 */
@@ -42,6 +45,8 @@ interface Props {
   inFlight: ConversationMessage | null
   /** 飛ぶ区間 */
   flight: { from: NodeId; to: NodeId } | null
+  /** ブロードキャストのとき、ネットワークから先に広がる宛先 */
+  fanOut: NodeId[]
   /** アニメーションをやり直すためのキー */
   flightKey: string
   durationMs: number
@@ -63,6 +68,7 @@ export function NetworkCanvas({
   deviceReadouts,
   inFlight,
   flight,
+  fanOut,
   flightKey,
   durationMs,
 }: Props) {
@@ -83,13 +89,19 @@ export function NetworkCanvas({
     [diagram, deviceReadouts, inFlight],
   )
 
-  const litEdges = useMemo(
-    () =>
-      flight
-        ? activeEdgeIds(diagram.edges, flight.from, flight.to, NETWORK_NODE_ID)
-        : [],
-    [diagram.edges, flight],
-  )
+  const litEdges = useMemo(() => {
+    if (!flight) return []
+    const ids = activeEdgeIds(
+      diagram.edges,
+      flight.from,
+      flight.to,
+      NETWORK_NODE_ID,
+    )
+    const fanned = fanOut.flatMap((target) =>
+      activeEdgeIds(diagram.edges, NETWORK_NODE_ID, target, NETWORK_NODE_ID),
+    )
+    return [...new Set([...ids, ...fanned])]
+  }, [diagram.edges, flight, fanOut])
 
   const edges: Edge[] = useMemo(
     () =>
@@ -104,11 +116,31 @@ export function NetworkCanvas({
     [diagram.edges, litEdges],
   )
 
+  const broadcasting = fanOut.length > 0
   const path = flight
     ? withMidpoint(
         flightWaypoints(diagram.nodes, flight.from, flight.to, NETWORK_NODE_ID),
       )
     : null
+
+  // ネットワークから各機器へ広がる分。本体が着いてから動き出す
+  const fanPaths = broadcasting
+    ? fanOut
+        .map((target) => ({
+          target,
+          path: withMidpoint(
+            flightWaypoints(
+              diagram.nodes,
+              NETWORK_NODE_ID,
+              target,
+              NETWORK_NODE_ID,
+            ),
+          ),
+        }))
+        .filter((fan): fan is { target: NodeId; path: [Point, Point, Point] } =>
+          Boolean(fan.path),
+        )
+    : []
 
   return (
     <ReactFlow
@@ -134,7 +166,9 @@ export function NetworkCanvas({
         <ViewportPortal>
           <div
             key={flightKey}
-            className={`packet packet--${inFlight.kind}`}
+            className={`packet packet--${inFlight.kind} ${
+              broadcasting ? 'packet--parked' : ''
+            }`}
             style={
               {
                 '--x0': `${path[0].x}px`,
@@ -143,7 +177,7 @@ export function NetworkCanvas({
                 '--y1': `${path[1].y}px`,
                 '--x2': `${path[2].x}px`,
                 '--y2': `${path[2].y}px`,
-                animationDuration: `${durationMs}ms`,
+                animationDuration: `${broadcasting ? durationMs * FAN_SPLIT : durationMs}ms`,
               } as CSSProperties
             }
           >
@@ -152,6 +186,29 @@ export function NetworkCanvas({
               <code className="packet__protocol">{inFlight.protocol}</code>
             </div>
           </div>
+
+          {fanPaths.map((fan) => (
+            <div
+              key={`${flightKey}-${fan.target}`}
+              className="packet packet--fan"
+              style={
+                {
+                  '--x0': `${fan.path[0].x}px`,
+                  '--y0': `${fan.path[0].y}px`,
+                  '--x1': `${fan.path[1].x}px`,
+                  '--y1': `${fan.path[1].y}px`,
+                  '--x2': `${fan.path[2].x}px`,
+                  '--y2': `${fan.path[2].y}px`,
+                  animationDuration: `${durationMs * (1 - FAN_SPLIT)}ms`,
+                  animationDelay: `${durationMs * FAN_SPLIT}ms`,
+                } as CSSProperties
+              }
+            >
+              <div className="packet__bubble packet__bubble--fan">
+                <code className="packet__protocol">{inFlight.protocol}</code>
+              </div>
+            </div>
+          ))}
         </ViewportPortal>
       )}
     </ReactFlow>
