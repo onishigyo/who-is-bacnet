@@ -36,8 +36,9 @@ export const conversations: Conversation[] = [
         protocol: 'I-Am device,3056930',
         transport: 'UDP → 192.168.1.10:47808（送信元 192.168.1.11）',
         action: '名乗る',
+        groupId: 'normal-i-am',
         explain:
-          '機器が自分の ID を名乗って返事をします。ここで大事なのは、I-Am の中身に IP は入っていないこと。「192.168.1.11 に device,3056930 がいる」と分かるのは、この返事が届いたパケットの送信元アドレスからです。',
+          '呼びかけを受け取った機器が、いっせいに名乗り返します。1 回の呼びかけで、3 台ぶんの返事がまとめて返ってくる ── これが Who-Is の正体です。なお I-Am の中身に IP は入っていません。「192.168.1.11 に device,3056930 がいる」と分かるのは、返事が届いたパケットの送信元アドレスからです。',
       },
       {
         id: 'n3',
@@ -48,6 +49,7 @@ export const conversations: Conversation[] = [
         protocol: 'I-Am device,100201',
         transport: 'UDP → 192.168.1.10:47808（送信元 192.168.1.12）',
         action: '名乗る',
+        groupId: 'normal-i-am',
         explain:
           '続いて照明コントローラ。メーカーが違っても、同じ呼びかけに同じ形で答えます。これが共通語であることの意味です。',
         annotation: 'メーカーが違っても、同じ呼びかけに同じ形で答える',
@@ -61,6 +63,7 @@ export const conversations: Conversation[] = [
         protocol: 'I-Am device,100305',
         transport: 'UDP → 192.168.1.10:47808（送信元 192.168.1.13）',
         action: '名乗る',
+        groupId: 'normal-i-am',
         explain:
           '電力計も返事をします。呼びかけ 1 回で「どの IP に、どの ID の機器がいるか」の対応表ができあがりました。',
       },
@@ -140,8 +143,9 @@ export const conversations: Conversation[] = [
         protocol: 'I-Am device,3056930',
         transport: 'UDP → 192.168.1.66:47808（送信元 192.168.1.11）',
         action: '名乗る',
+        groupId: 'attack-i-am',
         explain:
-          '機器は「誰が尋ねたのか」を確かめる手順を持っていません。中央監視に返したのと同じ返事が、そのまま 192.168.1.66 に届きます。',
+          '機器は「誰が尋ねたのか」を確かめる手順を持っていません。中央監視に返すのとまったく同じ返事が、4 台ぶんまとめて持ち込まれた PC に届きます。呼びかけ 1 回で、監視している側の居場所まで含めた一覧が手に入りました。',
         annotation: '誰が尋ねたのかを確かめる手順がない',
         annotationTone: 'alert',
       },
@@ -154,6 +158,7 @@ export const conversations: Conversation[] = [
         protocol: 'I-Am device,100201',
         transport: 'UDP → 192.168.1.66:47808（送信元 192.168.1.12）',
         action: '名乗る',
+        groupId: 'attack-i-am',
         explain: '照明コントローラも同じように名乗ります。',
       },
       {
@@ -165,6 +170,7 @@ export const conversations: Conversation[] = [
         protocol: 'I-Am device,100305',
         transport: 'UDP → 192.168.1.66:47808（送信元 192.168.1.13）',
         action: '名乗る',
+        groupId: 'attack-i-am',
         explain: '電力計も名乗ります。',
       },
       {
@@ -176,6 +182,7 @@ export const conversations: Conversation[] = [
         protocol: 'I-Am device,260001',
         transport: 'UDP → 192.168.1.66:47808（送信元 192.168.1.10）',
         action: '名乗る',
+        groupId: 'attack-i-am',
         explain:
           '中央監視装置も BACnet 機器なので、同じように名乗ります。呼びかけ 1 回で「どの IP に、どの ID の機器がいるか」の対応表ができあがりました。監視している側がどこにいるかまで、そこに載っています。',
         annotation: '呼びかけ 1 回で、中央監視まで含めた機器一覧が手に入る',

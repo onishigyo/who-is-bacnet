@@ -10,16 +10,17 @@ import { BROADCAST } from '../domain/types'
 import {
   canSendNext,
   isPlaybackFinished,
-  nextMessage,
+  nextGroup,
   playbackProgress,
+  previewOf,
 } from '../logic/conversation'
 
 interface Props {
   /** 再生中の会話。なければ待機表示 */
   conversation: Conversation | null
   playback: PlaybackState
-  /** いま解説すべきメッセージ */
-  current: ConversationMessage | null
+  /** いま解説すべきまとまり（まとめて飛んだものは複数通） */
+  current: ConversationMessage[]
   nodes: DiagramNodeSpec[]
   onSend: () => void
   /** トラックから選んで過去のやり取りを読み直している最中か */
@@ -33,15 +34,50 @@ function nameOf(nodes: DiagramNodeSpec[], id: NodeId): string {
   return nodes.find((node) => node.id === id)?.label ?? id
 }
 
-/** 次に何が起きるかを、起きる前に読ませる */
-function previewOf(
+function targetName(
   nodes: DiagramNodeSpec[],
-  playback: PlaybackState,
-  conversation: Conversation,
-): string | null {
-  const next = nextMessage(playback, conversation)
-  if (!next) return null
-  return `${nameOf(nodes, next.from)}が${next.action}`
+  message: ConversationMessage,
+): string {
+  return message.to === BROADCAST
+    ? '全員（ブロードキャスト）'
+    : nameOf(nodes, message.to)
+}
+
+/**
+ * まとめて飛んだ分は、1 通 1 行の一覧にする。
+ * 意訳はどれも似た文になるので、ここでは誰が何を返したかだけを見せ、
+ * 1 通ぶんの詳細はトラックから選んで読み直せるようにしている。
+ */
+function MessageLine({
+  message,
+  nodes,
+  compact,
+}: {
+  message: ConversationMessage
+  nodes: DiagramNodeSpec[]
+  compact: boolean
+}) {
+  if (compact) {
+    return (
+      <div className="stagebar__row">
+        <span className="stagebar__who">{nameOf(nodes, message.from)}</span>
+        <code className="stagebar__protocol">{message.protocol}</code>
+      </div>
+    )
+  }
+
+  return (
+    <div className="stagebar__line">
+      <p className="stagebar__meta">
+        {nameOf(nodes, message.from)}
+        <span aria-hidden="true"> → </span>
+        {targetName(nodes, message)}
+      </p>
+      <p className="stagebar__plain">{message.plain}</p>
+      <code className="stagebar__protocol">{message.protocol}</code>
+      <code className="stagebar__transport">{message.transport}</code>
+    </div>
+  )
 }
 
 /**
@@ -58,7 +94,8 @@ export function ConversationBar({
   onExitReview,
   idle,
 }: Props) {
-  if (!conversation || !current) {
+  const [first] = current
+  if (!conversation || !first) {
     return (
       <section className="stagebar stagebar--idle">
         <div className="stagebar__idle">{idle}</div>
@@ -68,35 +105,46 @@ export function ConversationBar({
 
   const { sent, total } = playbackProgress(playback, conversation)
   const finished = isPlaybackFinished(playback, conversation)
-  const preview = previewOf(nodes, playback, conversation)
+  const preview = previewOf(nextGroup(playback, conversation), (id) =>
+    nameOf(nodes, id),
+  )
+  const together = current.length > 1
 
   return (
     <section className="stagebar" aria-live="polite">
-      <div className={`stagebar__message stagebar__message--${current.kind}`}>
-        <p className="stagebar__meta">
+      <div className={`stagebar__message stagebar__message--${first.kind}`}>
+        <p className="stagebar__head">
           <span className={`stagebar__count ${reviewing ? 'is-review' : ''}`}>
             {reviewing ? '見直し中' : `${sent} / ${total}`}
           </span>
-          {nameOf(nodes, current.from)}
-          <span aria-hidden="true"> → </span>
-          {current.to === BROADCAST
-            ? '全員（ブロードキャスト）'
-            : nameOf(nodes, current.to)}
+          {together && (
+            <span className="stagebar__together">
+              {current.length} 台が同時に返事 → {targetName(nodes, first)}
+            </span>
+          )}
         </p>
-        <p className="stagebar__plain">{current.plain}</p>
-        <code className="stagebar__protocol">{current.protocol}</code>
-        <code className="stagebar__transport">{current.transport}</code>
+
+        <div className={`stagebar__lines ${together ? 'is-together' : ''}`}>
+          {current.map((message) => (
+            <MessageLine
+              key={message.id}
+              message={message}
+              nodes={nodes}
+              compact={together}
+            />
+          ))}
+        </div>
       </div>
 
       <div className="stagebar__explain">
-        <p>{current.explain}</p>
-        {current.annotation && (
+        <p>{first.explain}</p>
+        {first.annotation && (
           <p
             className={`stagebar__annotation ${
-              current.annotationTone === 'alert' ? 'is-alert' : ''
+              first.annotationTone === 'alert' ? 'is-alert' : ''
             }`}
           >
-            {current.annotation}
+            {first.annotation}
           </p>
         )}
       </div>

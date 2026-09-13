@@ -7,18 +7,23 @@ import {
   advancePlayback,
   broadcastTargets,
   canSendNext,
-  nextMessage,
   conversationById,
-  currentMessage,
+  currentGroup,
   deliveredMessages,
   flightPath,
   IDLE_PLAYBACK,
-  inFlightMessage,
+  inFlightMessages,
   isPlaybackFinished,
-  lastDeliveredMessage,
+  lastDeliveredGroup,
+  messageGroups,
+  nextGroup,
   playbackProgress,
+  previewOf,
   speakersOf,
 } from './conversation'
+
+const nameOf = (id: string) =>
+  diagramNodes.find((node) => node.id === id)?.label ?? id
 
 const normal = conversationById(conversations, NORMAL_CONVERSATION_ID)
 
@@ -118,21 +123,48 @@ describe('会話データ', () => {
 })
 
 describe('会話の再生', () => {
-  it('1通ごとに「飛ぶ → 着く」の2コマで進む', () => {
+  it('ひとまとまりごとに「飛ぶ → 着く」の2コマで進む', () => {
     const flying = advancePlayback(IDLE_PLAYBACK, normal)
     expect(flying.status).toBe('playing')
-    expect(flying.inFlight).toBe(0)
+    expect(flying.inFlightGroup).toBe(0)
     expect(deliveredMessages(flying, normal)).toHaveLength(0)
-    expect(inFlightMessage(flying, normal)?.id).toBe('n1')
+    expect(inFlightMessages(flying, normal).map((m) => m.id)).toEqual(['n1'])
 
     const landed = advancePlayback(flying, normal)
-    expect(landed.inFlight).toBeNull()
+    expect(landed.inFlightGroup).toBeNull()
     expect(deliveredMessages(landed, normal).map((m) => m.id)).toEqual(['n1'])
   })
 
-  it('最後まで進めると finished になり、それ以上は変化しない', () => {
+  it('Who-Is への返事は 1 回の操作でまとめて飛ぶ', () => {
+    // 1 通目（Who-Is）を送って着信させる
+    let state = advancePlayback(IDLE_PLAYBACK, normal)
+    state = advancePlayback(state, normal)
+
+    // 次の操作で I-Am が 3 台ぶんまとめて飛ぶ
+    state = advancePlayback(state, normal)
+    const flying = inFlightMessages(state, normal)
+    expect(flying.map((m) => m.id)).toEqual(['n2', 'n3', 'n4'])
+    expect(new Set(flying.map((m) => m.groupId)).size).toBe(1)
+
+    state = advancePlayback(state, normal)
+    expect(deliveredMessages(state, normal).map((m) => m.id)).toEqual([
+      'n1',
+      'n2',
+      'n3',
+      'n4',
+    ])
+  })
+
+  it('攻撃側も同じく、返事は 4 台ぶんまとめて飛ぶ', () => {
+    const discover = conversationById(conversations, 'attack-discover')
+    const groups = messageGroups(discover)
+    expect(groups.map((group) => group.length)).toEqual([1, 4])
+  })
+
+  it('まとまりの数だけ操作すれば終わる', () => {
+    const groups = messageGroups(normal)
     let state = IDLE_PLAYBACK
-    for (let i = 0; i < normal.messages.length * 2; i += 1) {
+    for (let i = 0; i < groups.length * 2; i += 1) {
       state = advancePlayback(state, normal)
     }
     expect(state.status).toBe('finished')
@@ -145,9 +177,25 @@ describe('会話の再生', () => {
     expect(again).toEqual(state)
   })
 
+  it('進み具合は、まとめて飛んだ分も通数で数える', () => {
+    let state = advancePlayback(IDLE_PLAYBACK, normal)
+    state = advancePlayback(state, normal)
+    state = advancePlayback(state, normal)
+    expect(playbackProgress(state, normal)).toEqual({
+      sent: 4,
+      total: normal.messages.length,
+    })
+  })
+
   it('空の会話はすぐ finished', () => {
     const empty: Conversation = { id: 'empty', title: '', messages: [] }
     expect(advancePlayback(IDLE_PLAYBACK, empty).status).toBe('finished')
+  })
+
+  it('groupId のないメッセージは 1 通ずつのまとまりになる', () => {
+    const groups = messageGroups(normal)
+    expect(groups[0].map((m) => m.id)).toEqual(['n1'])
+    expect(groups.at(-1)?.map((m) => m.id)).toEqual(['n8'])
   })
 })
 
@@ -198,7 +246,7 @@ describe('図の上の飛び方', () => {
   })
 })
 
-describe('1 通ずつ進める操作', () => {
+describe('進める操作', () => {
   it('飛んでいる最中は次を送れない', () => {
     expect(canSendNext(IDLE_PLAYBACK, normal)).toBe(true)
     const flying = advancePlayback(IDLE_PLAYBACK, normal)
@@ -208,63 +256,48 @@ describe('1 通ずつ進める操作', () => {
 
   it('最後まで送ったら、それ以上は送れない', () => {
     let state = IDLE_PLAYBACK
-    for (let i = 0; i < normal.messages.length * 2; i += 1) {
+    for (let i = 0; i < messageGroups(normal).length * 2; i += 1) {
       state = advancePlayback(state, normal)
     }
     expect(canSendNext(state, normal)).toBe(false)
+    expect(nextGroup(state, normal)).toEqual([])
   })
 
-  it('進み具合は「飛んでいる分」も送信済みに数える', () => {
-    expect(playbackProgress(IDLE_PLAYBACK, normal)).toEqual({
-      sent: 0,
-      total: normal.messages.length,
-    })
-    const flying = advancePlayback(IDLE_PLAYBACK, normal)
-    expect(playbackProgress(flying, normal).sent).toBe(1)
-    expect(playbackProgress(advancePlayback(flying, normal), normal).sent).toBe(
-      1,
-    )
-  })
-
-  it('解説は、飛んでいる間はそのメッセージ、着いたあとも消えない', () => {
-    expect(currentMessage(IDLE_PLAYBACK, normal)).toBeNull()
+  it('解説は、飛んでいる間はそのまとまり、着いたあとも消えない', () => {
+    expect(currentGroup(IDLE_PLAYBACK, normal)).toEqual([])
 
     const flying = advancePlayback(IDLE_PLAYBACK, normal)
-    expect(currentMessage(flying, normal)?.id).toBe('n1')
+    expect(currentGroup(flying, normal).map((m) => m.id)).toEqual(['n1'])
 
     const landed = advancePlayback(flying, normal)
-    expect(inFlightMessage(landed, normal)).toBeNull()
-    expect(lastDeliveredMessage(landed, normal)?.id).toBe('n1')
-    expect(currentMessage(landed, normal)?.id).toBe('n1')
+    expect(inFlightMessages(landed, normal)).toEqual([])
+    expect(lastDeliveredGroup(landed, normal).map((m) => m.id)).toEqual(['n1'])
+    expect(currentGroup(landed, normal).map((m) => m.id)).toEqual(['n1'])
   })
 })
 
 describe('次に何が起きるかの予告', () => {
-  it('次に送られるメッセージを、送る前に取り出せる', () => {
-    expect(nextMessage(IDLE_PLAYBACK, normal)?.id).toBe('n1')
-
-    const flying = advancePlayback(IDLE_PLAYBACK, normal)
-    // 飛んでいる最中は「次」を出さない（ボタンは通信中になる）
-    expect(nextMessage(flying, normal)).toBeNull()
-
-    const landed = advancePlayback(flying, normal)
-    expect(nextMessage(landed, normal)?.id).toBe('n2')
+  it('1 通なら「話し手が〜する」', () => {
+    expect(previewOf(nextGroup(IDLE_PLAYBACK, normal), nameOf)).toBe(
+      '中央監視装置が全員に呼びかける',
+    )
   })
 
-  it('最後まで送り終えたら、次はない', () => {
-    let state = IDLE_PLAYBACK
-    for (let i = 0; i < normal.messages.length * 2; i += 1) {
-      state = advancePlayback(state, normal)
-    }
-    expect(nextMessage(state, normal)).toBeNull()
+  it('まとめて飛ぶものは台数で言う', () => {
+    let state = advancePlayback(IDLE_PLAYBACK, normal)
+    state = advancePlayback(state, normal)
+    expect(previewOf(nextGroup(state, normal), nameOf)).toBe('3 台が名乗る')
+  })
+
+  it('送れないときは空', () => {
+    const flying = advancePlayback(IDLE_PLAYBACK, normal)
+    expect(previewOf(nextGroup(flying, normal), nameOf)).toBe('')
   })
 
   it('予告は「話し手 + が + 動作」として読める（動作に主語を含めない）', () => {
-    const labels = new Map(diagramNodes.map((node) => [node.id, node.label]))
-
     for (const conversation of conversations) {
       for (const message of conversation.messages) {
-        const speaker = labels.get(message.from)!
+        const speaker = nameOf(message.from)
         expect(message.action).not.toContain(speaker)
         expect(message.action.startsWith('が')).toBe(false)
         // ボタンは「▸ 〇〇が〜する」の 1 行。長いと折り返して不格好になる

@@ -17,6 +17,11 @@ import type {
   DiagramState,
   NodeId,
 } from '../domain/types'
+import {
+  broadcastTargets,
+  flightPath,
+  isBroadcast,
+} from '../logic/conversation'
 import { activeEdgeIds, flightWaypoints, type Point } from '../logic/layout'
 import { BacnetNode, type BacnetFlowNode } from './nodes/BacnetNode'
 
@@ -63,12 +68,8 @@ interface Props {
   diagram: DiagramState
   /** 値を表示させたい機器の id → 状態 */
   deviceReadouts: Record<NodeId, DeviceState>
-  /** いま飛んでいるメッセージ（なければ null） */
-  inFlight: ConversationMessage | null
-  /** 飛ぶ区間 */
-  flight: { from: NodeId; to: NodeId } | null
-  /** ブロードキャストのとき、ネットワークから先に広がる宛先 */
-  fanOut: NodeId[]
+  /** いま飛んでいるメッセージ。まとめて飛ぶものは複数通 */
+  inFlight: ConversationMessage[]
   /** アニメーションをやり直すためのキー */
   flightKey: string
   durationMs: number
@@ -89,11 +90,65 @@ export function NetworkCanvas({
   diagram,
   deviceReadouts,
   inFlight,
-  flight,
-  fanOut,
   flightKey,
   durationMs,
 }: Props) {
+  const narrow = useNarrowScreen()
+
+  /** 飛んでいる 1 通ごとの、経路と広がり先 */
+  const flights = useMemo(
+    () =>
+      inFlight.map((message) => {
+        const path = flightPath(message, NETWORK_NODE_ID)
+        const fanOut = isBroadcast(message.to)
+          ? broadcastTargets(diagram.nodes, message.from, NETWORK_NODE_ID)
+          : []
+        const broadcasting = fanOut.length > 0
+        return {
+          message,
+          broadcasting,
+          main: withMidpoint(
+            flightWaypoints(diagram.nodes, path.from, path.to, NETWORK_NODE_ID),
+          ),
+          fans: fanOut
+            .map((target) =>
+              withMidpoint(
+                flightWaypoints(
+                  diagram.nodes,
+                  NETWORK_NODE_ID,
+                  target,
+                  NETWORK_NODE_ID,
+                ),
+              ),
+            )
+            .filter((points): points is [Point, Point, Point] =>
+              Boolean(points),
+            ),
+          legs: activeEdgeIds(
+            diagram.edges,
+            path.from,
+            path.to,
+            NETWORK_NODE_ID,
+          ).concat(
+            fanOut.flatMap((target) =>
+              activeEdgeIds(
+                diagram.edges,
+                NETWORK_NODE_ID,
+                target,
+                NETWORK_NODE_ID,
+              ),
+            ),
+          ),
+        }
+      }),
+    [inFlight, diagram],
+  )
+
+  const speaking = useMemo(
+    () => new Set(inFlight.map((message) => message.from)),
+    [inFlight],
+  )
+
   const nodes: BacnetFlowNode[] = useMemo(
     () =>
       diagram.nodes.map((spec) => ({
@@ -104,26 +159,17 @@ export function NetworkCanvas({
         data: {
           spec,
           showIp: diagram.showIp,
-          speaking: inFlight?.from === spec.id,
+          speaking: speaking.has(spec.id),
           device: deviceReadouts[spec.id] ?? null,
         },
       })),
-    [diagram, deviceReadouts, inFlight],
+    [diagram, deviceReadouts, speaking],
   )
 
-  const litEdges = useMemo(() => {
-    if (!flight) return []
-    const ids = activeEdgeIds(
-      diagram.edges,
-      flight.from,
-      flight.to,
-      NETWORK_NODE_ID,
-    )
-    const fanned = fanOut.flatMap((target) =>
-      activeEdgeIds(diagram.edges, NETWORK_NODE_ID, target, NETWORK_NODE_ID),
-    )
-    return [...new Set([...ids, ...fanned])]
-  }, [diagram.edges, flight, fanOut])
+  const litEdges = useMemo(
+    () => new Set(flights.flatMap((flight) => flight.legs)),
+    [flights],
+  )
 
   const edges: Edge[] = useMemo(
     () =>
@@ -132,38 +178,16 @@ export function NetworkCanvas({
         source: edge.source,
         target: edge.target,
         type: 'straight',
-        animated: litEdges.includes(edge.id),
-        className: litEdges.includes(edge.id) ? 'link is-active' : 'link',
+        animated: litEdges.has(edge.id),
+        className: litEdges.has(edge.id) ? 'link is-active' : 'link',
       })),
     [diagram.edges, litEdges],
   )
 
-  const narrow = useNarrowScreen()
-  const broadcasting = fanOut.length > 0
-  const path = flight
-    ? withMidpoint(
-        flightWaypoints(diagram.nodes, flight.from, flight.to, NETWORK_NODE_ID),
-      )
-    : null
-
-  // ネットワークから各機器へ広がる分。本体が着いてから動き出す
-  const fanPaths = broadcasting
-    ? fanOut
-        .map((target) => ({
-          target,
-          path: withMidpoint(
-            flightWaypoints(
-              diagram.nodes,
-              NETWORK_NODE_ID,
-              target,
-              NETWORK_NODE_ID,
-            ),
-          ),
-        }))
-        .filter((fan): fan is { target: NodeId; path: [Point, Point, Point] } =>
-          Boolean(fan.path),
-        )
-    : []
+  /** まとめて飛ぶときは、少しずつずらして出す（重なって読めなくなるため） */
+  const stagger =
+    flights.length > 1 ? Math.min(160, durationMs / (flights.length * 3)) : 0
+  const mainDuration = durationMs - stagger * Math.max(0, flights.length - 1)
 
   return (
     <ReactFlow
@@ -200,55 +224,75 @@ export function NetworkCanvas({
       />
       <Controls showInteractive={false} />
 
-      {inFlight && path && (
-        <ViewportPortal>
-          <div
-            key={flightKey}
-            className={`packet packet--${inFlight.kind} ${
-              broadcasting ? 'packet--parked' : ''
-            }`}
-            style={
-              {
-                '--x0': `${path[0].x}px`,
-                '--y0': `${path[0].y}px`,
-                '--x1': `${path[1].x}px`,
-                '--y1': `${path[1].y}px`,
-                '--x2': `${path[2].x}px`,
-                '--y2': `${path[2].y}px`,
-                animationDuration: `${broadcasting ? durationMs * FAN_SPLIT : durationMs}ms`,
-              } as CSSProperties
-            }
-          >
-            <div className="packet__bubble">
-              <span className="packet__plain">{inFlight.plain}</span>
-              <code className="packet__protocol">{inFlight.protocol}</code>
-            </div>
-          </div>
+      <ViewportPortal>
+        {flights.map((flight, index) => {
+          const compact = flights.length > 1
+          const delay = stagger * index
+          const duration = flight.broadcasting
+            ? mainDuration * FAN_SPLIT
+            : mainDuration
 
-          {fanPaths.map((fan) => (
-            <div
-              key={`${flightKey}-${fan.target}`}
-              className="packet packet--fan"
-              style={
-                {
-                  '--x0': `${fan.path[0].x}px`,
-                  '--y0': `${fan.path[0].y}px`,
-                  '--x1': `${fan.path[1].x}px`,
-                  '--y1': `${fan.path[1].y}px`,
-                  '--x2': `${fan.path[2].x}px`,
-                  '--y2': `${fan.path[2].y}px`,
-                  animationDuration: `${durationMs * (1 - FAN_SPLIT)}ms`,
-                  animationDelay: `${durationMs * FAN_SPLIT}ms`,
-                } as CSSProperties
-              }
-            >
-              <div className="packet__bubble packet__bubble--fan">
-                <code className="packet__protocol">{inFlight.protocol}</code>
-              </div>
+          return (
+            <div key={`${flightKey}-${flight.message.id}`}>
+              {flight.main && (
+                <div
+                  className={`packet packet--${flight.message.kind} ${
+                    flight.broadcasting ? 'packet--parked' : ''
+                  } ${compact ? 'packet--compact' : ''}`}
+                  style={
+                    {
+                      '--x0': `${flight.main[0].x}px`,
+                      '--y0': `${flight.main[0].y}px`,
+                      '--x1': `${flight.main[1].x}px`,
+                      '--y1': `${flight.main[1].y}px`,
+                      '--x2': `${flight.main[2].x}px`,
+                      '--y2': `${flight.main[2].y}px`,
+                      animationDuration: `${duration}ms`,
+                      animationDelay: `${delay}ms`,
+                    } as CSSProperties
+                  }
+                >
+                  <div className="packet__bubble">
+                    {!compact && (
+                      <span className="packet__plain">
+                        {flight.message.plain}
+                      </span>
+                    )}
+                    <code className="packet__protocol">
+                      {flight.message.protocol}
+                    </code>
+                  </div>
+                </div>
+              )}
+
+              {flight.fans.map((points, fanIndex) => (
+                <div
+                  key={`fan-${fanIndex}`}
+                  className="packet packet--fan"
+                  style={
+                    {
+                      '--x0': `${points[0].x}px`,
+                      '--y0': `${points[0].y}px`,
+                      '--x1': `${points[1].x}px`,
+                      '--y1': `${points[1].y}px`,
+                      '--x2': `${points[2].x}px`,
+                      '--y2': `${points[2].y}px`,
+                      animationDuration: `${mainDuration * (1 - FAN_SPLIT)}ms`,
+                      animationDelay: `${delay + mainDuration * FAN_SPLIT}ms`,
+                    } as CSSProperties
+                  }
+                >
+                  <div className="packet__bubble packet__bubble--fan">
+                    <code className="packet__protocol">
+                      {flight.message.protocol}
+                    </code>
+                  </div>
+                </div>
+              ))}
             </div>
-          ))}
-        </ViewportPortal>
-      )}
+          )
+        })}
+      </ViewportPortal>
     </ReactFlow>
   )
 }

@@ -96,8 +96,13 @@ export interface ConversationMessage {
   protocol: string
   /** どこへ届くか。BACnet の要求自体に相手の識別子は入らず、宛先は IP が決める */
   transport: string
-  /** このメッセージで話し手が何をするか（「次へ ▸ 〇〇が〜する」の後半） */
+  /** このメッセージで話し手が何をするか（「▸ 〇〇が〜する」の後半） */
   action: string
+  /**
+   * 同じ値を持つ連続したメッセージは、まとめて同時に飛ぶ。
+   * Who-Is への返事のように、実際が「一斉」であるものに使う。
+   */
+  groupId?: string
   /** いま何が起きているかの解説（1 通ずつ進めるときに読ませる） */
   explain: string
   /** 補足（「認証確認なし」など） */
@@ -113,13 +118,16 @@ export interface Conversation {
 
 export type PlaybackStatus = 'idle' | 'playing' | 'finished'
 
-/** 会話再生の状態。時間を持たない純粋な状態機械として扱う */
+/**
+ * 会話再生の状態。時間を持たない純粋な状態機械として扱う。
+ * 進む単位はメッセージではなく「まとまり（group）」。
+ */
 export interface PlaybackState {
   status: PlaybackStatus
-  /** 到達済み（ログに出た）メッセージ数 */
-  delivered: number
-  /** いま飛んでいるメッセージの index。飛んでいなければ null */
-  inFlight: number | null
+  /** 到達済みのまとまりの数 */
+  deliveredGroups: number
+  /** いま飛んでいるまとまりの index。飛んでいなければ null */
+  inFlightGroup: number | null
 }
 
 export type AttackActionId = 'discover' | 'read' | 'write'

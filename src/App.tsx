@@ -13,12 +13,7 @@ import {
   conversations,
   NORMAL_CONVERSATION_ID,
 } from './content/conversations'
-import {
-  AHU_ID,
-  diagramEdges,
-  diagramNodes,
-  NETWORK_NODE_ID,
-} from './content/diagram'
+import { AHU_ID, diagramEdges, diagramNodes } from './content/diagram'
 import { steps } from './content/steps'
 import type {
   AttackActionId,
@@ -30,13 +25,10 @@ import type {
 import { INITIAL_DEVICE, initialAttackState, runAction } from './logic/attack'
 import {
   advancePlayback,
-  broadcastTargets,
   conversationById,
-  currentMessage,
-  flightPath,
+  currentGroup,
   IDLE_PLAYBACK,
-  inFlightMessage,
-  isBroadcast,
+  inFlightMessages,
   isPlaybackFinished,
 } from './logic/conversation'
 import { buildDiagramState, stepByOrder } from './logic/steps'
@@ -76,14 +68,14 @@ export default function App() {
   useEffect(() => {
     if (!activeConversation) return
 
-    if (playback.inFlight === null) return
+    if (playback.inFlightGroup === null) return
 
-    const landing = inFlightMessage(playback, activeConversation)
+    const landing = inFlightMessages(playback, activeConversation)
     const timer = setTimeout(() => {
       const next = advancePlayback(playback, activeConversation)
       setPlayback(next)
-      if (landing) {
-        setTranscript((current) => [...current, landing])
+      if (landing.length > 0) {
+        setTranscript((current) => [...current, ...landing])
         setReviewId(null)
       }
       if (next.status === 'finished' && activeActionId) {
@@ -146,23 +138,17 @@ export default function App() {
   }, [])
 
   const inFlight = activeConversation
-    ? inFlightMessage(playback, activeConversation)
-    : null
-  const flight = inFlight ? flightPath(inFlight, NETWORK_NODE_ID) : null
-  // ブロードキャストは、ネットワークに着いてから図にいる全員へ広がる
-  const fanOut =
-    inFlight && isBroadcast(inFlight.to)
-      ? broadcastTargets(diagram.nodes, inFlight.from, NETWORK_NODE_ID)
-      : []
-  const liveMessage = activeConversation
-    ? currentMessage(playback, activeConversation)
-    : null
-  // トラックから選んでいるときは、そのメッセージを帯に出す
+    ? inFlightMessages(playback, activeConversation)
+    : []
+  const liveGroup = activeConversation
+    ? currentGroup(playback, activeConversation)
+    : []
+  // トラックから選んでいるときは、その 1 通だけを帯に出す
   const reviewed = reviewId
-    ? (transcript.find((message) => message.id === reviewId) ?? null)
-    : null
-  const current = reviewed ?? liveMessage
-  const reviewing = reviewed !== null
+    ? transcript.find((message) => message.id === reviewId)
+    : undefined
+  const current = reviewed ? [reviewed] : liveGroup
+  const reviewing = reviewed !== undefined
   /** 会話が途中（送り終えていない）なら、ほかの操作は止めておく */
   const busy = activeConversation
     ? !isPlaybackFinished(playback, activeConversation)
@@ -197,9 +183,7 @@ export default function App() {
               diagram={diagram}
               deviceReadouts={deviceReadouts}
               inFlight={inFlight}
-              flight={flight}
-              fanOut={fanOut}
-              flightKey={`${activeConversationId ?? 'none'}-${playback.inFlight ?? -1}`}
+              flightKey={`${activeConversationId ?? 'none'}-${playback.inFlightGroup ?? -1}`}
               durationMs={FLIGHT_MS}
             />
           </div>
@@ -236,7 +220,7 @@ export default function App() {
             <ConversationTrack
               messages={transcript}
               nodes={diagramNodes}
-              activeId={current?.id ?? null}
+              activeIds={current.map((message) => message.id)}
               onSelect={reviewMessage}
               emptyText={
                 order === 3

@@ -88,6 +88,17 @@ export const steps: StepContent[] = [
         source: 'ANSI/ASHRAE Standard 135（I-Am Service）',
       },
       {
+        id: 'std-iam-burst',
+        confidence: 'standard',
+        text: 'Who-Is の条件に当てはまる機器は、それぞれが I-Am を返します。呼びかけは 1 回でも、返事は台数ぶん発生します。この図で返事がまとめて飛ぶのは、そのためです。',
+        source: 'ANSI/ASHRAE Standard 135（Who-Is / I-Am Service）',
+      },
+      {
+        id: 'interp-whois-storm',
+        confidence: 'interpretation',
+        text: '機器の多い環境では、この返事が短時間に集中してネットワークを圧迫することがあると、ベンダーの技術記事で指摘されています（現場では「Who-Is ストーム」と呼ばれます）。規格そのものの記述ではなく、制作者も実環境では未確認です。',
+      },
+      {
         id: 'std-iam-broadcast',
         confidence: 'standard',
         text: 'I-Am は、もともと規格ではブロードキャストで送ることが求められていました。Addendum 135-2008q でこれが緩和され、ブロードキャストまたはユニキャストのどちらでもよくなっています（ただし Who-Is を送った相手に必ず届く形で送ること）。この図では読みやすさのため、尋ねた相手へ返す形で描いています。',
