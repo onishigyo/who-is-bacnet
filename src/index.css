@@ -636,93 +636,6 @@ button:disabled {
   color: var(--muted);
 }
 
-/* ---------- 会話ログ ---------- */
-
-.play {
-  padding: 12px 16px;
-  border-radius: 10px;
-  border: 1px solid var(--accent);
-  background: var(--accent-soft);
-  color: var(--text-strong);
-  font-size: 14px;
-  font-weight: 600;
-}
-
-.play:disabled {
-  opacity: 0.5;
-}
-
-.log__title,
-.console__title,
-.capture__title {
-  font-size: 14px;
-  margin-bottom: 10px;
-}
-
-.log__empty {
-  font-size: 13px;
-  color: var(--muted);
-}
-
-.log__list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.log__item {
-  padding: 8px 12px;
-  border-radius: 10px;
-  border: 1px solid var(--line);
-  background: var(--bg-raise);
-}
-
-.log__item--response {
-  border-left: 3px solid #2f6350;
-}
-
-.log__item--request {
-  border-left: 3px solid var(--accent);
-}
-
-.log__from {
-  font-size: 11px;
-  color: var(--muted);
-}
-
-.log__plain {
-  font-size: 14px;
-  color: var(--text-strong);
-}
-
-.log__protocol {
-  display: block;
-  margin-top: 2px;
-  font-size: 11px;
-  color: var(--accent);
-  word-break: break-all;
-}
-
-.log__transport {
-  display: block;
-  font-size: 10px;
-  color: var(--muted);
-  word-break: break-all;
-}
-
-.log__annotation {
-  margin-top: 6px;
-  font-size: 12px;
-  color: var(--muted);
-}
-
-.log__annotation.is-alert {
-  color: var(--alert);
-}
-
 /* ---------- 図の下に固定する会話バー ---------- */
 
 .stagebar {
@@ -773,6 +686,11 @@ button:disabled {
   border-radius: 999px;
   background: var(--bg-raise);
   color: var(--text);
+}
+
+.stagebar__count.is-review {
+  background: var(--accent-soft);
+  color: var(--accent);
 }
 
 .stagebar__plain {
@@ -870,6 +788,124 @@ button:disabled {
   .stagebar__controls {
     width: 100%;
   }
+}
+
+/* ---------- ここまでのやり取り（図の下のトラック） ---------- */
+
+.play {
+  padding: 12px 16px;
+  border-radius: 10px;
+  border: 1px solid var(--accent);
+  background: var(--accent-soft);
+  color: var(--text-strong);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.play:disabled {
+  opacity: 0.5;
+}
+
+.track {
+  border-top: 1px solid var(--line);
+  background: var(--bg);
+  height: 64px;
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+}
+
+.track__empty {
+  padding: 0 18px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.track__list {
+  list-style: none;
+  margin: 0;
+  padding: 8px 14px;
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  width: 100%;
+  height: 100%;
+  align-items: center;
+}
+
+.track__item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 230px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: var(--bg-soft);
+  text-align: left;
+  transition:
+    border-color 0.2s,
+    opacity 0.2s;
+  opacity: 0.65;
+}
+
+.track__item:hover {
+  opacity: 1;
+  border-color: var(--accent);
+}
+
+.track__item--request {
+  border-left: 3px solid var(--accent);
+}
+
+.track__item--response {
+  border-left: 3px solid #2f6350;
+}
+
+.track__item.is-alert {
+  border-color: var(--alert);
+}
+
+.track__item.is-active {
+  opacity: 1;
+  background: var(--bg-raise);
+  box-shadow: 0 0 0 2px var(--accent-soft);
+}
+
+.track__no {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--muted);
+}
+
+.track__body {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.track__from {
+  font-size: 10px;
+  color: var(--muted);
+}
+
+.track__plain {
+  font-size: 12px;
+  color: var(--text-strong);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.stagebar__annotation {
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.stagebar__annotation.is-alert {
+  color: var(--alert);
 }
 
 /* ---------- 攻撃コンソール ---------- */

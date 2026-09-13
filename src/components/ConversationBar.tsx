@@ -24,6 +24,9 @@ interface Props {
   autoPlay: boolean
   onToggleAuto: () => void
   onSend: () => void
+  /** トラックから選んで過去のやり取りを読み直している最中か */
+  reviewing: boolean
+  onExitReview: () => void
   /** 会話が動いていないときに操作欄へ出すもの（開始ボタンや案内） */
   idle: ReactNode
 }
@@ -55,6 +58,8 @@ export function ConversationBar({
   autoPlay,
   onToggleAuto,
   onSend,
+  reviewing,
+  onExitReview,
   idle,
 }: Props) {
   if (!conversation || !current) {
@@ -73,8 +78,8 @@ export function ConversationBar({
     <section className="stagebar" aria-live="polite">
       <div className={`stagebar__message stagebar__message--${current.kind}`}>
         <p className="stagebar__meta">
-          <span className="stagebar__count">
-            {sent} / {total}
+          <span className={`stagebar__count ${reviewing ? 'is-review' : ''}`}>
+            {reviewing ? '見直し中' : `${sent} / ${total}`}
           </span>
           {nameOf(nodes, current.from)}
           <span aria-hidden="true"> → </span>
@@ -89,9 +94,28 @@ export function ConversationBar({
 
       <div className="stagebar__explain">
         <p>{current.explain}</p>
+        {current.annotation && (
+          <p
+            className={`stagebar__annotation ${
+              current.annotationTone === 'alert' ? 'is-alert' : ''
+            }`}
+          >
+            {current.annotation}
+          </p>
+        )}
       </div>
 
       <div className="stagebar__controls">
+        {reviewing && (
+          <button
+            type="button"
+            className="stagebar__next"
+            onClick={onExitReview}
+          >
+            ↩ 実況に戻る
+          </button>
+        )}
+
         {finished ? (
           idle
         ) : (

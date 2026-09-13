@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { AttackConsole } from './components/AttackConsole'
 import { CaptureEvidenceCard } from './components/CaptureEvidenceCard'
 import { ConversationBar } from './components/ConversationBar'
-import { ConversationLog } from './components/ConversationLog'
+import { ConversationTrack } from './components/ConversationTrack'
 import { NetworkCanvas } from './components/NetworkCanvas'
 import { StepNav } from './components/StepNav'
 import { StepNotes } from './components/StepNotes'
@@ -58,6 +58,8 @@ export default function App() {
   const [playback, setPlayback] = useState(IDLE_PLAYBACK)
   /** 既定は自動で進む。読みたいところで止められる */
   const [autoPlay, setAutoPlay] = useState(true)
+  /** トラックから選んで見直しているメッセージ */
+  const [reviewId, setReviewId] = useState<string | null>(null)
   /** 着信済みのメッセージ。会話をまたいで積み上がる */
   const [transcript, setTranscript] = useState<ConversationMessage[]>([])
   const [attack, setAttack] = useState(initialAttackState)
@@ -85,7 +87,10 @@ export default function App() {
       const timer = setTimeout(() => {
         const next = advancePlayback(playback, activeConversation)
         setPlayback(next)
-        if (landing) setTranscript((current) => [...current, landing])
+        if (landing) {
+          setTranscript((current) => [...current, landing])
+          setReviewId(null)
+        }
         if (next.status === 'finished' && activeActionId) {
           setAttack((current) =>
             runAction(attackActions, current, activeActionId),
@@ -107,13 +112,26 @@ export default function App() {
     if (!activeConversation) return
     // 手動で送ったら、そこからは止めたままにする
     setAutoPlay(false)
+    setReviewId(null)
     setPlayback((current) => advancePlayback(current, activeConversation))
   }, [activeConversation])
 
-  const toggleAuto = useCallback(() => setAutoPlay((current) => !current), [])
+  const toggleAuto = useCallback(() => {
+    setReviewId(null)
+    setAutoPlay((current) => !current)
+  }, [])
+
+  /** 過去のやり取りを選んだら、そこで止めて読み直す */
+  const reviewMessage = useCallback((id: string) => {
+    setAutoPlay(false)
+    setReviewId(id)
+  }, [])
+
+  const exitReview = useCallback(() => setReviewId(null), [])
 
   const goToStep = useCallback((next: StepOrder) => {
     setOrder(next)
+    setReviewId(null)
     setActiveConversationId(null)
     setActiveActionId(null)
     setPlayback(IDLE_PLAYBACK)
@@ -122,6 +140,7 @@ export default function App() {
 
   const startNormalConversation = useCallback(() => {
     setAutoPlay(true)
+    setReviewId(null)
     setPlayback(IDLE_PLAYBACK)
     setTranscript([])
     setActiveActionId(null)
@@ -132,6 +151,7 @@ export default function App() {
     const action = attackActions.find((a) => a.id === id)
     if (!action) return
     setAutoPlay(true)
+    setReviewId(null)
     setPlayback(IDLE_PLAYBACK)
     setActiveActionId(id)
     setActiveConversationId(action.conversationId)
@@ -139,6 +159,7 @@ export default function App() {
 
   const resetAttack = useCallback(() => {
     setAttack(initialAttackState())
+    setReviewId(null)
     setActiveConversationId(null)
     setActiveActionId(null)
     setPlayback(IDLE_PLAYBACK)
@@ -154,9 +175,15 @@ export default function App() {
     inFlight && isBroadcast(inFlight.to)
       ? broadcastTargets(diagram.nodes, inFlight.from, NETWORK_NODE_ID)
       : []
-  const current = activeConversation
+  const liveMessage = activeConversation
     ? currentMessage(playback, activeConversation)
     : null
+  // トラックから選んでいるときは、そのメッセージを帯に出す
+  const reviewed = reviewId
+    ? (transcript.find((message) => message.id === reviewId) ?? null)
+    : null
+  const current = reviewed ?? liveMessage
+  const reviewing = reviewed !== null
   /** 会話が途中（送り終えていない）なら、ほかの操作は止めておく */
   const busy = activeConversation
     ? !isPlaybackFinished(playback, activeConversation)
@@ -200,6 +227,8 @@ export default function App() {
               autoPlay={autoPlay}
               onToggleAuto={toggleAuto}
               onSend={sendNext}
+              reviewing={reviewing}
+              onExitReview={exitReview}
               idle={
                 order === 3 ? (
                   <button
@@ -219,6 +248,20 @@ export default function App() {
             />
           )}
 
+          {order >= 3 && (
+            <ConversationTrack
+              messages={transcript}
+              nodes={diagramNodes}
+              activeId={current?.id ?? null}
+              onSelect={reviewMessage}
+              emptyText={
+                order === 3
+                  ? 'ここに、やり取りが 1 通ずつ積み上がります。押すと読み直せます。'
+                  : 'ここに、攻撃者のやり取りが積み上がります。ステップ3と見比べてください。'
+              }
+            />
+          )}
+
           <StepNav steps={steps} current={order} onChange={goToStep} />
         </div>
 
@@ -229,12 +272,6 @@ export default function App() {
 
           {order === 3 && (
             <>
-              <ConversationLog
-                title="ここまでの会話"
-                messages={transcript}
-                nodes={diagramNodes}
-                emptyText="図の下にある「会話を始める」を押すと、中央監視と機器のやり取りが流れます。"
-              />
               <StepNotes notes={step.notes} />
             </>
           )}
@@ -247,12 +284,6 @@ export default function App() {
                 busy={busy}
                 onRun={runAttack}
                 onReset={resetAttack}
-              />
-              <ConversationLog
-                title="ここまでの会話"
-                messages={transcript}
-                nodes={diagramNodes}
-                emptyText="コンソールの操作を選ぶと、やり取りが図の下に流れます。ステップ3の会話と見比べてください。"
               />
               {attack.completed.length > 0 &&
                 captures.map((capture) => (
