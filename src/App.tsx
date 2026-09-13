@@ -31,7 +31,6 @@ import { INITIAL_DEVICE, initialAttackState, runAction } from './logic/attack'
 import {
   advancePlayback,
   broadcastTargets,
-  canSendNext,
   conversationById,
   currentMessage,
   flightPath,
@@ -44,10 +43,6 @@ import { buildDiagramState, stepByOrder } from './logic/steps'
 
 /** パケットが図の上を飛ぶ時間。目で追える速さにしている */
 const FLIGHT_MS = 1800
-/** 着信してから次を送り出すまでの間。解説を読む時間 */
-const DWELL_MS = 2400
-/** 会話を始めてから 1 通目が出るまでの間。待たせない */
-const START_MS = 500
 
 export default function App() {
   const [order, setOrder] = useState<StepOrder>(1)
@@ -58,8 +53,6 @@ export default function App() {
     null,
   )
   const [playback, setPlayback] = useState(IDLE_PLAYBACK)
-  /** 既定は自動で進む。読みたいところで止められる */
-  const [autoPlay, setAutoPlay] = useState(true)
   /** トラックから選んで見直しているメッセージ */
   const [reviewId, setReviewId] = useState<string | null>(null)
   /** 着信済みのメッセージ。会話をまたいで積み上がる */
@@ -77,60 +70,40 @@ export default function App() {
     : null
 
   /**
-   * 時間の面倒を見るだけの層。進め方の判断はロジック側にある。
-   * 飛んでいるパケットは必ず着信させ、そのあと自動で進む設定なら
-   * 解説を読む間をおいて次を送り出す。止めていれば、そこで待つ。
+   * 時間の面倒を見るだけの層。進むのは利用者が押したときだけで、
+   * タイマーは「飛んでいるパケットを着信させる」ところだけを受け持つ。
    */
   useEffect(() => {
     if (!activeConversation) return
 
-    if (playback.inFlight !== null) {
-      const landing = inFlightMessage(playback, activeConversation)
-      const timer = setTimeout(() => {
-        const next = advancePlayback(playback, activeConversation)
-        setPlayback(next)
-        if (landing) {
-          setTranscript((current) => [...current, landing])
-          setReviewId(null)
-        }
-        if (next.status === 'finished' && activeActionId) {
-          setAttack((current) =>
-            runAction(attackActions, current, activeActionId),
-          )
-        }
-      }, FLIGHT_MS)
-      return () => clearTimeout(timer)
-    }
+    if (playback.inFlight === null) return
 
-    if (!autoPlay || !canSendNext(playback, activeConversation)) return
+    const landing = inFlightMessage(playback, activeConversation)
+    const timer = setTimeout(() => {
+      const next = advancePlayback(playback, activeConversation)
+      setPlayback(next)
+      if (landing) {
+        setTranscript((current) => [...current, landing])
+        setReviewId(null)
+      }
+      if (next.status === 'finished' && activeActionId) {
+        setAttack((current) =>
+          runAction(attackActions, current, activeActionId),
+        )
+      }
+    }, FLIGHT_MS)
 
-    const timer = setTimeout(
-      () => {
-        setPlayback((current) => advancePlayback(current, activeConversation))
-      },
-      playback.delivered === 0 ? START_MS : DWELL_MS,
-    )
     return () => clearTimeout(timer)
-  }, [playback, activeConversation, activeActionId, autoPlay])
+  }, [playback, activeConversation, activeActionId])
 
   const sendNext = useCallback(() => {
     if (!activeConversation) return
-    // 手動で送ったら、そこからは止めたままにする
-    setAutoPlay(false)
     setReviewId(null)
     setPlayback((current) => advancePlayback(current, activeConversation))
   }, [activeConversation])
 
-  const toggleAuto = useCallback(() => {
-    setReviewId(null)
-    setAutoPlay((current) => !current)
-  }, [])
-
-  /** 過去のやり取りを選んだら、そこで止めて読み直す */
-  const reviewMessage = useCallback((id: string) => {
-    setAutoPlay(false)
-    setReviewId(id)
-  }, [])
+  /** 過去のやり取りを選んで読み直す */
+  const reviewMessage = useCallback((id: string) => setReviewId(id), [])
 
   const exitReview = useCallback(() => setReviewId(null), [])
 
@@ -144,22 +117,23 @@ export default function App() {
   }, [])
 
   const startNormalConversation = useCallback(() => {
-    setAutoPlay(true)
+    const conversation = conversationById(conversations, NORMAL_CONVERSATION_ID)
     setReviewId(null)
-    setPlayback(IDLE_PLAYBACK)
     setTranscript([])
     setActiveActionId(null)
     setActiveConversationId(NORMAL_CONVERSATION_ID)
+    // 押したその場で 1 通目を送り出す
+    setPlayback(advancePlayback(IDLE_PLAYBACK, conversation))
   }, [])
 
   const runAttack = useCallback((id: AttackActionId) => {
     const action = attackActions.find((a) => a.id === id)
     if (!action) return
-    setAutoPlay(true)
+    const conversation = conversationById(conversations, action.conversationId)
     setReviewId(null)
-    setPlayback(IDLE_PLAYBACK)
     setActiveActionId(id)
     setActiveConversationId(action.conversationId)
+    setPlayback(advancePlayback(IDLE_PLAYBACK, conversation))
   }, [])
 
   const resetAttack = useCallback(() => {
@@ -236,8 +210,6 @@ export default function App() {
               playback={playback}
               current={current}
               nodes={diagramNodes}
-              autoPlay={autoPlay}
-              onToggleAuto={toggleAuto}
               onSend={sendNext}
               reviewing={reviewing}
               onExitReview={exitReview}

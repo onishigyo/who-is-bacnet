@@ -646,22 +646,25 @@ button:disabled {
   list-style: none;
   margin: 0;
   padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+  /* バッジの文字数が違っても説明の頭がそろうよう、2 列で組む */
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 6px 10px;
+  align-items: baseline;
 }
 
 .notes__legend li {
-  display: flex;
-  gap: 8px;
-  align-items: baseline;
-  flex-wrap: wrap;
+  display: contents;
 }
 
 .notes__legend-text {
-  flex: 1;
-  min-width: 200px;
   color: var(--muted);
+}
+
+@media (max-width: 420px) {
+  .notes__legend ul {
+    grid-template-columns: 1fr;
+  }
 }
 
 .note__source {

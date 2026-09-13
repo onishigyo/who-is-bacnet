@@ -21,8 +21,6 @@ interface Props {
   /** いま解説すべきメッセージ */
   current: ConversationMessage | null
   nodes: DiagramNodeSpec[]
-  autoPlay: boolean
-  onToggleAuto: () => void
   onSend: () => void
   /** トラックから選んで過去のやり取りを読み直している最中か */
   reviewing: boolean
@@ -55,8 +53,6 @@ export function ConversationBar({
   playback,
   current,
   nodes,
-  autoPlay,
-  onToggleAuto,
   onSend,
   reviewing,
   onExitReview,
@@ -109,7 +105,7 @@ export function ConversationBar({
         {reviewing && (
           <button
             type="button"
-            className="stagebar__next"
+            className="stagebar__toggle"
             onClick={onExitReview}
           >
             ↩ 実況に戻る
@@ -119,30 +115,14 @@ export function ConversationBar({
         {finished ? (
           idle
         ) : (
-          <>
-            <button
-              type="button"
-              className="stagebar__toggle"
-              onClick={onToggleAuto}
-            >
-              {autoPlay ? '⏸ 止めて読む' : '▶ 自動で進む'}
-            </button>
-
-            {autoPlay ? (
-              <p className="stagebar__preview">
-                {preview ? `次は ${preview}` : ' '}
-              </p>
-            ) : (
-              <button
-                type="button"
-                className="stagebar__next"
-                onClick={onSend}
-                disabled={!canSendNext(playback, conversation)}
-              >
-                {preview ? `次へ ▸ ${preview}` : '通信中…'}
-              </button>
-            )}
-          </>
+          <button
+            type="button"
+            className="stagebar__next"
+            onClick={onSend}
+            disabled={!canSendNext(playback, conversation)}
+          >
+            {preview ? `次へ ▸ ${preview}` : '通信中…'}
+          </button>
         )}
       </div>
     </section>
