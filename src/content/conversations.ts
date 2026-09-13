@@ -21,9 +21,10 @@ export const conversations: Conversation[] = [
         to: BROADCAST,
         kind: 'request',
         plain: 'どなたかいますか？',
-        protocol: 'Who-Is（ブロードキャスト / UDP 47808）',
+        protocol: 'Who-Is',
+        transport: 'UDP ブロードキャスト → 192.168.1.255:47808',
         explain:
-          '中央監視が、ネットワーク全体に向けて一斉に呼びかけます。相手の IP を 1 台ずつ指定する必要はありません。',
+          '中央監視が、ネットワーク全体に向けて一斉に呼びかけます。この 1 通だけは宛先を決め打ちせず、サブネット全体に飛ばします。どの IP に誰がいるかを、まだ知らないからです。',
       },
       {
         id: 'n2',
@@ -32,8 +33,9 @@ export const conversations: Conversation[] = [
         kind: 'response',
         plain: 'はい、空調コントローラです。ID は 3056930 です',
         protocol: 'I-Am device,3056930',
+        transport: 'UDP → 192.168.1.10:47808（送信元 192.168.1.11）',
         explain:
-          '呼びかけを受け取った機器が、自分の ID を名乗って返事をします。まず空調コントローラから。',
+          '機器が自分の ID を名乗って返事をします。ここで大事なのは、I-Am の中身に IP は入っていないこと。「192.168.1.11 に device,3056930 がいる」と分かるのは、この返事が届いたパケットの送信元アドレスからです。',
       },
       {
         id: 'n3',
@@ -42,6 +44,7 @@ export const conversations: Conversation[] = [
         kind: 'response',
         plain: 'こちらは照明コントローラ、ID 100201 です',
         protocol: 'I-Am device,100201',
+        transport: 'UDP → 192.168.1.10:47808（送信元 192.168.1.12）',
         explain:
           '続いて照明コントローラ。メーカーが違っても、同じ呼びかけに同じ形で答えます。これが共通語であることの意味です。',
         annotation: 'メーカーが違っても、同じ呼びかけに同じ形で答える',
@@ -53,8 +56,9 @@ export const conversations: Conversation[] = [
         kind: 'response',
         plain: 'こちらは電力計、ID 100305 です',
         protocol: 'I-Am device,100305',
+        transport: 'UDP → 192.168.1.10:47808（送信元 192.168.1.13）',
         explain:
-          '電力計も返事をします。呼びかけ 1 回で、ネットワーク上にどんな機器がいるかの一覧ができあがりました。',
+          '電力計も返事をします。呼びかけ 1 回で「どの IP に、どの ID の機器がいるか」の対応表ができあがりました。',
       },
       {
         id: 'n5',
@@ -63,8 +67,9 @@ export const conversations: Conversation[] = [
         kind: 'request',
         plain: 'いまの室温を教えて',
         protocol: 'ReadProperty analog-input,0 present-value',
+        transport: 'UDP ユニキャスト → 192.168.1.11:47808',
         explain:
-          '相手が分かったので、今度は名指しで頼みます。analog-input,0 は温度センサの入力、present-value はそのいまの値です。',
+          'ここからは名指しです。といっても要求の中身は「analog-input,0 の present-value を読ませて」だけで、相手が誰かは書かれていません。宛先 IP（192.168.1.11:47808）に直接送ることで、相手を決めています。',
       },
       {
         id: 'n6',
@@ -73,8 +78,9 @@ export const conversations: Conversation[] = [
         kind: 'response',
         plain: '22.0 ℃です',
         protocol: 'ComplexACK → 22.0',
+        transport: 'UDP ユニキャスト → 192.168.1.10:47808',
         explain:
-          '機器が値を返します。読み取りの応答は、値を含んだ ComplexACK という形で返ってきます。',
+          '機器が値を返します。読み取りの応答は、値を含んだ ComplexACK という形で、頼んできた IP へ返ります。',
       },
       {
         id: 'n7',
@@ -83,8 +89,9 @@ export const conversations: Conversation[] = [
         kind: 'request',
         plain: '設定温度を 24.0 ℃にして',
         protocol: 'WriteProperty analog-value,0 present-value 24.0',
+        transport: 'UDP ユニキャスト → 192.168.1.11:47808',
         explain:
-          '今度は書き込みです。analog-value,0 は設定値を持つオブジェクトで、そこに 24.0 を書きます。',
+          '今度は書き込みです。analog-value,0 は設定値を持つオブジェクトで、そこに 24.0 を書きます。読むときと同じく、届け先は宛先 IP で決まります。',
       },
       {
         id: 'n8',
@@ -93,6 +100,7 @@ export const conversations: Conversation[] = [
         kind: 'response',
         plain: '了解しました',
         protocol: 'SimpleACK',
+        transport: 'UDP ユニキャスト → 192.168.1.10:47808',
         explain:
           '書き込みが成功すると SimpleACK が返ります。これだけで、中央監視から設備の設定を変えられました。',
       },
@@ -108,7 +116,8 @@ export const conversations: Conversation[] = [
         to: BROADCAST,
         kind: 'request',
         plain: 'どなたかいますか？',
-        protocol: 'Who-Is（ブロードキャスト / UDP 47808）',
+        protocol: 'Who-Is',
+        transport: 'UDP ブロードキャスト → 192.168.1.255:47808',
         explain:
           'ステップ3で中央監視が送ったものと、まったく同じ呼びかけです。違うのは、送り出した機械だけ。',
         annotation: '中央監視が送ったものと、1 ビットも変わらない要求',
@@ -120,8 +129,9 @@ export const conversations: Conversation[] = [
         kind: 'response',
         plain: 'はい、空調コントローラです。ID は 3056930 です',
         protocol: 'I-Am device,3056930',
+        transport: 'UDP → 192.168.1.66:47808（送信元 192.168.1.11）',
         explain:
-          '機器は「誰が尋ねたのか」を確かめる手順を持っていません。中央監視に返したのと同じ返事を、そのまま返します。',
+          '機器は「誰が尋ねたのか」を確かめる手順を持っていません。中央監視に返したのと同じ返事が、そのまま 192.168.1.66 に届きます。',
         annotation: '誰が尋ねたのかを確かめる手順がない',
         annotationTone: 'alert',
       },
@@ -132,6 +142,7 @@ export const conversations: Conversation[] = [
         kind: 'response',
         plain: 'こちらは照明コントローラ、ID 100201 です',
         protocol: 'I-Am device,100201',
+        transport: 'UDP → 192.168.1.66:47808（送信元 192.168.1.12）',
         explain: '照明コントローラも同じように名乗ります。',
       },
       {
@@ -141,8 +152,9 @@ export const conversations: Conversation[] = [
         kind: 'response',
         plain: 'こちらは電力計、ID 100305 です',
         protocol: 'I-Am device,100305',
+        transport: 'UDP → 192.168.1.66:47808（送信元 192.168.1.13）',
         explain:
-          '電力計も。呼びかけ 1 回で、どの IP にどんな機器がいるかが揃いました。次はこの中から狙いを決めるだけです。',
+          '電力計も。呼びかけ 1 回で「どの IP に、どの ID の機器がいるか」の対応表が、そのまま手に入りました。次はこの中から狙いを決めるだけです。',
         annotation: '呼びかけ 1 回で、ネットワーク上の機器一覧が手に入る',
         annotationTone: 'alert',
       },
@@ -159,8 +171,9 @@ export const conversations: Conversation[] = [
         kind: 'request',
         plain: 'いまの室温を教えて',
         protocol: 'ReadProperty analog-input,0 present-value',
+        transport: 'UDP ユニキャスト → 192.168.1.11:47808',
         explain:
-          '見つけた空調コントローラを名指しして、値を尋ねます。ステップ3で中央監視がやったことと同じ手順です。',
+          '返事から分かった IP へ、直接送ります。中身はステップ3で中央監視が送ったものと同じ。宛先 IP に届けば、それで相手は決まります。',
       },
       {
         id: 'a6',
@@ -169,6 +182,7 @@ export const conversations: Conversation[] = [
         kind: 'response',
         plain: '22.0 ℃です',
         protocol: 'ComplexACK → 22.0',
+        transport: 'UDP ユニキャスト → 192.168.1.66:47808',
         explain:
           '値がそのまま返ってきます。ここまでは「見ているだけ」ですが、建物がいまどういう状態かは筒抜けです。',
         annotation: '中央監視に返したのと同じ値を、そのまま返す',
@@ -187,8 +201,9 @@ export const conversations: Conversation[] = [
         kind: 'request',
         plain: '設定温度を 99.0 ℃にして',
         protocol: 'WriteProperty analog-value,0 present-value 99.0',
+        transport: 'UDP ユニキャスト → 192.168.1.11:47808',
         explain:
-          'ここからが書き込みです。読むのと同じ気軽さで、設定値のオブジェクトに 99.0 を書きにいきます。',
+          'ここからが書き込みです。読むのと同じ気軽さで、同じ宛先 IP に、今度は 99.0 を書きにいきます。',
       },
       {
         id: 'a8',
@@ -197,8 +212,9 @@ export const conversations: Conversation[] = [
         kind: 'response',
         plain: '了解しました',
         protocol: 'SimpleACK',
+        transport: 'UDP ユニキャスト → 192.168.1.66:47808',
         explain:
-          '機器は受け入れました。中央監視からの指示と区別する材料がないので、断る理由がありません。',
+          '機器は受け入れました。届いた先が 192.168.1.10 だろうと 192.168.1.66 だろうと、中央監視からの指示と区別する材料がないので、断る理由がありません。',
         annotation:
           '認証の確認なし。中央監視からの指示とまったく同じ扱いで受け入れられた',
         annotationTone: 'alert',

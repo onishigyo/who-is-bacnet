@@ -40,6 +40,7 @@ export function ConversationLog({ title, messages, nodes, emptyText }: Props) {
               </p>
               <p className="log__plain">{message.plain}</p>
               <code className="log__protocol">{message.protocol}</code>
+              <code className="log__transport">{message.transport}</code>
               {message.annotation && (
                 <p
                   className={`log__annotation ${

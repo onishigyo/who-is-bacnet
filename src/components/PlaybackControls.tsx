@@ -74,6 +74,7 @@ export function PlaybackControls({
           </p>
           <p className="pacer__plain">{current.plain}</p>
           <code className="pacer__protocol">{current.protocol}</code>
+          <code className="pacer__transport">{current.transport}</code>
           <p className="pacer__explain">{current.explain}</p>
         </div>
       ) : (

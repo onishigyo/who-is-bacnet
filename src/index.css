@@ -593,6 +593,13 @@ button:disabled {
   word-break: break-all;
 }
 
+.log__transport {
+  display: block;
+  font-size: 10px;
+  color: var(--muted);
+  word-break: break-all;
+}
+
 .log__annotation {
   margin-top: 6px;
   font-size: 12px;
@@ -664,6 +671,14 @@ button:disabled {
   margin-top: 4px;
   font-size: 12px;
   color: var(--accent);
+  word-break: break-all;
+}
+
+.pacer__transport {
+  display: block;
+  margin-top: 2px;
+  font-size: 11px;
+  color: var(--muted);
   word-break: break-all;
 }
 

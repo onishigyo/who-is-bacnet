@@ -74,6 +74,26 @@ export const steps: StepContent[] = [
         source:
           'ANSI/ASHRAE Standard 135（Object Access Services / Remote Device Management Services）',
       },
+      {
+        id: 'std-addressing',
+        confidence: 'standard',
+        text: 'ReadProperty / WriteProperty の要求そのものには、相手の機器を指す情報は入っていません。中身は「どのオブジェクトの、どのプロパティか」だけです。どの機器に届くかは、その下の層 ── BACnet/IP なら宛先 IP アドレスと UDP ポート ── が決めます。つまり会話の相手は、IP で指定されています。',
+        source:
+          'ANSI/ASHRAE Standard 135（ReadProperty / WriteProperty Service、Annex J）',
+      },
+      {
+        id: 'std-iam-address',
+        confidence: 'standard',
+        text: 'I-Am が伝えるのは、デバイスインスタンス番号・受け入れ可能な APDU の最大長・セグメンテーション対応・ベンダー ID です。IP アドレスは入っていません。「どの IP にどの機器がいるか」が分かるのは、その I-Am が届いたパケットの送信元アドレスからです。中央監視は、この対応を覚えてから名指しの読み書きに移ります。',
+        source: 'ANSI/ASHRAE Standard 135（I-Am Service）',
+      },
+      {
+        id: 'std-iam-broadcast',
+        confidence: 'standard',
+        text: 'I-Am は、もともと規格ではブロードキャストで送ることが求められていました。Addendum 135-2008q でこれが緩和され、ブロードキャストまたはユニキャストのどちらでもよくなっています（ただし Who-Is を送った相手に必ず届く形で送ること）。この図では読みやすさのため、尋ねた相手へ返す形で描いています。',
+        source:
+          'ANSI/ASHRAE Addendum q to Standard 135-2008（135-2008q-1、Clause 16.10.4 の変更）',
+      },
     ],
   },
   {
@@ -100,6 +120,12 @@ export const steps: StepContent[] = [
         confidence: 'standard',
         text: '「認証がない」ことと「どんな書き込みも必ず通る」ことは別の話です。プロパティが読み取り専用だったり、値が範囲外だったり、Priority Array の優先度で上書きされたりすれば Error や Reject が返ります。ただしこれはデータモデル上の制約であって、送信元を確かめるセキュリティ機構ではありません。',
         source: 'ANSI/ASHRAE Standard 135（WriteProperty / Priority Array）',
+      },
+      {
+        id: 'std-target-by-ip',
+        confidence: 'standard',
+        text: '攻撃側も、特別なことは何もしていません。Who-Is への返事で「どの IP にどの機器がいるか」を知り、その IP へ普通のユニキャストで読み書きを送っているだけです。機器から見れば、宛先 IP に届いた正しい形の要求であり、中央監視からのものと区別する材料がありません。',
+        source: 'ANSI/ASHRAE Standard 135 Annex J',
       },
       {
         id: 'interp-segmentation',

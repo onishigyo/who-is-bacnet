@@ -92,8 +92,10 @@ export interface ConversationMessage {
   kind: MessageKind
   /** 意訳 */
   plain: string
-  /** 実コマンド／プロトコル用語 */
+  /** 実コマンド／プロトコル用語（APDU の中身） */
   protocol: string
+  /** どこへ届くか。BACnet の要求自体に相手の識別子は入らず、宛先は IP が決める */
+  transport: string
   /** いま何が起きているかの解説（1 通ずつ進めるときに読ませる） */
   explain: string
   /** 補足（「認証確認なし」など） */

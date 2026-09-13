@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { conversations, NORMAL_CONVERSATION_ID } from '../content/conversations'
-import { NETWORK_NODE_ID } from '../content/diagram'
+import { diagramNodes, NETWORK_NODE_ID } from '../content/diagram'
 import type { Conversation } from '../domain/types'
 import { BROADCAST } from '../domain/types'
 import {
@@ -27,6 +27,34 @@ describe('会話データ', () => {
         expect(message.plain.length).toBeGreaterThan(0)
         expect(message.protocol.length).toBeGreaterThan(0)
         expect(message.explain.length).toBeGreaterThan(0)
+        expect(message.transport.length).toBeGreaterThan(0)
+      }
+    }
+  })
+
+  it('宛先に書かれた IP は、図にいる機器のものか、サブネットのブロードキャストである', () => {
+    const known = new Set(
+      diagramNodes.flatMap((node) => (node.ip ? [node.ip] : [])),
+    )
+    // 192.168.1.0/24 の指向性ブロードキャスト
+    known.add('192.168.1.255')
+
+    for (const conversation of conversations) {
+      for (const message of conversation.messages) {
+        const addresses = message.transport.match(/\d+\.\d+\.\d+\.\d+/g) ?? []
+        expect(addresses.length).toBeGreaterThan(0)
+        for (const address of addresses) {
+          expect(known).toContain(address)
+        }
+      }
+    }
+  })
+
+  it('ブロードキャストで送るのは Who-Is だけで、あとは宛先 IP を名指しする', () => {
+    for (const conversation of conversations) {
+      for (const message of conversation.messages) {
+        const broadcast = message.transport.includes('192.168.1.255')
+        expect(broadcast).toBe(message.protocol.startsWith('Who-Is'))
       }
     }
   })
@@ -115,6 +143,7 @@ describe('図の上の飛び方', () => {
         kind: 'request',
         plain: '',
         protocol: '',
+        transport: '',
         explain: '',
       },
       NETWORK_NODE_ID,
@@ -131,6 +160,7 @@ describe('図の上の飛び方', () => {
         kind: 'request',
         plain: '',
         protocol: '',
+        transport: '',
         explain: '',
       },
       NETWORK_NODE_ID,

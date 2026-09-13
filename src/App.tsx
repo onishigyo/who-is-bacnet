@@ -143,7 +143,7 @@ export default function App() {
   return (
     <div className="app">
       <header className="app__header">
-        <h1 className="app__title">Who is BACnet?</h1>
+        <h1 className="app__title">Who-Is BACnet?</h1>
         <p className="app__subtitle">
           ビル設備のプロトコル BACnet を、1 枚のネットワーク図の上で理解する
         </p>
