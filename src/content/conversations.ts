@@ -165,9 +165,20 @@ export const conversations: Conversation[] = [
         protocol: 'I-Am device,100305',
         transport: 'UDP → 192.168.1.66:47808（送信元 192.168.1.13）',
         action: '名乗る',
+        explain: '電力計も名乗ります。',
+      },
+      {
+        id: 'a5',
+        from: SUPERVISOR_ID,
+        to: ATTACKER_ID,
+        kind: 'response',
+        plain: 'こちらは中央監視装置、ID 260001 です',
+        protocol: 'I-Am device,260001',
+        transport: 'UDP → 192.168.1.66:47808（送信元 192.168.1.10）',
+        action: '名乗る',
         explain:
-          '電力計も。呼びかけ 1 回で「どの IP に、どの ID の機器がいるか」の対応表が、そのまま手に入りました。次はこの中から狙いを決めるだけです。',
-        annotation: '呼びかけ 1 回で、ネットワーク上の機器一覧が手に入る',
+          '中央監視装置も BACnet 機器なので、同じように名乗ります。呼びかけ 1 回で「どの IP に、どの ID の機器がいるか」の対応表ができあがりました。監視している側がどこにいるかまで、そこに載っています。',
+        annotation: '呼びかけ 1 回で、中央監視まで含めた機器一覧が手に入る',
         annotationTone: 'alert',
       },
     ],
@@ -177,7 +188,7 @@ export const conversations: Conversation[] = [
     title: '持ち込まれた PC から、室温を読む',
     messages: [
       {
-        id: 'a5',
+        id: 'a6',
         from: ATTACKER_ID,
         to: AHU_ID,
         kind: 'request',
@@ -189,7 +200,7 @@ export const conversations: Conversation[] = [
           '返事から分かった IP へ、直接送ります。中身はステップ3で中央監視が送ったものと同じ。宛先 IP に届けば、それで相手は決まります。',
       },
       {
-        id: 'a6',
+        id: 'a7',
         from: AHU_ID,
         to: ATTACKER_ID,
         kind: 'response',
@@ -209,7 +220,7 @@ export const conversations: Conversation[] = [
     title: '持ち込まれた PC から、設定温度を書き換える',
     messages: [
       {
-        id: 'a7',
+        id: 'a8',
         from: ATTACKER_ID,
         to: AHU_ID,
         kind: 'request',
@@ -221,7 +232,7 @@ export const conversations: Conversation[] = [
           'ここからが書き込みです。読むのと同じ気軽さで、同じ宛先 IP に、今度は 99.0 を書きにいきます。',
       },
       {
-        id: 'a8',
+        id: 'a9',
         from: AHU_ID,
         to: ATTACKER_ID,
         kind: 'response',

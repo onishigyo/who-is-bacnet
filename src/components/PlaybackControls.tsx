@@ -9,6 +9,7 @@ import type {
 import { BROADCAST } from '../domain/types'
 import {
   canSendNext,
+  isPlaybackFinished,
   nextMessage,
   playbackProgress,
 } from '../logic/conversation'
@@ -19,6 +20,9 @@ interface Props {
   /** いま解説すべきメッセージ */
   current: ConversationMessage | null
   nodes: DiagramNodeSpec[]
+  /** 自動で次へ進む状態か */
+  autoPlay: boolean
+  onToggleAuto: () => void
   onSend: () => void
 }
 
@@ -26,34 +30,37 @@ function nameOf(nodes: DiagramNodeSpec[], id: NodeId): string {
   return nodes.find((node) => node.id === id)?.label ?? id
 }
 
-/** 押すと何が起きるかを、押す前に見せる */
-function nextLabel(
+/** 次に何が起きるかを、起きる前に読ませる */
+function previewOf(
   nodes: DiagramNodeSpec[],
   playback: PlaybackState,
   conversation: Conversation,
-): string {
-  if (playback.inFlight !== null) return '通信中…'
+): string | null {
   const next = nextMessage(playback, conversation)
-  if (!next) return 'この会話はここまで'
-  return `次へ ▸ ${nameOf(nodes, next.from)}が${next.action}`
+  if (!next) return null
+  return `${nameOf(nodes, next.from)}が${next.action}`
 }
 
 /**
- * 会話を 1 通ずつ進めるためのコントロールと、いま何が起きているかの解説。
- * 自動では進まない。利用者が読み終えてから次を送る。
+ * 会話の進行と、いま何が起きているかの解説。
+ * 既定では自動で進み、読みたいところで止めて 1 通ずつ進められる。
  */
 export function PlaybackControls({
   conversation,
   playback,
   current,
   nodes,
+  autoPlay,
+  onToggleAuto,
   onSend,
 }: Props) {
   const { sent, total } = playbackProgress(playback, conversation)
+  const finished = isPlaybackFinished(playback, conversation)
   const sendable = canSendNext(playback, conversation)
+  const preview = previewOf(nodes, playback, conversation)
   const root = useRef<HTMLElement>(null)
 
-  // 新しいメッセージのたびに、読む場所と次のボタンを視界に入れておく
+  // 新しいメッセージのたびに、読む場所を視界に入れておく
   useEffect(() => {
     root.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' })
   }, [current?.id, playback.inFlight])
@@ -82,27 +89,39 @@ export function PlaybackControls({
           <p className="pacer__explain">{current.explain}</p>
         </div>
       ) : (
-        <p className="pacer__idle">
-          ボタンには、押すと次に何が起きるかが書いてあります。1
-          通ずつ進めてください。
-        </p>
+        <p className="pacer__idle">会話が自動で流れます。</p>
       )}
 
-      <button
-        type="button"
-        className="pacer__next"
-        onClick={onSend}
-        disabled={!sendable}
-      >
-        <span className="pacer__next-label">
-          {nextLabel(nodes, playback, conversation)}
-        </span>
-        {sendable && (
-          <span className="pacer__next-count">
-            {sent + 1} / {total}
-          </span>
-        )}
-      </button>
+      {finished ? (
+        <p className="pacer__done">この会話はここまで</p>
+      ) : (
+        <div className="pacer__controls">
+          <button
+            type="button"
+            className="pacer__toggle"
+            onClick={onToggleAuto}
+          >
+            {autoPlay ? '⏸ 止めて読む' : '▶ 自動で進む'}
+          </button>
+
+          {autoPlay ? (
+            <p className="pacer__preview">
+              {preview ? `次は ${preview}` : ' '}
+            </p>
+          ) : (
+            <button
+              type="button"
+              className="pacer__next"
+              onClick={onSend}
+              disabled={!sendable}
+            >
+              <span className="pacer__next-label">
+                {preview ? `次へ ▸ ${preview}` : '通信中…'}
+              </span>
+            </button>
+          )}
+        </div>
+      )}
     </section>
   )
 }

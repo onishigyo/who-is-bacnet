@@ -5,6 +5,7 @@ import { ConversationLog } from './components/ConversationLog'
 import { NetworkCanvas } from './components/NetworkCanvas'
 import { PlaybackControls } from './components/PlaybackControls'
 import { StepNav } from './components/StepNav'
+import { StepNotes } from './components/StepNotes'
 import { StepPanel } from './components/StepPanel'
 import { captures } from './content/captures'
 import {
@@ -30,6 +31,7 @@ import { INITIAL_DEVICE, initialAttackState, runAction } from './logic/attack'
 import {
   advancePlayback,
   broadcastTargets,
+  canSendNext,
   conversationById,
   currentMessage,
   flightPath,
@@ -41,7 +43,9 @@ import {
 import { buildDiagramState, stepByOrder } from './logic/steps'
 
 /** パケットが図の上を飛ぶ時間。目で追える速さにしている */
-const FLIGHT_MS = 2200
+const FLIGHT_MS = 1800
+/** 着信してから次を送り出すまでの間。解説を読む時間 */
+const DWELL_MS = 2400
 
 export default function App() {
   const [order, setOrder] = useState<StepOrder>(1)
@@ -52,6 +56,8 @@ export default function App() {
     null,
   )
   const [playback, setPlayback] = useState(IDLE_PLAYBACK)
+  /** 既定は自動で進む。読みたいところで止められる */
+  const [autoPlay, setAutoPlay] = useState(true)
   /** 着信済みのメッセージ。会話をまたいで積み上がる */
   const [transcript, setTranscript] = useState<ConversationMessage[]>([])
   const [attack, setAttack] = useState(initialAttackState)
@@ -67,32 +73,44 @@ export default function App() {
     : null
 
   /**
-   * 進むのは利用者がボタンを押したときだけ。
-   * タイマーが面倒を見るのは「飛んでいるパケットを着信させる」ところだけで、
-   * 着信したらそこで止まり、次は押されるまで送らない。
+   * 時間の面倒を見るだけの層。進め方の判断はロジック側にある。
+   * 飛んでいるパケットは必ず着信させ、そのあと自動で進む設定なら
+   * 解説を読む間をおいて次を送り出す。止めていれば、そこで待つ。
    */
   useEffect(() => {
-    if (!activeConversation || playback.inFlight === null) return
+    if (!activeConversation) return
 
-    const landing = inFlightMessage(playback, activeConversation)
+    if (playback.inFlight !== null) {
+      const landing = inFlightMessage(playback, activeConversation)
+      const timer = setTimeout(() => {
+        const next = advancePlayback(playback, activeConversation)
+        setPlayback(next)
+        if (landing) setTranscript((current) => [...current, landing])
+        if (next.status === 'finished' && activeActionId) {
+          setAttack((current) =>
+            runAction(attackActions, current, activeActionId),
+          )
+        }
+      }, FLIGHT_MS)
+      return () => clearTimeout(timer)
+    }
+
+    if (!autoPlay || !canSendNext(playback, activeConversation)) return
+
     const timer = setTimeout(() => {
-      const next = advancePlayback(playback, activeConversation)
-      setPlayback(next)
-      if (landing) setTranscript((current) => [...current, landing])
-      if (next.status === 'finished' && activeActionId) {
-        setAttack((current) =>
-          runAction(attackActions, current, activeActionId),
-        )
-      }
-    }, FLIGHT_MS)
-
+      setPlayback((current) => advancePlayback(current, activeConversation))
+    }, DWELL_MS)
     return () => clearTimeout(timer)
-  }, [playback, activeConversation, activeActionId])
+  }, [playback, activeConversation, activeActionId, autoPlay])
 
   const sendNext = useCallback(() => {
     if (!activeConversation) return
+    // 手動で送ったら、そこからは止めたままにする
+    setAutoPlay(false)
     setPlayback((current) => advancePlayback(current, activeConversation))
   }, [activeConversation])
+
+  const toggleAuto = useCallback(() => setAutoPlay((current) => !current), [])
 
   const goToStep = useCallback((next: StepOrder) => {
     setOrder(next)
@@ -103,6 +121,7 @@ export default function App() {
   }, [])
 
   const startNormalConversation = useCallback(() => {
+    setAutoPlay(true)
     setPlayback(IDLE_PLAYBACK)
     setTranscript([])
     setActiveActionId(null)
@@ -112,6 +131,7 @@ export default function App() {
   const runAttack = useCallback((id: AttackActionId) => {
     const action = attackActions.find((a) => a.id === id)
     if (!action) return
+    setAutoPlay(true)
     setPlayback(IDLE_PLAYBACK)
     setActiveActionId(id)
     setActiveConversationId(action.conversationId)
@@ -176,6 +196,8 @@ export default function App() {
         <aside className="app__panel">
           <StepPanel step={step} />
 
+          {order < 3 && <StepNotes notes={step.notes} />}
+
           {order === 3 && (
             <>
               {(!activeConversation || !busy) && (
@@ -193,6 +215,8 @@ export default function App() {
                   playback={playback}
                   current={current}
                   nodes={diagramNodes}
+                  autoPlay={autoPlay}
+                  onToggleAuto={toggleAuto}
                   onSend={sendNext}
                 />
               )}
@@ -200,8 +224,9 @@ export default function App() {
                 title="ここまでの会話"
                 messages={transcript}
                 nodes={diagramNodes}
-                emptyText="「会話を始める」を押すと、中央監視と機器のやり取りを 1 通ずつ送れます。"
+                emptyText="「会話を始める」を押すと、中央監視と機器のやり取りが流れます。"
               />
+              <StepNotes notes={step.notes} />
             </>
           )}
 
@@ -220,6 +245,8 @@ export default function App() {
                   playback={playback}
                   current={current}
                   nodes={diagramNodes}
+                  autoPlay={autoPlay}
+                  onToggleAuto={toggleAuto}
                   onSend={sendNext}
                 />
               )}
@@ -227,12 +254,13 @@ export default function App() {
                 title="ここまでの会話"
                 messages={transcript}
                 nodes={diagramNodes}
-                emptyText="コンソールの操作を選ぶと、やり取りを 1 通ずつ送れます。ステップ3の会話と見比べてください。"
+                emptyText="コンソールの操作を選ぶと、やり取りが流れます。ステップ3の会話と見比べてください。"
               />
               {attack.completed.length > 0 &&
                 captures.map((capture) => (
                   <CaptureEvidenceCard key={capture.id} capture={capture} />
                 ))}
+              <StepNotes notes={step.notes} />
             </>
           )}
         </aside>

@@ -64,20 +64,31 @@ describe('会話データ', () => {
     }
   })
 
-  it('Who-Is には、図に出ている機器が全台返事をする', () => {
+  it('Who-Is には、その時点で図にいる BACnet 機器が、送信元を除いて全台返事をする', () => {
+    // 攻撃者は BACnet 機器ではない（デバイスインスタンスを持たない）ので名乗らない
+    const expected = (order: number, asker: string) =>
+      diagramNodes
+        .filter(
+          (node) =>
+            node.appearsAt <= order &&
+            node.deviceInstance !== undefined &&
+            node.id !== asker,
+        )
+        .map((node) => node.id)
+        .sort()
+
     const responders = (id: string) =>
       conversationById(conversations, id)
         .messages.filter((message) => message.protocol.startsWith('I-Am'))
         .map((message) => message.from)
         .sort()
 
-    expect(responders(NORMAL_CONVERSATION_ID)).toEqual([
-      'ahu',
-      'lighting',
-      'meter',
-    ])
-    // 攻撃側でも同じ顔ぶれが返事をする（違うのは話し手だけ）
-    expect(responders('attack-discover')).toEqual(['ahu', 'lighting', 'meter'])
+    // ステップ3では中央監視が尋ねる側なので、返すのは機器 3 台
+    expect(responders(NORMAL_CONVERSATION_ID)).toEqual(
+      expected(3, 'supervisor'),
+    )
+    // ステップ4では攻撃者が尋ねるので、中央監視も返す
+    expect(responders('attack-discover')).toEqual(expected(4, 'attacker'))
   })
 
   it('メッセージ id はアプリ全体で一意', () => {
