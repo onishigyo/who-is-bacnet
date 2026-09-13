@@ -202,9 +202,16 @@ export default function App() {
   return (
     <div className="app">
       <header className="app__header">
-        <h1 className="app__title">Who-Is BACnet?</h1>
-        <p className="app__subtitle">
-          ビル設備のプロトコル BACnet を、1 枚のネットワーク図の上で理解する
+        <div className="app__brand">
+          <h1 className="app__title">Who-Is BACnet?</h1>
+          <p className="app__subtitle">
+            ビル設備のプロトコル BACnet を、1 枚のネットワーク図の上で理解する
+          </p>
+        </div>
+
+        <p className="app__disclaimer">
+          ブラウザ内だけで動く再現です。実際の BACnet 通信は発生しません。
+          防御を学ぶための教材であり、許可のないシステムへの操作を推奨するものではありません。
         </p>
       </header>
 
@@ -299,14 +306,6 @@ export default function App() {
           )}
         </aside>
       </main>
-
-      <footer className="app__footer">
-        <p>
-          このアプリはブラウザ内だけで動く再現です。実際の BACnet
-          通信は発生しません。
-          防御を学ぶための教材であり、許可のないシステムへの操作を推奨するものではありません。
-        </p>
-      </footer>
     </div>
   )
 }

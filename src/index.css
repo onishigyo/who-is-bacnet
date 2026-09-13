@@ -77,9 +77,23 @@ button:disabled {
 }
 
 .app__header {
-  padding: 16px 24px;
+  padding: 12px 24px;
   border-bottom: 1px solid var(--line);
   background: var(--bg-soft);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  flex: 0 0 auto;
+}
+
+.app__disclaimer {
+  max-width: 520px;
+  padding-left: 14px;
+  border-left: 2px solid var(--line);
+  font-size: 11.5px;
+  line-height: 1.6;
+  color: var(--muted);
 }
 
 .app__title {
@@ -107,8 +121,10 @@ button:disabled {
 }
 
 .app__canvas {
-  flex: 1;
-  min-height: 420px;
+  /* 帯・トラック・ナビは高さが決まっているので、余りはすべて図に渡す。
+     min-height を置くと画面が低いときにナビを押し出してしまう */
+  flex: 1 1 0;
+  min-height: 0;
 }
 
 .app__panel {
@@ -120,15 +136,17 @@ button:disabled {
   background: var(--bg-soft);
 }
 
-.app__footer {
-  border-top: 1px solid var(--line);
-  padding: 12px 24px;
-  color: var(--muted);
-  font-size: 12px;
-  background: var(--bg-soft);
-}
-
 @media (max-width: 1080px) {
+  .app__header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .app__disclaimer {
+    max-width: none;
+  }
+
   .app {
     height: auto;
     min-height: 100svh;
