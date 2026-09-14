@@ -1,6 +1,6 @@
 import type { Conversation } from '../domain/types'
 import { AHU_ID, ATTACKER_ID, SUPERVISOR_ID } from './diagram'
-import { HUB_ID } from './diagram-sc'
+import { SC_HUB_ID } from './diagram-sc'
 
 export const SC_NORMAL_CONVERSATION_ID = 'sc-normal'
 export const SC_ATTACK_CONVERSATION_ID = 'sc-attack'
@@ -25,18 +25,18 @@ export const scConversations: Conversation[] = [
       {
         id: 's1',
         from: AHU_ID,
-        to: HUB_ID,
+        to: SC_HUB_ID,
         kind: 'request',
-        plain: 'ハブに参加させてください（これが私の証明書です）',
+        plain: 'ネットワークに参加させてください（これが私の証明書です）',
         protocol: 'TLS 1.3 handshake（wss / port 47900）',
         transport: 'TCP → 192.168.222.130:47900',
         action: 'ハブに接続する',
         explain:
-          '空調コントローラが、ハブに向かって TLS で繋ぎにいきます。このとき自分の X.509 証明書を示します。同じネットワークにいるかどうかではなく、正しい証明書を持っているかどうかが問われます。',
+          '空調コントローラが、ハブ機能を持つ中央監視装置に向かって TLS で繋ぎにいきます。このとき自分の X.509 証明書を示します。同じネットワークにいるかどうかではなく、正しい証明書を持っているかどうかが問われます。',
       },
       {
         id: 's2',
-        from: HUB_ID,
+        from: SC_HUB_ID,
         to: AHU_ID,
         kind: 'response',
         plain: '証明書を確認しました。どうぞ',
@@ -109,19 +109,19 @@ export const scConversations: Conversation[] = [
       {
         id: 'sa1',
         from: ATTACKER_ID,
-        to: HUB_ID,
+        to: SC_HUB_ID,
         kind: 'request',
-        plain: 'ハブに参加させてください',
+        plain: 'ネットワークに参加させてください',
         protocol: 'TLS 1.3 handshake を開始（wss / port 47900）',
         transport: 'TCP → 192.168.222.130:47900',
         action: 'ハブに接続を試みる',
         explain:
-          'IP 編と同じ「持ち込まれた PC」が、今度はハブに繋ごうとします。やろうとしていることは、正規の機器と同じ ── まずハブに接続することです。',
+          'IP 編と同じ「持ち込まれた PC」が、今度はハブ（中央監視装置）に繋ごうとします。やろうとしていることは、正規の機器と同じ ── まずハブに接続することです。',
         annotation: 'IP 編では、この先で会話に割り込めた',
       },
       {
         id: 'sa2',
-        from: HUB_ID,
+        from: SC_HUB_ID,
         to: ATTACKER_ID,
         kind: 'response',
         plain: '証明書がありません。参加は認められません',

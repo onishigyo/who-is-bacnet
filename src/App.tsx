@@ -24,7 +24,7 @@ import {
   diagramNodes,
   NETWORK_NODE_ID,
 } from './content/diagram'
-import { HUB_ID, scDiagramEdges, scDiagramNodes } from './content/diagram-sc'
+import { SC_HUB_ID, scDiagramEdges, scDiagramNodes } from './content/diagram-sc'
 import { steps } from './content/steps'
 import type {
   ConversationMessage,
@@ -63,7 +63,7 @@ export default function App() {
   // world ごとに、図・会話・中継ノードを丸ごと切り替える
   const worldNodes = isSc ? scDiagramNodes : diagramNodes
   const worldEdges = isSc ? scDiagramEdges : diagramEdges
-  const networkNodeId = isSc ? HUB_ID : NETWORK_NODE_ID
+  const networkNodeId = isSc ? SC_HUB_ID : NETWORK_NODE_ID
   const allConversations = useMemo(
     () => [...conversations, ...scConversations],
     [],

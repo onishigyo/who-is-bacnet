@@ -4,14 +4,20 @@ import {
   SC_ATTACK_CONVERSATION_ID,
   SC_NORMAL_CONVERSATION_ID,
 } from '../content/conversations-sc'
-import { HUB_ID, scDiagramEdges, scDiagramNodes } from '../content/diagram-sc'
+import {
+  SC_HUB_ID,
+  scDiagramEdges,
+  scDiagramNodes,
+} from '../content/diagram-sc'
 
 describe('SC 図', () => {
-  it('中央はハブで、機器はすべてハブに繋がる', () => {
-    const hub = scDiagramNodes.find((n) => n.id === HUB_ID)
-    expect(hub?.kind).toBe('hub')
+  it('機器はすべて、ハブ機能を兼ねる中央監視に繋がる', () => {
+    // ハブは専用機とは限らず、中央監視装置がハブ機能を兼ねる構成
+    const hub = scDiagramNodes.find((n) => n.id === SC_HUB_ID)
+    expect(hub).toBeDefined()
+    expect(hub?.hasCertificate).toBe(true)
     for (const edge of scDiagramEdges) {
-      expect(edge.target).toBe(HUB_ID)
+      expect(edge.target).toBe(SC_HUB_ID)
     }
   })
 
@@ -52,7 +58,7 @@ describe('SC 会話', () => {
   it('攻撃は、ハブの拒否で終わる（rejected で止まる）', () => {
     const last = attack.messages.at(-1)!
     expect(last.rejected).toBe(true)
-    expect(last.from).toBe(HUB_ID)
+    expect(last.from).toBe(SC_HUB_ID)
     // 拒否より後に、Read や Write は 1 通も無い
     expect(
       attack.messages.some((m) =>

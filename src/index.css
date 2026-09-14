@@ -188,11 +188,13 @@ button:disabled {
   gap: 6px;
   list-style: none;
   margin: 0;
-  padding: 0;
+  padding: 2px;
   flex: 1;
-  flex-wrap: wrap;
-  justify-content: center;
+  /* 数が多いので折り返さず、入り切らなければ横スクロール */
+  flex-wrap: nowrap;
+  overflow-x: auto;
   align-items: center;
+  scrollbar-width: thin;
 }
 
 .stepnav__item {

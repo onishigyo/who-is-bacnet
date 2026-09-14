@@ -1,5 +1,4 @@
 import type { StepContent, StepOrder } from '../domain/types'
-import { canGoNext, canGoPrev, nextStep, prevStep } from '../logic/steps'
 
 interface Props {
   steps: StepContent[]
@@ -7,18 +6,13 @@ interface Props {
   onChange: (order: StepOrder) => void
 }
 
+/**
+ * ステップの pill を 1 行に並べる。数が多いので横スクロールで逃がす。
+ * 進む／戻るボタンは置かない（pill を直接押して移動する）。
+ */
 export function StepNav({ steps, current, onChange }: Props) {
   return (
     <nav className="stepnav" aria-label="学習ステップ">
-      <button
-        type="button"
-        className="stepnav__arrow"
-        onClick={() => onChange(prevStep(current))}
-        disabled={!canGoPrev(current)}
-      >
-        ← 戻る
-      </button>
-
       <ol className="stepnav__list">
         {steps.map((step, index) => {
           // 章が切り替わるところに区切りを入れる（IP 編 → SC 編）
@@ -42,15 +36,6 @@ export function StepNav({ steps, current, onChange }: Props) {
           )
         })}
       </ol>
-
-      <button
-        type="button"
-        className="stepnav__arrow"
-        onClick={() => onChange(nextStep(current))}
-        disabled={!canGoNext(current)}
-      >
-        次へ →
-      </button>
     </nav>
   )
 }
