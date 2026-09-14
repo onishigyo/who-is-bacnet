@@ -6,18 +6,25 @@ import { NetworkCanvas } from './components/NetworkCanvas'
 import { StepNav } from './components/StepNav'
 import { StepNotes } from './components/StepNotes'
 import { StepPanel } from './components/StepPanel'
-import { ipCapture } from './content/captures'
+import { ipCapture, scCapture } from './content/captures'
 import {
   ATTACK_CONVERSATION_ID,
   conversations,
   NORMAL_CONVERSATION_ID,
 } from './content/conversations'
 import {
+  SC_ATTACK_CONVERSATION_ID,
+  SC_NORMAL_CONVERSATION_ID,
+  scConversations,
+} from './content/conversations-sc'
+import {
   AHU_ID,
   ATTACKER_ID,
   diagramEdges,
   diagramNodes,
+  NETWORK_NODE_ID,
 } from './content/diagram'
+import { HUB_ID, scDiagramEdges, scDiagramNodes } from './content/diagram-sc'
 import { steps } from './content/steps'
 import type {
   ConversationMessage,
@@ -51,13 +58,24 @@ export default function App() {
   const [transcript, setTranscript] = useState<ConversationMessage[]>([])
 
   const step = stepByOrder(steps, order)
+  const isSc = step.world === 'sc'
+
+  // world ごとに、図・会話・中継ノードを丸ごと切り替える
+  const worldNodes = isSc ? scDiagramNodes : diagramNodes
+  const worldEdges = isSc ? scDiagramEdges : diagramEdges
+  const networkNodeId = isSc ? HUB_ID : NETWORK_NODE_ID
+  const allConversations = useMemo(
+    () => [...conversations, ...scConversations],
+    [],
+  )
+
   const diagram = useMemo(
-    () => buildDiagramState(diagramNodes, diagramEdges, order),
-    [order],
+    () => buildDiagramState(worldNodes, worldEdges, order),
+    [worldNodes, worldEdges, order],
   )
 
   const activeConversation = activeConversationId
-    ? conversationById(conversations, activeConversationId)
+    ? conversationById(allConversations, activeConversationId)
     : null
 
   /**
@@ -103,7 +121,7 @@ export default function App() {
 
   /** その会話を最初から再生する（ステップ3・4 で共通） */
   const startConversation = useCallback((id: string) => {
-    const conversation = conversationById(conversations, id)
+    const conversation = conversationById(allConversations, id)
     setReviewId(null)
     setTranscript([])
     setActiveConversationId(id)
@@ -123,10 +141,27 @@ export default function App() {
   const current = reviewed.length > 0 ? reviewed : liveGroup
   const reviewing = reviewed.length > 0
   const deviceReadouts = useMemo<Record<NodeId, DeviceState>>(() => {
-    if (order < 3) return {}
-    // 着信したやり取りから、機器のいまの状態を組み立てる
+    // 機器の値表示は IP 編だけ。SC 編は外から中身が見えないのが主眼なので出さない
+    if (order !== 3 && order !== 4) return {}
     return { [AHU_ID]: deviceFrom(transcript, ATTACKER_ID) }
   }, [order, transcript])
+
+  /** その order に会話があるなら、その id を返す */
+  const conversationIdFor = (o: StepOrder): string | null => {
+    switch (o) {
+      case 3:
+        return NORMAL_CONVERSATION_ID
+      case 4:
+        return ATTACK_CONVERSATION_ID
+      case 5:
+        return SC_NORMAL_CONVERSATION_ID
+      case 6:
+        return SC_ATTACK_CONVERSATION_ID
+      default:
+        return null
+    }
+  }
+  const hasConversation = conversationIdFor(order) !== null
 
   return (
     <div className="app">
@@ -152,17 +187,18 @@ export default function App() {
               diagram={diagram}
               deviceReadouts={deviceReadouts}
               inFlight={inFlight}
+              networkNodeId={networkNodeId}
               flightKey={`${activeConversationId ?? 'none'}-${playback.inFlightGroup ?? -1}`}
               durationMs={FLIGHT_MS}
             />
           </div>
 
-          {order >= 3 && (
+          {hasConversation && (
             <ConversationBar
               conversation={activeConversation}
               playback={playback}
               current={current}
-              nodes={diagramNodes}
+              nodes={worldNodes}
               onSend={sendNext}
               reviewing={reviewing}
               onExitReview={exitReview}
@@ -170,17 +206,14 @@ export default function App() {
                 <button
                   type="button"
                   className="play"
-                  onClick={() =>
-                    startConversation(
-                      order === 3
-                        ? NORMAL_CONVERSATION_ID
-                        : ATTACK_CONVERSATION_ID,
-                    )
-                  }
+                  onClick={() => {
+                    const id = conversationIdFor(order)
+                    if (id) startConversation(id)
+                  }}
                 >
                   {activeConversation
                     ? 'もう一度、最初から'
-                    : order === 3
+                    : order === 3 || order === 5
                       ? '会話を始める'
                       : '持ち込まれた PC を操作する'}
                 </button>
@@ -188,16 +221,16 @@ export default function App() {
             />
           )}
 
-          {order >= 3 && (
+          {hasConversation && (
             <ConversationTrack
               messages={transcript}
-              nodes={diagramNodes}
+              nodes={worldNodes}
               activeIds={current.map((message) => message.id)}
               onSelect={reviewMessage}
               emptyText={
-                order === 3
+                order === 3 || order === 5
                   ? 'ここに、やり取りが積み上がります。押すと読み直せます。'
-                  : 'ここに、攻撃者のやり取りが積み上がります。ステップ3と見比べてください。'
+                  : 'ここに、攻撃者のやり取りが積み上がります。前のステップと見比べてください。'
               }
             />
           )}
@@ -208,10 +241,12 @@ export default function App() {
         <aside className="app__panel">
           <StepPanel step={step} />
 
-          {order < 3 && <StepNotes notes={step.notes} />}
+          {(order === 1 || order === 2 || order === 5) && (
+            <StepNotes notes={step.notes} />
+          )}
 
+          {/* IP 編ステップ4：攻撃を始めた時点から、飛んでいる行を光らせる */}
           {order === 4 && activeConversation && (
-            // 攻撃を始めた時点から出し、いま図の上を飛んでいる行を光らせる
             <CaptureEvidenceCard
               capture={ipCapture}
               highlight={current.flatMap((message) =>
@@ -220,7 +255,17 @@ export default function App() {
             />
           )}
 
-          {order >= 3 && <StepNotes notes={step.notes} />}
+          {/* SC 編ステップ6：IP（読める）と SC（読めない）を並べる Before/After */}
+          {order === 6 && (
+            <div className="beforeafter">
+              <CaptureEvidenceCard capture={ipCapture} />
+              <CaptureEvidenceCard capture={scCapture} />
+            </div>
+          )}
+
+          {order !== 1 && order !== 2 && order !== 5 && (
+            <StepNotes notes={step.notes} />
+          )}
         </aside>
       </main>
     </div>

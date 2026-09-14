@@ -20,19 +20,27 @@ export function StepNav({ steps, current, onChange }: Props) {
       </button>
 
       <ol className="stepnav__list">
-        {steps.map((step) => (
-          <li key={step.id}>
-            <button
-              type="button"
-              className="stepnav__pill"
-              aria-current={step.order === current ? 'step' : undefined}
-              onClick={() => onChange(step.order)}
-            >
-              <span className="stepnav__num">{step.order}</span>
-              <span className="stepnav__label">{step.navLabel}</span>
-            </button>
-          </li>
-        ))}
+        {steps.map((step, index) => {
+          // 章が切り替わるところに区切りを入れる（IP 編 → SC 編）
+          const newChapter =
+            index === 0 || steps[index - 1].chapter !== step.chapter
+          return (
+            <li key={step.id} className="stepnav__item">
+              {newChapter && (
+                <span className="stepnav__chapter">{step.chapter}</span>
+              )}
+              <button
+                type="button"
+                className="stepnav__pill"
+                aria-current={step.order === current ? 'step' : undefined}
+                onClick={() => onChange(step.order)}
+              >
+                <span className="stepnav__num">{step.order}</span>
+                <span className="stepnav__label">{step.navLabel}</span>
+              </button>
+            </li>
+          )
+        })}
       </ol>
 
       <button

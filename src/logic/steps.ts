@@ -7,8 +7,8 @@ import type {
 } from '../domain/types'
 
 export const FIRST_STEP: StepOrder = 1
-export const LAST_STEP: StepOrder = 4
-export const STEP_ORDERS: StepOrder[] = [1, 2, 3, 4]
+export const LAST_STEP: StepOrder = 7
+export const STEP_ORDERS: StepOrder[] = [1, 2, 3, 4, 5, 6, 7]
 
 /** IP アドレスの札が出るステップ（BACnet/IP の説明以降） */
 const IP_VISIBLE_FROM: StepOrder = 2

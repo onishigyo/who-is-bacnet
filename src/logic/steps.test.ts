@@ -19,22 +19,34 @@ describe('ステップの移動', () => {
   it('最初のステップでは戻れず、最後のステップでは進めない', () => {
     expect(canGoPrev(1)).toBe(false)
     expect(canGoNext(1)).toBe(true)
-    expect(canGoPrev(4)).toBe(true)
-    expect(canGoNext(4)).toBe(false)
+    expect(canGoPrev(7)).toBe(true)
+    expect(canGoNext(7)).toBe(false)
   })
 
   it('端でクランプされる', () => {
     expect(prevStep(1)).toBe(1)
-    expect(nextStep(4)).toBe(4)
+    expect(nextStep(7)).toBe(7)
     expect(nextStep(2)).toBe(3)
     expect(prevStep(3)).toBe(2)
+    // 章をまたいでも連続で動く（IP 編 4 → SC 編 5）
+    expect(nextStep(4)).toBe(5)
+    expect(prevStep(5)).toBe(4)
   })
 })
 
 describe('ステップ内容', () => {
-  it('1〜4 のすべてが定義され、順序が重複しない', () => {
+  it('1〜7 のすべてが定義され、順序が重複しない', () => {
     const orders = steps.map((step) => step.order)
-    expect([...orders].sort()).toEqual([1, 2, 3, 4])
+    expect([...orders].sort()).toEqual([1, 2, 3, 4, 5, 6, 7])
+  })
+
+  it('各ステップは world と章を持つ（IP 編 1〜4 / SC 編 5〜7）', () => {
+    for (const step of steps) {
+      expect(['ip', 'sc']).toContain(step.world)
+      expect(step.chapter.length).toBeGreaterThan(0)
+      if (step.world === 'ip') expect(step.order).toBeLessThanOrEqual(4)
+      if (step.world === 'sc') expect(step.order).toBeGreaterThanOrEqual(5)
+    }
   })
 
   it('order で引ける', () => {

@@ -185,13 +185,35 @@ button:disabled {
 
 .stepnav__list {
   display: flex;
-  gap: 8px;
+  gap: 6px;
   list-style: none;
   margin: 0;
   padding: 0;
   flex: 1;
   flex-wrap: wrap;
   justify-content: center;
+  align-items: center;
+}
+
+.stepnav__item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.stepnav__chapter {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--muted);
+  padding: 2px 8px;
+  border-left: 2px solid var(--line);
+  margin-left: 4px;
+  white-space: nowrap;
+}
+
+.stepnav__item:first-child .stepnav__chapter {
+  border-left: none;
+  margin-left: 0;
 }
 
 .stepnav__pill {
@@ -1027,6 +1049,12 @@ button:disabled {
 }
 
 /* ---------- Wireshark 答え合わせ ---------- */
+
+.beforeafter {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
 
 .capture {
   padding: 16px;

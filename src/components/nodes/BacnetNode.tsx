@@ -16,6 +16,7 @@ const kindLabel: Record<NodeKind, string> = {
   controller: 'BACnet 機器',
   supervisor: '中央監視',
   switch: 'ネットワーク',
+  hub: 'SC ハブ',
   attacker: '攻撃者',
 }
 
