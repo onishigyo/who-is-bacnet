@@ -320,38 +320,6 @@ export const conversations: Conversation[] = [
           '認証の確認なし。中央監視からの指示とまったく同じ扱いで受け入れられた',
         annotationTone: 'alert',
       },
-      {
-        id: 'a12',
-        from: ATTACKER_ID,
-        to: AHU_ID,
-        kind: 'request',
-        plain: 'いまの設定温度を教えて',
-        protocol:
-          'Confirmed-REQ   readProperty[  3] analog-value,0 present-value',
-        frame: 3690,
-        transport: 'UDP ユニキャスト → 192.168.222.130:47808',
-        action: '設定温度を読む',
-        explain:
-          'SimpleACK は「受け付けました」と言っているだけで、本当に値が変わったかまでは教えてくれません。そこで、書き換えた設定温度（analog-value,0）をもう一度読みにいきます。',
-      },
-      {
-        id: 'a13',
-        from: AHU_ID,
-        to: ATTACKER_ID,
-        kind: 'response',
-        plain: '99.0 ℃です',
-        protocol:
-          'Complex-ACK     readProperty[  3] analog-value,0 present-value',
-        value: 'Present Value (real): 99',
-        frame: 3691,
-        transport: 'UDP ユニキャスト → 192.168.222.128:47808',
-        action: '設定温度を返す',
-        explain:
-          '24.0 ℃だったものが 99.0 ℃になっています。書き換えは本当に効いています。しかも攻撃者は、それを中央監視を通さずに、自分の手元で確かめられます。',
-        annotation:
-          '24.0 → 99.0。書き換えは成功していて、持ち込まれた PC から確かめられる',
-        annotationTone: 'alert',
-      },
     ],
   },
 ]

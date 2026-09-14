@@ -84,21 +84,6 @@ export const ipCapture: CaptureEvidence = {
       protocol: 'BACnet-APDU',
       info: 'Simple-ACK      writeProperty[  2]',
     },
-    {
-      no: 3690,
-      source: '192.168.222.128',
-      destination: '192.168.222.130',
-      protocol: 'BACnet-APDU',
-      info: 'Confirmed-REQ   readProperty[  3] analog-value,0 present-value',
-    },
-    {
-      no: 3691,
-      source: '192.168.222.130',
-      destination: '192.168.222.128',
-      protocol: 'BACnet-APDU',
-      info: 'Complex-ACK     readProperty[  3] analog-value,0 present-value',
-      value: 'Present Value (real): 99',
-    },
   ],
   alt: '実験で取得した BACnet/IP の通信を Wireshark で bacnet フィルタ表示した一覧',
 }
