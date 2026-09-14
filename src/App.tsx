@@ -26,20 +26,17 @@ import {
 } from './content/diagram'
 import { SC_HUB_ID, scDiagramEdges, scDiagramNodes } from './content/diagram-sc'
 import { steps } from './content/steps'
-import type {
-  ConversationMessage,
-  DeviceState,
-  NodeId,
-  StepOrder,
-} from './domain/types'
+import type { DeviceState, NodeId, StepOrder } from './domain/types'
 import { deviceFrom } from './logic/device'
 import {
-  advancePlayback,
   conversationById,
-  currentGroup,
-  groupOf,
+  flyingMessages,
+  groupIndexOfMessage,
   IDLE_PLAYBACK,
-  inFlightMessages,
+  landGroup,
+  messagesUpToGroup,
+  playGroup,
+  selectedMessages,
 } from './logic/conversation'
 import { buildDiagramState, stepByOrder } from './logic/steps'
 
@@ -52,10 +49,6 @@ export default function App() {
     string | null
   >(null)
   const [playback, setPlayback] = useState(IDLE_PLAYBACK)
-  /** トラックから選んで見直しているメッセージ */
-  const [reviewId, setReviewId] = useState<string | null>(null)
-  /** 着信済みのメッセージ。会話をまたいで積み上がる */
-  const [transcript, setTranscript] = useState<ConversationMessage[]>([])
 
   const step = stepByOrder(steps, order)
   const isSc = step.world === 'sc'
@@ -78,73 +71,57 @@ export default function App() {
     ? conversationById(allConversations, activeConversationId)
     : null
 
-  /**
-   * 時間の面倒を見るだけの層。進むのは利用者が押したときだけで、
-   * タイマーは「飛んでいるパケットを着信させる」ところだけを受け持つ。
-   */
+  // 飛行中のまとまりは、一定時間で着地させる（アニメの終わり）
   useEffect(() => {
-    if (!activeConversation) return
-
-    if (playback.inFlightGroup === null) return
-
-    const landing = inFlightMessages(playback, activeConversation)
-    const timer = setTimeout(() => {
-      const next = advancePlayback(playback, activeConversation)
-      setPlayback(next)
-      if (landing.length > 0) {
-        setTranscript((current) => [...current, ...landing])
-        setReviewId(null)
-      }
-    }, FLIGHT_MS)
-
+    if (playback.phase !== 'flying') return
+    const timer = setTimeout(() => setPlayback(landGroup), FLIGHT_MS)
     return () => clearTimeout(timer)
-  }, [playback, activeConversation])
+  }, [playback])
 
-  const sendNext = useCallback(() => {
-    if (!activeConversation) return
-    setReviewId(null)
-    setPlayback((current) => advancePlayback(current, activeConversation))
-  }, [activeConversation])
+  /** そのまとまりを図で再生する */
+  const play = useCallback((index: number) => {
+    setPlayback((current) => playGroup(current, index))
+  }, [])
 
-  /** 過去のやり取りを選んで読み直す */
-  const reviewMessage = useCallback((id: string) => setReviewId(id), [])
-
-  const exitReview = useCallback(() => setReviewId(null), [])
+  /** トラックのチップを押したら、そのまとまりを再生する */
+  const selectMessage = useCallback(
+    (messageId: string) => {
+      if (!activeConversation) return
+      const index = groupIndexOfMessage(activeConversation, messageId)
+      if (index !== null) play(index)
+    },
+    [activeConversation, play],
+  )
 
   const goToStep = useCallback((next: StepOrder) => {
     setOrder(next)
-    setReviewId(null)
     setActiveConversationId(null)
     setPlayback(IDLE_PLAYBACK)
-    setTranscript([])
   }, [])
 
-  /** その会話を最初から再生する（ステップ3・4 で共通） */
+  /** その会話を開始し、先頭のまとまりを再生する */
   const startConversation = useCallback((id: string) => {
-    const conversation = conversationById(allConversations, id)
-    setReviewId(null)
-    setTranscript([])
     setActiveConversationId(id)
-    // 押したその場で 1 通目を送り出す
-    setPlayback(advancePlayback(IDLE_PLAYBACK, conversation))
+    // 全やり取りはトラックに並ぶ。まず先頭を再生してきっかけにする
+    setPlayback(playGroup(IDLE_PLAYBACK, 0))
   }, [])
 
   const inFlight = activeConversation
-    ? inFlightMessages(playback, activeConversation)
+    ? flyingMessages(activeConversation, playback)
     : []
-  const liveGroup = activeConversation
-    ? currentGroup(playback, activeConversation)
+  const current = activeConversation
+    ? selectedMessages(activeConversation, playback)
     : []
-  // トラックから選んでいるときは、そのまとまりを帯に出す。
-  // まとめて送ったものは、読み直すときもまとめて見せる
-  const reviewed = reviewId ? groupOf(transcript, reviewId) : []
-  const current = reviewed.length > 0 ? reviewed : liveGroup
-  const reviewing = reviewed.length > 0
   const deviceReadouts = useMemo<Record<NodeId, DeviceState>>(() => {
     // 機器の値表示は IP 編だけ。SC 編は外から中身が見えないのが主眼なので出さない
     if (order !== 3 && order !== 4) return {}
-    return { [AHU_ID]: deviceFrom(transcript, ATTACKER_ID) }
-  }, [order, transcript])
+    // いま選んでいるまとまりまでの、その時点の機器状態を出す
+    const upto =
+      activeConversation && playback.selected !== null
+        ? messagesUpToGroup(activeConversation, playback.selected)
+        : []
+    return { [AHU_ID]: deviceFrom(upto, ATTACKER_ID) }
+  }, [order, activeConversation, playback.selected])
 
   /** その order に会話があるなら、その id を返す */
   const conversationIdFor = (o: StepOrder): string | null => {
@@ -188,20 +165,15 @@ export default function App() {
               deviceReadouts={deviceReadouts}
               inFlight={inFlight}
               networkNodeId={networkNodeId}
-              flightKey={`${activeConversationId ?? 'none'}-${playback.inFlightGroup ?? -1}`}
+              flightKey={`${activeConversationId ?? 'none'}-${playback.nonce}`}
               durationMs={FLIGHT_MS}
             />
           </div>
 
           {hasConversation && (
             <ConversationBar
-              conversation={activeConversation}
-              playback={playback}
               current={current}
               nodes={worldNodes}
-              onSend={sendNext}
-              reviewing={reviewing}
-              onExitReview={exitReview}
               idle={
                 <button
                   type="button"
@@ -223,14 +195,14 @@ export default function App() {
 
           {hasConversation && (
             <ConversationTrack
-              messages={transcript}
+              messages={activeConversation ? activeConversation.messages : []}
               nodes={worldNodes}
               activeIds={current.map((message) => message.id)}
-              onSelect={reviewMessage}
+              onSelect={selectMessage}
               emptyText={
                 order === 3 || order === 5
-                  ? 'ここに、やり取りが積み上がります。押すと読み直せます。'
-                  : 'ここに、攻撃者のやり取りが積み上がります。前のステップと見比べてください。'
+                  ? '「会話を始める」を押すと、やり取りがここに並びます。チップを押すと図で再生されます。'
+                  : '操作を始めると、やり取りがここに並びます。前のステップと見比べてください。'
               }
             />
           )}

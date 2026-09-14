@@ -143,7 +143,7 @@ export function NetworkCanvas({
           ),
         }
       }),
-    [inFlight, diagram],
+    [inFlight, diagram, networkNodeId],
   )
 
   const speaking = useMemo(

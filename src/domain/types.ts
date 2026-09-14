@@ -146,18 +146,19 @@ export interface Conversation {
   messages: ConversationMessage[]
 }
 
-export type PlaybackStatus = 'idle' | 'playing' | 'finished'
+export type PlaybackPhase = 'flying' | 'landed'
 
 /**
- * 会話再生の状態。時間を持たない純粋な状態機械として扱う。
- * 進む単位はメッセージではなく「まとまり（group）」。
+ * 会話再生の状態。トラックのどのまとまりを、いま図で再生しているか。
+ * 順送りではなく、利用者が選んだまとまりを 1 回ずつ再生するモデル。
  */
 export interface PlaybackState {
-  status: PlaybackStatus
-  /** 到達済みのまとまりの数 */
-  deliveredGroups: number
-  /** いま飛んでいるまとまりの index。飛んでいなければ null */
-  inFlightGroup: number | null
+  /** いま選んでいるまとまりの index。未選択なら null */
+  selected: number | null
+  /** そのまとまりが図を飛んでいる最中か、着いたか */
+  phase: PlaybackPhase
+  /** 再生ごとに増える。同じまとまりを選び直してもアニメをやり直すため */
+  nonce: number
 }
 
 export interface DeviceState {
