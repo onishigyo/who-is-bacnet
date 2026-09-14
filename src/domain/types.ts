@@ -92,8 +92,12 @@ export interface ConversationMessage {
   kind: MessageKind
   /** 意訳 */
   plain: string
-  /** 実コマンド／プロトコル用語（APDU の中身） */
+  /** 実コマンド／プロトコル用語。Wireshark の Info 欄と同じ表記で書く */
   protocol: string
+  /** 詳細ペインで見える値（Present Value など）。Info 欄には出ない */
+  value?: string
+  /** 実験キャプチャで対応するパケットの番号。実験にない通信なら持たない */
+  frame?: number
   /** どこへ届くか。BACnet の要求自体に相手の識別子は入らず、宛先は IP が決める */
   transport: string
   /** このメッセージで話し手が何をするか（「▸ 〇〇が〜する」の後半） */
@@ -130,7 +134,7 @@ export interface PlaybackState {
   inFlightGroup: number | null
 }
 
-export type AttackActionId = 'discover' | 'read' | 'write'
+export type AttackActionId = 'discover' | 'read' | 'write' | 'verify'
 
 export interface AttackAction {
   id: AttackActionId

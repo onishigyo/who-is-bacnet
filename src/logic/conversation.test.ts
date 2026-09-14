@@ -47,8 +47,8 @@ describe('会話データ', () => {
     const known = new Set(
       diagramNodes.flatMap((node) => (node.ip ? [node.ip] : [])),
     )
-    // 192.168.1.0/24 の指向性ブロードキャスト
-    known.add('192.168.1.255')
+    // 192.168.222.0/24 の指向性ブロードキャスト（実験と同じネットワーク）
+    known.add('192.168.222.255')
 
     for (const conversation of conversations) {
       for (const message of conversation.messages) {
@@ -64,8 +64,8 @@ describe('会話データ', () => {
   it('ブロードキャストで送るのは Who-Is だけで、あとは宛先 IP を名指しする', () => {
     for (const conversation of conversations) {
       for (const message of conversation.messages) {
-        const broadcast = message.transport.includes('192.168.1.255')
-        expect(broadcast).toBe(message.protocol.startsWith('Who-Is'))
+        const broadcast = message.transport.includes('192.168.222.255')
+        expect(broadcast).toBe(message.protocol.includes('who-Is'))
       }
     }
   })
@@ -85,7 +85,7 @@ describe('会話データ', () => {
 
     const responders = (id: string) =>
       conversationById(conversations, id)
-        .messages.filter((message) => message.protocol.startsWith('I-Am'))
+        .messages.filter((message) => message.protocol.includes('i-Am'))
         .map((message) => message.from)
         .sort()
 
@@ -104,15 +104,17 @@ describe('会話データ', () => {
 
   it('正常運用と攻撃で、同じ要求が話し手だけ変えて現れる', () => {
     const normalWrite = normal.messages.find((m) =>
-      m.protocol.startsWith('WriteProperty'),
+      m.protocol.includes('writeProperty'),
     )
     const attackWrite = conversationById(
       conversations,
       'attack-write',
-    ).messages.find((m) => m.protocol.startsWith('WriteProperty'))
+    ).messages.find((m) => m.protocol.includes('writeProperty'))
     expect(normalWrite?.from).toBe('supervisor')
     expect(attackWrite?.from).toBe('attacker')
     expect(normalWrite?.to).toBe(attackWrite?.to)
+    // Wireshark で見える要求は一字一句同じ。違うのは話し手と、書く値だけ
+    expect(normalWrite?.protocol).toBe(attackWrite?.protocol)
     expect(normalWrite?.kind).toBe(attackWrite?.kind)
     // ボタンの予告も同じ文言にして、「違うのは話し手だけ」を画面上でも揃える
     expect(normalWrite?.action).toBe(attackWrite?.action)

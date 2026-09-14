@@ -62,6 +62,10 @@ function MessageLine({
       <div className="stagebar__row">
         <span className="stagebar__who">{nameOf(nodes, message.from)}</span>
         <code className="stagebar__protocol">{message.protocol}</code>
+        {/* 実験に出てくる 1 通だけ番号を出す。ほかは物語上の機器 */}
+        <span className="stagebar__frame">
+          {message.frame !== undefined ? `No.${message.frame}` : ''}
+        </span>
       </div>
     )
   }
@@ -72,9 +76,15 @@ function MessageLine({
         {nameOf(nodes, message.from)}
         <span aria-hidden="true"> → </span>
         {targetName(nodes, message)}
+        {message.frame !== undefined && (
+          <span className="stagebar__frame">Wireshark No.{message.frame}</span>
+        )}
       </p>
       <p className="stagebar__plain">{message.plain}</p>
       <code className="stagebar__protocol">{message.protocol}</code>
+      {message.value && (
+        <code className="stagebar__value">{message.value}</code>
+      )}
       <code className="stagebar__transport">{message.transport}</code>
     </div>
   )

@@ -50,6 +50,9 @@ function applyOutcome(device: DeviceState, id: AttackActionId): DeviceState {
       return device
     case 'write':
       return { ...device, setpoint: ATTACK_SETPOINT, compromised: true }
+    case 'verify':
+      // 読み直すだけ。書き換えが効いていることを攻撃者が確かめる
+      return device
   }
 }
 

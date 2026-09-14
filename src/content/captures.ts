@@ -12,7 +12,7 @@ import type { CaptureEvidence } from '../domain/types'
  */
 
 const PROVENANCE_BASE =
-  '制作者が閉域の実験環境（VMware 上の仮想マシン 2 台）で取得したキャプチャを、tshark 4.6.8 で表示フィルタをかけて出力したものです。アドレスは実験環境のもの（192.168.222.x）で、図の 192.168.1.x とは別の閉域網です。'
+  '制作者が閉域の実験環境（VMware 上の仮想マシン 2 台）で取得したキャプチャを、tshark 4.6.8 で表示フィルタをかけて出力したものです。図のアドレスも、この実験に合わせてあります。実験に登場するのは、送信側（192.168.222.128 = 図の「持ち込まれた PC」）と BACnet 機器（192.168.222.130 = 図の「空調コントローラ」）の 2 台だけです。照明コントローラ・電力計・中央監視装置は、教材の物語として置いた機器で、実験には登場しません。'
 
 /** BACnet/IP：何をしているかが平文で全部読める（ステップ4の答え合わせ） */
 export const ipCapture: CaptureEvidence = {
@@ -21,7 +21,9 @@ export const ipCapture: CaptureEvidence = {
   caption:
     'Info 欄に、何をしているかがそのまま並びます。誰が誰に、どのオブジェクトの何を読んだか・書いたか。値も詳細を開けば読めます。どれも隠れていません。',
   filter: 'bacnet',
-  provenance: PROVENANCE_BASE,
+  provenance:
+    PROVENANCE_BASE +
+    '読んだ室温 22 と、書き込んだ 99 は実験で取った値です。ステップ3で中央監視が設定する 24.0 は、物語上の値です。',
   rows: [
     {
       no: 1052,

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { ipCapture, scCapture } from '../content/captures'
+import { attackActions, conversations } from '../content/conversations'
 import { AHU_ID, diagramNodes } from '../content/diagram'
 import { ATTACK_SETPOINT, INITIAL_DEVICE } from './attack'
 
@@ -47,6 +48,43 @@ describe('公開する範囲の点検', () => {
     for (const row of [...ipCapture.rows, ...scCapture.rows]) {
       expect(row.source).toMatch(/^192\.168\.222\.\d+$/)
       expect(row.destination).toMatch(/^192\.168\.222\.\d+$/)
+    }
+  })
+})
+
+describe('デモの攻撃は、実験キャプチャと 1 対 1 で対応する', () => {
+  // 操作の順に並べた、攻撃側の全メッセージ
+  const attackMessages = attackActions.flatMap(
+    (action) =>
+      conversations.find((c) => c.id === action.conversationId)?.messages ?? [],
+  )
+
+  it('番号を持つメッセージは、その番号の行と Info 欄・値が一字一句同じ', () => {
+    for (const message of attackMessages.filter((m) => m.frame !== undefined)) {
+      const row = ipCapture.rows.find((r) => r.no === message.frame)
+      expect(row, `No.${message.frame}`).toBeDefined()
+      expect(message.protocol).toBe(row?.info)
+      expect(message.value).toBe(row?.value)
+    }
+  })
+
+  it('キャプチャの全行が、デモのどこかに同じ順番で出てくる', () => {
+    const frames = attackMessages.flatMap((m) =>
+      m.frame === undefined ? [] : [m.frame],
+    )
+    expect(frames).toEqual(ipCapture.rows.map((row) => row.no))
+  })
+
+  it('送信元と宛先も実験と同じ（図のアドレスは実験に合わせてある）', () => {
+    const ipOf = Object.fromEntries(
+      diagramNodes.map((node) => [node.id, node.ip]),
+    )
+    for (const message of attackMessages.filter((m) => m.frame !== undefined)) {
+      const row = ipCapture.rows.find((r) => r.no === message.frame)
+      expect(ipOf[message.from]).toBe(row?.source)
+      const destination =
+        message.to === 'broadcast' ? '192.168.222.255' : ipOf[message.to]
+      expect(destination).toBe(row?.destination)
     }
   })
 })

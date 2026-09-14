@@ -368,7 +368,6 @@ button:disabled {
 
 .node--switch {
   width: 224px;
-  height: 76px;
   border-style: dashed;
 }
 
@@ -773,7 +772,7 @@ button:disabled {
 
 .stagebar__row {
   display: grid;
-  grid-template-columns: 116px minmax(0, 1fr);
+  grid-template-columns: 116px minmax(0, 1fr) auto;
   gap: 10px;
   align-items: baseline;
   padding: 2px 0 2px 8px;
@@ -789,9 +788,30 @@ button:disabled {
 }
 
 .stagebar__protocol,
+.stagebar__value,
 .stagebar__transport {
   display: block;
   word-break: break-all;
+}
+
+/* Info 欄の表記どおり、空白の数も保つ */
+.stagebar__protocol {
+  white-space: pre-wrap;
+}
+
+.stagebar__value {
+  font-size: 11px;
+  color: var(--accent);
+}
+
+.stagebar__frame {
+  margin-left: 8px;
+  padding: 0 6px;
+  border-radius: 4px;
+  background: #eef6ee;
+  color: #3d6b3d;
+  font-family: var(--mono);
+  font-size: 10px;
 }
 
 .stagebar__protocol {
@@ -1150,6 +1170,12 @@ button:disabled {
 
 .capture__packet:nth-child(even) {
   background: #f3f6f9;
+}
+
+/* いま図の上を飛んでいるパケット */
+.capture__packet.is-now {
+  background: var(--accent-soft);
+  box-shadow: inset 3px 0 0 var(--accent);
 }
 
 .capture__head {

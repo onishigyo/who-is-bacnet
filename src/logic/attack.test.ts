@@ -31,8 +31,14 @@ describe('ガイド付きの攻撃操作', () => {
     state = runAction(attackActions, state, 'write')
     expect(state.device.setpoint).toBe(ATTACK_SETPOINT)
     expect(state.device.compromised).toBe(true)
-    expect(nextActionId(attackActions, state)).toBeNull()
-    expect(isAttackComplete(attackActions, state)).toBe(true)
+    expect(nextActionId(attackActions, state)).toBe('verify')
+    expect(isAttackComplete(attackActions, state)).toBe(false)
+
+    // 読み直しても状態は変わらない（確かめるだけ）
+    const verified = runAction(attackActions, state, 'verify')
+    expect(verified.device).toEqual(state.device)
+    expect(nextActionId(attackActions, verified)).toBeNull()
+    expect(isAttackComplete(attackActions, verified)).toBe(true)
   })
 
   it('前提を満たさない操作は何も起こさない', () => {

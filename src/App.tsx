@@ -253,8 +253,14 @@ export default function App() {
                 onRun={runAttack}
                 onReset={resetAttack}
               />
-              {attack.completed.length > 0 && (
-                <CaptureEvidenceCard capture={ipCapture} />
+              {/* 最初の 1 通を送った時点から出し、いま飛んでいる行を光らせる */}
+              {activeConversation && (
+                <CaptureEvidenceCard
+                  capture={ipCapture}
+                  highlight={current.flatMap((message) =>
+                    message.frame === undefined ? [] : [message.frame],
+                  )}
+                />
               )}
               <StepNotes notes={step.notes} />
             </>
