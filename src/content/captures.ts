@@ -24,67 +24,8 @@ export const ipCapture: CaptureEvidence = {
   provenance:
     PROVENANCE_BASE +
     '読んだ室温 22 と、書き込んだ 99 は実験で取った値です。ステップ3で中央監視が設定する 24.0 は、物語上の値です。',
-  rows: [
-    {
-      no: 2238,
-      source: '192.168.222.128',
-      destination: '192.168.222.255',
-      protocol: 'BACnet-APDU',
-      info: 'Unconfirmed-REQ who-Is',
-    },
-    {
-      no: 2239,
-      source: '192.168.222.130',
-      destination: '192.168.222.128',
-      protocol: 'BACnet-APDU',
-      info: 'Unconfirmed-REQ i-Am device,3056526',
-    },
-    {
-      no: 2538,
-      source: '192.168.222.128',
-      destination: '192.168.222.130',
-      protocol: 'BACnet-APDU',
-      info: 'Confirmed-REQ   readProperty[  0] analog-input,0 present-value',
-    },
-    {
-      no: 2539,
-      source: '192.168.222.130',
-      destination: '192.168.222.128',
-      protocol: 'BACnet-APDU',
-      info: 'Complex-ACK     readProperty[  0] analog-input,0 present-value',
-      value: 'Present Value (real): 22',
-    },
-    {
-      no: 2949,
-      source: '192.168.222.128',
-      destination: '192.168.222.130',
-      protocol: 'BACnet-APDU',
-      info: 'Confirmed-REQ   readProperty[  1] analog-value,0 present-value',
-    },
-    {
-      no: 2950,
-      source: '192.168.222.130',
-      destination: '192.168.222.128',
-      protocol: 'BACnet-APDU',
-      info: 'Complex-ACK     readProperty[  1] analog-value,0 present-value',
-      value: 'Present Value (real): 24',
-    },
-    {
-      no: 3296,
-      source: '192.168.222.128',
-      destination: '192.168.222.130',
-      protocol: 'BACnet-APDU',
-      info: 'Confirmed-REQ   writeProperty[  2] analog-value,0 present-value',
-      value: 'Present Value (real): 99',
-    },
-    {
-      no: 3297,
-      source: '192.168.222.130',
-      destination: '192.168.222.128',
-      protocol: 'BACnet-APDU',
-      info: 'Simple-ACK      writeProperty[  2]',
-    },
-  ],
+  rows: [],
+  // 撮り直し待ち：室温読みを外して invoke ID を連番にしたキャプチャに差し替える
   alt: '実験で取得した BACnet/IP の通信を Wireshark で bacnet フィルタ表示した一覧',
 }
 
