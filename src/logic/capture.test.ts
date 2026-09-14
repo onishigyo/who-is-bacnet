@@ -10,8 +10,7 @@ const valueOf = (info: RegExp) => {
   return match ? Number(match[1]) : undefined
 }
 
-// 撮り直し待ち：ipCapture を差し替えたら復活させる
-describe.skip('教材の数字は、実験キャプチャと一致する', () => {
+describe('教材の数字は、実験キャプチャと一致する', () => {
   it('I-Am で名乗ったデバイスインスタンスが、図の空調コントローラと同じ', () => {
     const iAm = ipCapture.rows.find((row) => /i-Am device,\d+/.test(row.info))
     const instance = Number(iAm?.info.match(/i-Am device,(\d+)/)?.[1])
@@ -47,8 +46,7 @@ describe('公開する範囲の点検', () => {
   })
 })
 
-// 撮り直し待ち：会話に frame を付け直したら復活させる
-describe.skip('デモの攻撃は、実験キャプチャと 1 対 1 で対応する', () => {
+describe('デモの攻撃は、実験キャプチャと 1 対 1 で対応する', () => {
   // 攻撃の会話の全メッセージ（1 本に繋がっている）
   const attackMessages =
     conversations.find((c) => c.id === ATTACK_CONVERSATION_ID)?.messages ?? []

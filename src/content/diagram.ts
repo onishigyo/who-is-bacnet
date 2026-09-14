@@ -21,7 +21,7 @@ export const diagramNodes: DiagramNodeSpec[] = [
     kind: 'controller',
     label: '空調コントローラ',
     sublabel: 'メーカーA 製',
-    deviceInstance: 3056526,
+    deviceInstance: 3056489,
     ip: '192.168.222.130',
     appearsAt: 1,
     position: { x: 0, y: 0 },

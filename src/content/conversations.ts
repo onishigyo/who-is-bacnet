@@ -9,9 +9,9 @@ export const ATTACK_CONVERSATION_ID = 'attack'
  * ステップ3（正常運用）とステップ4（攻撃）の会話は、意図的に同じ形をしている。
  * 変わるのは from（話し手）だけ。この対比が「無認証」の本質そのもの。
  *
- * 流れは「探す → 室温を読む → 今の設定温度を読む → 書き換える → 確かめる」。
- * 実験（tshark）で取った通信と同じ順序で、attack-* 側のメッセージは
- * frame 番号でキャプチャの行と結びつく（logic/capture.test.ts で照合）。
+ * 流れは「探す → 今の設定温度を読む → 書き換える」。実験（tshark）で
+ * 取った通信と同じ順序で、attack-* 側のメッセージは frame 番号で
+ * キャプチャの行と結びつく（logic/capture.test.ts で照合）。
  *
  * protocol は Wireshark の Info 欄と同じ表記（空白の数も含めて）で書く。
  * value は詳細ペインで見える present-value。
@@ -38,13 +38,13 @@ export const conversations: Conversation[] = [
         from: AHU_ID,
         to: SUPERVISOR_ID,
         kind: 'response',
-        plain: 'はい、空調コントローラです。ID は 3056526 です',
-        protocol: 'Unconfirmed-REQ i-Am device,3056526',
+        plain: 'はい、空調コントローラです。ID は 3056489 です',
+        protocol: 'Unconfirmed-REQ i-Am device,3056489',
         transport: 'UDP → 192.168.222.10:47808（送信元 192.168.222.130）',
         action: '名乗る',
         groupId: 'normal-i-am',
         explain:
-          '呼びかけを受け取った機器が、いっせいに名乗り返します。1 回の呼びかけで、3 台ぶんの返事がまとめて返ってくる ── これが Who-Is の正体です。なお I-Am の中身に IP は入っていません。「192.168.222.130 に device,3056526 がいる」と分かるのは、返事が届いたパケットの送信元アドレスからです。',
+          '呼びかけを受け取った機器が、いっせいに名乗り返します。1 回の呼びかけで、3 台ぶんの返事がまとめて返ってくる ── これが Who-Is の正体です。なお I-Am の中身に IP は入っていません。「192.168.222.130 に device,3056489 がいる」と分かるのは、返事が届いたパケットの送信元アドレスからです。',
       },
       {
         id: 'n3',
@@ -138,6 +138,7 @@ export const conversations: Conversation[] = [
         kind: 'request',
         plain: 'どなたかいますか？',
         protocol: 'Unconfirmed-REQ who-Is',
+        frame: 550,
         transport: 'UDP ブロードキャスト → 192.168.222.255:47808',
         action: '全員に呼びかける',
         explain:
@@ -149,8 +150,9 @@ export const conversations: Conversation[] = [
         from: AHU_ID,
         to: ATTACKER_ID,
         kind: 'response',
-        plain: 'はい、空調コントローラです。ID は 3056526 です',
-        protocol: 'Unconfirmed-REQ i-Am device,3056526',
+        plain: 'はい、空調コントローラです。ID は 3056489 です',
+        protocol: 'Unconfirmed-REQ i-Am device,3056489',
+        frame: 551,
         transport: 'UDP → 192.168.222.128:47808（送信元 192.168.222.130）',
         action: '名乗る',
         groupId: 'attack-i-am',
@@ -206,6 +208,7 @@ export const conversations: Conversation[] = [
         plain: 'いまの設定温度を教えて',
         protocol:
           'Confirmed-REQ   readProperty[  0] analog-value,0 present-value',
+        frame: 997,
         transport: 'UDP ユニキャスト → 192.168.222.130:47808',
         action: '設定温度を聞く',
         explain:
@@ -220,6 +223,7 @@ export const conversations: Conversation[] = [
         protocol:
           'Complex-ACK     readProperty[  0] analog-value,0 present-value',
         value: 'Present Value (real): 24',
+        frame: 998,
         transport: 'UDP ユニキャスト → 192.168.222.128:47808',
         action: '設定温度を返す',
         explain:
@@ -236,6 +240,7 @@ export const conversations: Conversation[] = [
         protocol:
           'Confirmed-REQ   writeProperty[  1] analog-value,0 present-value',
         value: 'Present Value (real): 99',
+        frame: 1509,
         transport: 'UDP ユニキャスト → 192.168.222.130:47808',
         action: '書き換えを頼む',
         explain:
@@ -248,6 +253,7 @@ export const conversations: Conversation[] = [
         kind: 'response',
         plain: '了解しました',
         protocol: 'Simple-ACK      writeProperty[  1]',
+        frame: 1510,
         transport: 'UDP ユニキャスト → 192.168.222.128:47808',
         action: '受け入れる',
         explain:
