@@ -8,9 +8,10 @@ export const SC_ATTACK_CONVERSATION_ID = 'sc-attack'
 /**
  * SC 編の会話。
  *
- * IP 編と同じ「探す→読む→書く」の中身が、今度は TLS の中を通る。
- * encrypted: true のメッセージは、傍受しても Wireshark には Application Data
- * としか映らない（＝中身が読めない）ことを表す。
+ * 流れ：まず証明書を持つ機器（中央監視も含む）がハブに参加する。そのあと、
+ * 中央監視が機器を読み書きする ── 中身はすべて TLS の中を通る。
+ * encrypted: true は、傍受しても Wireshark には Application Data としか
+ * 映らない（＝中身が読めない）ことを表す。
  * rejected: true は、証明書のないノードがハブに門前払いされたことを表し、
  * そこで会話が止まる。
  *
@@ -20,31 +21,32 @@ export const SC_ATTACK_CONVERSATION_ID = 'sc-attack'
 export const scConversations: Conversation[] = [
   {
     id: SC_NORMAL_CONVERSATION_ID,
-    title: '証明書を持つ機器と、SC ハブの会話',
+    title: '証明書を持つ機器が、ハブに参加してから会話する',
     messages: [
       {
         id: 's1',
         from: AHU_ID,
         to: SC_HUB_ID,
         kind: 'request',
-        plain: 'ネットワークに参加させてください（これが私の証明書です）',
-        protocol: 'TLS 1.3 handshake（wss / port 47900）',
-        transport: 'TCP → 192.168.222.130:47900',
+        plain: 'ハブに参加させてください（これが私の証明書です）',
+        protocol:
+          'wss 接続を確立（TCP 3way → TLS 1.3 → WebSocket / port 47900）',
+        transport: 'TCP → ハブ:47900',
         action: 'ハブに接続する',
         explain:
-          '空調コントローラが、ハブ機能を持つ中央監視装置に向かって TLS で繋ぎにいきます。このとき自分の X.509 証明書を示します。同じネットワークにいるかどうかではなく、正しい証明書を持っているかどうかが問われます。',
+          '空調コントローラが、ハブに向かって接続します。まず TCP の 3way ハンドシェイクで土台を作り、その上で TLS 1.3 のハンドシェイクで X.509 証明書を交換します。同じネットワークにいるかどうかではなく、正しい証明書を持っているかが問われます。',
       },
       {
         id: 's2',
         from: SC_HUB_ID,
         to: AHU_ID,
         kind: 'response',
-        plain: '証明書を確認しました。どうぞ',
-        protocol: 'TLS 1.3 handshake 完了（暗号化トンネル確立）',
-        transport: 'TCP → 192.168.222.130:47900',
+        plain: '証明書を確認しました。参加を認めます',
+        protocol: 'TLS 1.3 ハンドシェイク完了（暗号化トンネル確立）',
+        transport: 'TCP → 空調コントローラ:47900',
         action: '参加を認める',
         explain:
-          'ハブが証明書を確かめ、正しかったので参加を認めます。ここから先のやり取りは、すべてこの暗号化されたトンネルの中を通ります。',
+          'ハブが証明書を確かめ、正しかったので参加を認めます。ここから先、この機器のやり取りはすべて暗号化されたトンネルの中を通ります。照明・電力計・中央監視も、同じように証明書を見せてハブに参加しています。',
         annotation: '参加できるかどうかは、証明書だけで決まる',
       },
       {
@@ -58,7 +60,7 @@ export const scConversations: Conversation[] = [
         action: '室温を聞く',
         encrypted: true,
         explain:
-          '中身は IP 編とまったく同じ ReadProperty です。違うのは、これが暗号化されたトンネルの中を、ハブを経由して届くこと。傍受しても、この要求そのものは読めません。',
+          '参加が済んだので、中央監視が空調コントローラに室温を尋ねます。中身は IP 編とまったく同じ ReadProperty。違うのは、これがハブを経由し、暗号化されたトンネルの中を通ることです。傍受しても、この要求は読めません。',
       },
       {
         id: 's4',
@@ -111,12 +113,12 @@ export const scConversations: Conversation[] = [
         from: ATTACKER_ID,
         to: SC_HUB_ID,
         kind: 'request',
-        plain: 'ネットワークに参加させてください',
-        protocol: 'TLS 1.3 handshake を開始（wss / port 47900）',
-        transport: 'TCP → 192.168.222.130:47900',
+        plain: 'ハブに参加させてください',
+        protocol: 'wss 接続を開始（TCP 3way → TLS 1.3 ハンドシェイク）',
+        transport: 'TCP → ハブ:47900',
         action: 'ハブに接続を試みる',
         explain:
-          'IP 編と同じ「持ち込まれた PC」が、今度はハブ（中央監視装置）に繋ごうとします。やろうとしていることは、正規の機器と同じ ── まずハブに接続することです。',
+          'IP 編と同じ「持ち込まれた PC」が、今度はハブに繋ごうとします。TCP の 3way までは通ります ── そこは誰でも叩けるからです。問題はその次、TLS のハンドシェイクで証明書を求められたときです。',
         annotation: 'IP 編では、この先で会話に割り込めた',
       },
       {
@@ -125,12 +127,12 @@ export const scConversations: Conversation[] = [
         to: ATTACKER_ID,
         kind: 'response',
         plain: '証明書がありません。参加は認められません',
-        protocol: 'TLS handshake 失敗 ── 接続拒否',
-        transport: 'TCP → 192.168.222.128:47900',
+        protocol: 'TLS ハンドシェイク失敗 ── 接続拒否',
+        transport: 'TCP → 持ち込まれた PC:47900',
         action: '証明書がなく、拒否する',
         rejected: true,
         explain:
-          'ハブは接続してきた相手に証明書を求めます。持ち込まれた PC はそれを出せません。TLS のハンドシェイクは完了せず、接続そのものが成立しません。Who-Is も ReadProperty も、そもそも送れない ── 会話の入り口で止められます。',
+          'ハブは接続してきた相手に証明書を求めます。持ち込まれた PC はそれを出せません。TLS のハンドシェイクは完了せず、暗号化トンネルは張られません。Who-Is も ReadProperty も、そもそも送れない ── 会話の入り口で止められます。',
         annotation:
           'IP 編との決定的な違い。ネットワークに到達できても、証明書がなければ会話に入れない',
         annotationTone: 'alert',

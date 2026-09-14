@@ -2,19 +2,19 @@ import type { DiagramEdgeSpec, DiagramNodeSpec, NodeId } from '../domain/types'
 import { AHU_ID, ATTACKER_ID, SUPERVISOR_ID } from './diagram'
 
 /**
- * SC 編の中央。ハブは専用の箱とは限らず、どのノードでも「ハブ機能」を
- * 担える（ASHRAE ホワイトペーパー）。ここでは既存の中央監視装置が
- * ハブ機能を兼ねる、現実的な構成を採る。各機器はここへ TLS（wss）で繋ぐ。
+ * SC 編の中央。専用のハブを 1 つ置く（分かりやすさ優先）。
+ * 実際にはハブは専用機とは限らず、中央監視などどのノードでも「ハブ機能」を
+ * 兼ねられる ── その点は注記で補う。各機器はここへ TLS（wss）で繋ぐ。
  */
-export const SC_HUB_ID: NodeId = SUPERVISOR_ID
+export const SC_HUB_ID: NodeId = 'sc-hub'
 
 /**
  * SC 編の図。IP 編とはトポロジが違う（hub-and-spoke）。
- * 中央監視装置がハブ機能を兼ね、証明書を持つ機器だけがそこへ TLS 接続する。
+ * 中央に専用の SC ハブを置き、証明書を持つ機器（中央監視も含む）が
+ * そこへ TLS 接続する。攻撃者だけステップ6で現れ、証明書がなく弾かれる。
  *
  * appearsAt はステップ番号（5〜7）。IP 編と同じ横長比率を保つ。
- * ノード id は IP 編と同じものを流用して「同じ機器が SC に移った」ことを示す
- * （攻撃者だけステップ6で新たに現れる）。
+ * 機器の id は IP 編と同じものを流用して「同じ機器が SC に移った」ことを示す。
  */
 export const scDiagramNodes: DiagramNodeSpec[] = [
   {
@@ -25,7 +25,7 @@ export const scDiagramNodes: DiagramNodeSpec[] = [
     deviceInstance: 3056526,
     hasCertificate: true,
     appearsAt: 5,
-    position: { x: 60, y: 0 },
+    position: { x: 0, y: 0 },
   },
   {
     id: 'lighting',
@@ -35,7 +35,7 @@ export const scDiagramNodes: DiagramNodeSpec[] = [
     deviceInstance: 100201,
     hasCertificate: true,
     appearsAt: 5,
-    position: { x: 340, y: 0 },
+    position: { x: 250, y: 0 },
   },
   {
     id: 'meter',
@@ -45,17 +45,25 @@ export const scDiagramNodes: DiagramNodeSpec[] = [
     deviceInstance: 100305,
     hasCertificate: true,
     appearsAt: 5,
-    position: { x: 620, y: 0 },
+    position: { x: 500, y: 0 },
   },
   {
     id: SUPERVISOR_ID,
     kind: 'supervisor',
     label: '中央監視装置',
-    sublabel: 'ハブ機能を兼ねる（wss / TLS 1.3）',
+    sublabel: 'スーパーバイザ（証明書あり）',
     deviceInstance: 260001,
     hasCertificate: true,
     appearsAt: 5,
-    position: { x: 340, y: 200 },
+    position: { x: 750, y: 0 },
+  },
+  {
+    id: SC_HUB_ID,
+    kind: 'hub',
+    label: 'SC ハブ',
+    sublabel: '証明書を確かめて参加を通す（wss / TLS 1.3）',
+    appearsAt: 5,
+    position: { x: 375, y: 200 },
   },
   {
     id: ATTACKER_ID,
@@ -64,7 +72,7 @@ export const scDiagramNodes: DiagramNodeSpec[] = [
     sublabel: '証明書を持たない',
     hasCertificate: false,
     appearsAt: 6,
-    position: { x: 760, y: 200 },
+    position: { x: 790, y: 200 },
   },
 ]
 
@@ -77,6 +85,12 @@ export const scDiagramEdges: DiagramEdgeSpec[] = [
     appearsAt: 5,
   },
   { id: 'sc-meter-hub', source: 'meter', target: SC_HUB_ID, appearsAt: 5 },
+  {
+    id: 'sc-supervisor-hub',
+    source: SUPERVISOR_ID,
+    target: SC_HUB_ID,
+    appearsAt: 5,
+  },
   // 攻撃者からハブへの線は「繋ごうとして拒否される」を表す。ステップ6で出す
   {
     id: 'sc-attacker-hub',

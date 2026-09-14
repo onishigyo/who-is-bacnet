@@ -11,14 +11,18 @@ import {
 } from '../content/diagram-sc'
 
 describe('SC 図', () => {
-  it('機器はすべて、ハブ機能を兼ねる中央監視に繋がる', () => {
-    // ハブは専用機とは限らず、中央監視装置がハブ機能を兼ねる構成
+  it('中央に専用ハブがあり、機器はすべてハブに繋がる', () => {
     const hub = scDiagramNodes.find((n) => n.id === SC_HUB_ID)
-    expect(hub).toBeDefined()
-    expect(hub?.hasCertificate).toBe(true)
+    expect(hub?.kind).toBe('hub')
     for (const edge of scDiagramEdges) {
       expect(edge.target).toBe(SC_HUB_ID)
     }
+  })
+
+  it('中央監視も証明書を持ち、ハブに繋がる 1 ノードとして描かれる', () => {
+    const supervisor = scDiagramNodes.find((n) => n.kind === 'supervisor')
+    expect(supervisor?.hasCertificate).toBe(true)
+    expect(scDiagramEdges.some((e) => e.source === supervisor?.id)).toBe(true)
   })
 
   it('正規の機器は証明書を持ち、攻撃者は持たない', () => {
