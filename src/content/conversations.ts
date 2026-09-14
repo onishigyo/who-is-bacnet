@@ -1,14 +1,20 @@
-import type { AttackAction, Conversation } from '../domain/types'
+import type { Conversation } from '../domain/types'
 import { BROADCAST } from '../domain/types'
 import { AHU_ID, ATTACKER_ID, SUPERVISOR_ID } from './diagram'
 
 export const NORMAL_CONVERSATION_ID = 'normal-operation'
+export const ATTACK_CONVERSATION_ID = 'attack'
 
 /**
  * ステップ3（正常運用）とステップ4（攻撃）の会話は、意図的に同じ形をしている。
  * 変わるのは from（話し手）だけ。この対比が「無認証」の本質そのもの。
  *
- * explain は「いま何が起きているか」の解説。利用者が 1 通ずつ送りながら読む。
+ * 流れは「探す → 室温を読む → 今の設定温度を読む → 書き換える → 確かめる」。
+ * 実験（tshark）で取った通信と同じ順序で、attack-* 側のメッセージは
+ * frame 番号でキャプチャの行と結びつく（logic/capture.test.ts で照合）。
+ *
+ * protocol は Wireshark の Info 欄と同じ表記（空白の数も含めて）で書く。
+ * value は詳細ペインで見える present-value。
  */
 export const conversations: Conversation[] = [
   {
@@ -21,8 +27,8 @@ export const conversations: Conversation[] = [
         to: BROADCAST,
         kind: 'request',
         plain: 'どなたかいますか？',
-        protocol: 'Who-Is',
-        transport: 'UDP ブロードキャスト → 192.168.1.255:47808',
+        protocol: 'Unconfirmed-REQ who-Is',
+        transport: 'UDP ブロードキャスト → 192.168.222.255:47808',
         action: '全員に呼びかける',
         explain:
           '中央監視が、ネットワーク全体に向けて一斉に呼びかけます。この 1 通だけは宛先を決め打ちせず、サブネット全体に飛ばします。どの IP に誰がいるかを、まだ知らないからです。',
@@ -32,13 +38,13 @@ export const conversations: Conversation[] = [
         from: AHU_ID,
         to: SUPERVISOR_ID,
         kind: 'response',
-        plain: 'はい、空調コントローラです。ID は 3056930 です',
-        protocol: 'I-Am device,3056930',
-        transport: 'UDP → 192.168.1.10:47808（送信元 192.168.1.11）',
+        plain: 'はい、空調コントローラです。ID は 3056526 です',
+        protocol: 'Unconfirmed-REQ i-Am device,3056526',
+        transport: 'UDP → 192.168.222.10:47808（送信元 192.168.222.130）',
         action: '名乗る',
         groupId: 'normal-i-am',
         explain:
-          '呼びかけを受け取った機器が、いっせいに名乗り返します。1 回の呼びかけで、3 台ぶんの返事がまとめて返ってくる ── これが Who-Is の正体です。なお I-Am の中身に IP は入っていません。「192.168.1.11 に device,3056930 がいる」と分かるのは、返事が届いたパケットの送信元アドレスからです。',
+          '呼びかけを受け取った機器が、いっせいに名乗り返します。1 回の呼びかけで、3 台ぶんの返事がまとめて返ってくる ── これが Who-Is の正体です。なお I-Am の中身に IP は入っていません。「192.168.222.130 に device,3056526 がいる」と分かるのは、返事が届いたパケットの送信元アドレスからです。',
       },
       {
         id: 'n3',
@@ -46,8 +52,8 @@ export const conversations: Conversation[] = [
         to: SUPERVISOR_ID,
         kind: 'response',
         plain: 'こちらは照明コントローラ、ID 100201 です',
-        protocol: 'I-Am device,100201',
-        transport: 'UDP → 192.168.1.10:47808（送信元 192.168.1.12）',
+        protocol: 'Unconfirmed-REQ i-Am device,100201',
+        transport: 'UDP → 192.168.222.10:47808（送信元 192.168.222.131）',
         action: '名乗る',
         groupId: 'normal-i-am',
         explain:
@@ -60,8 +66,8 @@ export const conversations: Conversation[] = [
         to: SUPERVISOR_ID,
         kind: 'response',
         plain: 'こちらは電力計、ID 100305 です',
-        protocol: 'I-Am device,100305',
-        transport: 'UDP → 192.168.1.10:47808（送信元 192.168.1.13）',
+        protocol: 'Unconfirmed-REQ i-Am device,100305',
+        transport: 'UDP → 192.168.222.10:47808（送信元 192.168.222.132）',
         action: '名乗る',
         groupId: 'normal-i-am',
         explain:
@@ -73,11 +79,12 @@ export const conversations: Conversation[] = [
         to: AHU_ID,
         kind: 'request',
         plain: 'いまの室温を教えて',
-        protocol: 'ReadProperty analog-input,0 present-value',
-        transport: 'UDP ユニキャスト → 192.168.1.11:47808',
+        protocol:
+          'Confirmed-REQ   readProperty[  0] analog-input,0 present-value',
+        transport: 'UDP ユニキャスト → 192.168.222.130:47808',
         action: '室温を聞く',
         explain:
-          'ここからは名指しです。といっても要求の中身は「analog-input,0 の present-value を読ませて」だけで、相手が誰かは書かれていません。宛先 IP（192.168.1.11:47808）に直接送ることで、相手を決めています。',
+          'ここからは名指しです。といっても要求の中身は「analog-input,0 の present-value を読ませて」だけで、相手が誰かは書かれていません。宛先 IP（192.168.222.130:47808）に直接送ることで、相手を決めています。',
       },
       {
         id: 'n6',
@@ -85,8 +92,10 @@ export const conversations: Conversation[] = [
         to: SUPERVISOR_ID,
         kind: 'response',
         plain: '22.0 ℃です',
-        protocol: 'ComplexACK → 22.0',
-        transport: 'UDP ユニキャスト → 192.168.1.10:47808',
+        protocol:
+          'Complex-ACK     readProperty[  0] analog-input,0 present-value',
+        value: 'Present Value (real): 22',
+        transport: 'UDP ユニキャスト → 192.168.222.10:47808',
         action: '室温を返す',
         explain:
           '機器が値を返します。読み取りの応答は、値を含んだ ComplexACK という形で、頼んできた IP へ返ります。',
@@ -96,21 +105,49 @@ export const conversations: Conversation[] = [
         from: SUPERVISOR_ID,
         to: AHU_ID,
         kind: 'request',
-        plain: '設定温度を 24.0 ℃にして',
-        protocol: 'WriteProperty analog-value,0 present-value 24.0',
-        transport: 'UDP ユニキャスト → 192.168.1.11:47808',
-        action: '書き換えを頼む',
+        plain: 'いまの設定温度を教えて',
+        protocol:
+          'Confirmed-REQ   readProperty[  1] analog-value,0 present-value',
+        transport: 'UDP ユニキャスト → 192.168.222.130:47808',
+        action: '設定温度を聞く',
         explain:
-          '今度は書き込みです。analog-value,0 は設定値を持つオブジェクトで、そこに 24.0 を書きます。読むときと同じく、届け先は宛先 IP で決まります。',
+          '書き換える前に、今の設定温度を読んでおきます。室温（analog-input,0）とは別の、設定値を持つオブジェクト（analog-value,0）です。',
       },
       {
         id: 'n8',
         from: AHU_ID,
         to: SUPERVISOR_ID,
         kind: 'response',
+        plain: '24.0 ℃です',
+        protocol:
+          'Complex-ACK     readProperty[  1] analog-value,0 present-value',
+        value: 'Present Value (real): 24',
+        transport: 'UDP ユニキャスト → 192.168.222.10:47808',
+        action: '設定温度を返す',
+        explain: '今の設定は 24.0 ℃。これを別の値に変えてみます。',
+      },
+      {
+        id: 'n9',
+        from: SUPERVISOR_ID,
+        to: AHU_ID,
+        kind: 'request',
+        plain: '設定温度を 26.0 ℃にして',
+        protocol:
+          'Confirmed-REQ   writeProperty[  2] analog-value,0 present-value',
+        value: 'Present Value (real): 26',
+        transport: 'UDP ユニキャスト → 192.168.222.130:47808',
+        action: '書き換えを頼む',
+        explain:
+          '今度は書き込みです。さっき読んだ設定温度（analog-value,0）に、26.0 を書きます。読むときと同じく、届け先は宛先 IP で決まります。',
+      },
+      {
+        id: 'n10',
+        from: AHU_ID,
+        to: SUPERVISOR_ID,
+        kind: 'response',
         plain: '了解しました',
-        protocol: 'SimpleACK',
-        transport: 'UDP ユニキャスト → 192.168.1.10:47808',
+        protocol: 'Simple-ACK      writeProperty[  2]',
+        transport: 'UDP ユニキャスト → 192.168.222.10:47808',
         action: '受け入れる',
         explain:
           '書き込みが成功すると SimpleACK が返ります。これだけで、中央監視から設備の設定を変えられました。',
@@ -118,8 +155,8 @@ export const conversations: Conversation[] = [
     ],
   },
   {
-    id: 'attack-discover',
-    title: '持ち込まれた PC から「どなたかいますか？」',
+    id: ATTACK_CONVERSATION_ID,
+    title: '持ち込まれた PC から、機器を操作する',
     messages: [
       {
         id: 'a1',
@@ -127,8 +164,9 @@ export const conversations: Conversation[] = [
         to: BROADCAST,
         kind: 'request',
         plain: 'どなたかいますか？',
-        protocol: 'Who-Is',
-        transport: 'UDP ブロードキャスト → 192.168.1.255:47808',
+        protocol: 'Unconfirmed-REQ who-Is',
+        frame: 2238,
+        transport: 'UDP ブロードキャスト → 192.168.222.255:47808',
         action: '全員に呼びかける',
         explain:
           'ステップ3で中央監視が送ったものと、まったく同じ呼びかけです。違うのは、送り出した機械だけ。',
@@ -139,9 +177,10 @@ export const conversations: Conversation[] = [
         from: AHU_ID,
         to: ATTACKER_ID,
         kind: 'response',
-        plain: 'はい、空調コントローラです。ID は 3056930 です',
-        protocol: 'I-Am device,3056930',
-        transport: 'UDP → 192.168.1.66:47808（送信元 192.168.1.11）',
+        plain: 'はい、空調コントローラです。ID は 3056526 です',
+        protocol: 'Unconfirmed-REQ i-Am device,3056526',
+        frame: 2239,
+        transport: 'UDP → 192.168.222.128:47808（送信元 192.168.222.130）',
         action: '名乗る',
         groupId: 'attack-i-am',
         explain:
@@ -155,8 +194,8 @@ export const conversations: Conversation[] = [
         to: ATTACKER_ID,
         kind: 'response',
         plain: 'こちらは照明コントローラ、ID 100201 です',
-        protocol: 'I-Am device,100201',
-        transport: 'UDP → 192.168.1.66:47808（送信元 192.168.1.12）',
+        protocol: 'Unconfirmed-REQ i-Am device,100201',
+        transport: 'UDP → 192.168.222.128:47808（送信元 192.168.222.131）',
         action: '名乗る',
         groupId: 'attack-i-am',
         explain: '照明コントローラも同じように名乗ります。',
@@ -167,8 +206,8 @@ export const conversations: Conversation[] = [
         to: ATTACKER_ID,
         kind: 'response',
         plain: 'こちらは電力計、ID 100305 です',
-        protocol: 'I-Am device,100305',
-        transport: 'UDP → 192.168.1.66:47808（送信元 192.168.1.13）',
+        protocol: 'Unconfirmed-REQ i-Am device,100305',
+        transport: 'UDP → 192.168.222.128:47808（送信元 192.168.222.132）',
         action: '名乗る',
         groupId: 'attack-i-am',
         explain: '電力計も名乗ります。',
@@ -179,8 +218,8 @@ export const conversations: Conversation[] = [
         to: ATTACKER_ID,
         kind: 'response',
         plain: 'こちらは中央監視装置、ID 260001 です',
-        protocol: 'I-Am device,260001',
-        transport: 'UDP → 192.168.1.66:47808（送信元 192.168.1.10）',
+        protocol: 'Unconfirmed-REQ i-Am device,260001',
+        transport: 'UDP → 192.168.222.128:47808（送信元 192.168.222.10）',
         action: '名乗る',
         groupId: 'attack-i-am',
         explain:
@@ -188,20 +227,16 @@ export const conversations: Conversation[] = [
         annotation: '呼びかけ 1 回で、中央監視まで含めた機器一覧が手に入る',
         annotationTone: 'alert',
       },
-    ],
-  },
-  {
-    id: 'attack-read',
-    title: '持ち込まれた PC から、室温を読む',
-    messages: [
       {
         id: 'a6',
         from: ATTACKER_ID,
         to: AHU_ID,
         kind: 'request',
         plain: 'いまの室温を教えて',
-        protocol: 'ReadProperty analog-input,0 present-value',
-        transport: 'UDP ユニキャスト → 192.168.1.11:47808',
+        protocol:
+          'Confirmed-REQ   readProperty[  0] analog-input,0 present-value',
+        frame: 2538,
+        transport: 'UDP ユニキャスト → 192.168.222.130:47808',
         action: '室温を聞く',
         explain:
           '返事から分かった IP へ、直接送ります。中身はステップ3で中央監視が送ったものと同じ。宛先 IP に届けば、それで相手は決まります。',
@@ -212,72 +247,111 @@ export const conversations: Conversation[] = [
         to: ATTACKER_ID,
         kind: 'response',
         plain: '22.0 ℃です',
-        protocol: 'ComplexACK → 22.0',
-        transport: 'UDP ユニキャスト → 192.168.1.66:47808',
+        protocol:
+          'Complex-ACK     readProperty[  0] analog-input,0 present-value',
+        value: 'Present Value (real): 22',
+        frame: 2539,
+        transport: 'UDP ユニキャスト → 192.168.222.128:47808',
         action: '室温を返す',
         explain:
           '値がそのまま返ってきます。ここまでは「見ているだけ」ですが、建物がいまどういう状態かは筒抜けです。',
         annotation: '中央監視に返したのと同じ値を、そのまま返す',
         annotationTone: 'alert',
       },
-    ],
-  },
-  {
-    id: 'attack-write',
-    title: '持ち込まれた PC から、設定温度を書き換える',
-    messages: [
       {
         id: 'a8',
         from: ATTACKER_ID,
         to: AHU_ID,
         kind: 'request',
-        plain: '設定温度を 99.0 ℃にして',
-        protocol: 'WriteProperty analog-value,0 present-value 99.0',
-        transport: 'UDP ユニキャスト → 192.168.1.11:47808',
-        action: '書き換えを頼む',
+        plain: 'いまの設定温度を教えて',
+        protocol:
+          'Confirmed-REQ   readProperty[  1] analog-value,0 present-value',
+        frame: 2949,
+        transport: 'UDP ユニキャスト → 192.168.222.130:47808',
+        action: '設定温度を聞く',
         explain:
-          'ここからが書き込みです。読むのと同じ気軽さで、同じ宛先 IP に、今度は 99.0 を書きにいきます。',
+          '書き換える前に、今の設定温度を読みます。ステップ3で中央監視がやったのと同じ手順。狙う値の現状を、まず把握します。',
       },
       {
         id: 'a9',
         from: AHU_ID,
         to: ATTACKER_ID,
         kind: 'response',
+        plain: '24.0 ℃です',
+        protocol:
+          'Complex-ACK     readProperty[  1] analog-value,0 present-value',
+        value: 'Present Value (real): 24',
+        frame: 2950,
+        transport: 'UDP ユニキャスト → 192.168.222.128:47808',
+        action: '設定温度を返す',
+        explain:
+          '今の設定は 24.0 ℃。これも、正しく尋ねれば持ち込まれた PC にそのまま返ってきます。',
+        annotation: '設定温度も、そのまま読めてしまう',
+        annotationTone: 'alert',
+      },
+      {
+        id: 'a10',
+        from: ATTACKER_ID,
+        to: AHU_ID,
+        kind: 'request',
+        plain: '設定温度を 99.0 ℃にして',
+        protocol:
+          'Confirmed-REQ   writeProperty[  2] analog-value,0 present-value',
+        value: 'Present Value (real): 99',
+        frame: 3296,
+        transport: 'UDP ユニキャスト → 192.168.222.130:47808',
+        action: '書き換えを頼む',
+        explain:
+          'ここからが書き込みです。読むのと同じ気軽さで、さっき 24.0 と読んだ設定温度に、今度は 99.0 を書きにいきます。',
+      },
+      {
+        id: 'a11',
+        from: AHU_ID,
+        to: ATTACKER_ID,
+        kind: 'response',
         plain: '了解しました',
-        protocol: 'SimpleACK',
-        transport: 'UDP ユニキャスト → 192.168.1.66:47808',
+        protocol: 'Simple-ACK      writeProperty[  2]',
+        frame: 3297,
+        transport: 'UDP ユニキャスト → 192.168.222.128:47808',
         action: '受け入れる',
         explain:
-          '機器は受け入れました。届いた先が 192.168.1.10 だろうと 192.168.1.66 だろうと、中央監視からの指示と区別する材料がないので、断る理由がありません。',
+          '機器は受け入れました。送ってきたのが 192.168.222.10（中央監視）だろうと 192.168.222.128（持ち込まれた PC）だろうと、中央監視からの指示と区別する材料がないので、断る理由がありません。',
         annotation:
           '認証の確認なし。中央監視からの指示とまったく同じ扱いで受け入れられた',
         annotationTone: 'alert',
       },
+      {
+        id: 'a12',
+        from: ATTACKER_ID,
+        to: AHU_ID,
+        kind: 'request',
+        plain: 'いまの設定温度を教えて',
+        protocol:
+          'Confirmed-REQ   readProperty[  3] analog-value,0 present-value',
+        frame: 3690,
+        transport: 'UDP ユニキャスト → 192.168.222.130:47808',
+        action: '設定温度を読む',
+        explain:
+          'SimpleACK は「受け付けました」と言っているだけで、本当に値が変わったかまでは教えてくれません。そこで、書き換えた設定温度（analog-value,0）をもう一度読みにいきます。',
+      },
+      {
+        id: 'a13',
+        from: AHU_ID,
+        to: ATTACKER_ID,
+        kind: 'response',
+        plain: '99.0 ℃です',
+        protocol:
+          'Complex-ACK     readProperty[  3] analog-value,0 present-value',
+        value: 'Present Value (real): 99',
+        frame: 3691,
+        transport: 'UDP ユニキャスト → 192.168.222.128:47808',
+        action: '設定温度を返す',
+        explain:
+          '24.0 ℃だったものが 99.0 ℃になっています。書き換えは本当に効いています。しかも攻撃者は、それを中央監視を通さずに、自分の手元で確かめられます。',
+        annotation:
+          '24.0 → 99.0。書き換えは成功していて、持ち込まれた PC から確かめられる',
+        annotationTone: 'alert',
+      },
     ],
-  },
-]
-
-/** ステップ4のガイド付き操作。上から順に開いていく */
-export const attackActions: AttackAction[] = [
-  {
-    id: 'discover',
-    label: '① 機器を探す（Who-Is）',
-    hint: 'ネットワーク全体に呼びかけて、どんな機器がいるかを一覧にする。',
-    requires: null,
-    conversationId: 'attack-discover',
-  },
-  {
-    id: 'read',
-    label: '② 値を読む（ReadProperty）',
-    hint: '見つけた空調コントローラに、いまの室温を尋ねる。',
-    requires: 'discover',
-    conversationId: 'attack-read',
-  },
-  {
-    id: 'write',
-    label: '③ 値を書き換える（WriteProperty）',
-    hint: '設定温度を 99.0 ℃に書き換える。ここが「読むだけ」との決定的な違い。',
-    requires: 'read',
-    conversationId: 'attack-write',
   },
 ]

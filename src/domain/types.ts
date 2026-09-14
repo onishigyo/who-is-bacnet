@@ -92,8 +92,12 @@ export interface ConversationMessage {
   kind: MessageKind
   /** 意訳 */
   plain: string
-  /** 実コマンド／プロトコル用語（APDU の中身） */
+  /** 実コマンド／プロトコル用語。Wireshark の Info 欄と同じ表記で書く */
   protocol: string
+  /** 詳細ペインで見える値（Present Value など）。Info 欄には出ない */
+  value?: string
+  /** 実験キャプチャで対応するパケットの番号。実験にない通信なら持たない */
+  frame?: number
   /** どこへ届くか。BACnet の要求自体に相手の識別子は入らず、宛先は IP が決める */
   transport: string
   /** このメッセージで話し手が何をするか（「▸ 〇〇が〜する」の後半） */
@@ -130,20 +134,7 @@ export interface PlaybackState {
   inFlightGroup: number | null
 }
 
-export type AttackActionId = 'discover' | 'read' | 'write'
-
-export interface AttackAction {
-  id: AttackActionId
-  label: string
-  hint: string
-  /** 先に済ませておく必要のある操作（ガイド付き進行） */
-  requires: AttackActionId | null
-  conversationId: string
-}
-
 export interface DeviceState {
-  /** 攻撃者に発見されたか */
-  discovered: boolean
   /** 室温（analog-input,0 present-value 相当） */
   presentValue: number
   /** 設定温度（analog-value,0 present-value 相当） */
@@ -152,19 +143,29 @@ export interface DeviceState {
   compromised: boolean
 }
 
-export interface AttackState {
-  completed: AttackActionId[]
-  device: DeviceState
+/** キャプチャの 1 行（Wireshark のパケット一覧と同じ列） */
+export interface CaptureRow {
+  no: number
+  source: string
+  destination: string
+  protocol: string
+  /** Info 欄。tshark の出力そのまま（空白の数も含めて手を加えない） */
+  info: string
+  /** 詳細ペインで見える値（Present Value など）。一覧の Info 欄には出ない */
+  value?: string
 }
 
-/** Wireshark による答え合わせ素材 */
+/** 実験で取得した Wireshark キャプチャによる答え合わせ素材 */
 export interface CaptureEvidence {
   id: string
   title: string
   caption: string
-  /** Wireshark の Info 欄に並ぶ行（実キャプチャ画像を置くまでのテキスト再現） */
-  infoColumn: string[]
-  /** 実験で取得したスクリーンショット。未配置の間は undefined */
+  /** 一覧を絞った Wireshark の表示フィルタ */
+  filter: string
+  /** どこで・何を使って取った／出したか */
+  provenance: string
+  rows: CaptureRow[]
+  /** 同じ範囲を Wireshark で表示したスクリーンショット（任意） */
   imageSrc?: string
   alt: string
 }
