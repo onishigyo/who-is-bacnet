@@ -31,9 +31,9 @@ import { deviceFrom } from './logic/device'
 import {
   conversationById,
   flyingMessages,
-  groupIndexOfMessage,
   IDLE_PLAYBACK,
   landGroup,
+  messageGroups,
   messagesUpToGroup,
   playGroup,
   selectedMessages,
@@ -82,16 +82,6 @@ export default function App() {
   const play = useCallback((index: number) => {
     setPlayback((current) => playGroup(current, index))
   }, [])
-
-  /** トラックのチップを押したら、そのまとまりを再生する */
-  const selectMessage = useCallback(
-    (messageId: string) => {
-      if (!activeConversation) return
-      const index = groupIndexOfMessage(activeConversation, messageId)
-      if (index !== null) play(index)
-    },
-    [activeConversation, play],
-  )
 
   const goToStep = useCallback((next: StepOrder) => {
     setOrder(next)
@@ -195,10 +185,12 @@ export default function App() {
 
           {hasConversation && (
             <ConversationTrack
-              messages={activeConversation ? activeConversation.messages : []}
+              groups={
+                activeConversation ? messageGroups(activeConversation) : []
+              }
               nodes={worldNodes}
-              activeIds={current.map((message) => message.id)}
-              onSelect={selectMessage}
+              activeIndex={playback.selected}
+              onSelect={play}
               emptyText={
                 order === 3 || order === 5
                   ? '「会話を始める」を押すと、やり取りがここに並びます。チップを押すと図で再生されます。'
