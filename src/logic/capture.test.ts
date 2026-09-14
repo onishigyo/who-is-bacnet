@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { ipCapture, scCapture } from '../content/captures'
 import { ATTACK_CONVERSATION_ID, conversations } from '../content/conversations'
 import { AHU_ID, diagramNodes } from '../content/diagram'
-import { ATTACK_SETPOINT, INITIAL_DEVICE } from './device'
+import { ATTACK_SETPOINT } from './device'
 
 const valueOf = (info: RegExp) => {
   const row = ipCapture.rows.find((r) => info.test(r.info))
@@ -17,12 +17,6 @@ describe.skip('教材の数字は、実験キャプチャと一致する', () =>
     const instance = Number(iAm?.info.match(/i-Am device,(\d+)/)?.[1])
     const ahu = diagramNodes.find((node) => node.id === AHU_ID)
     expect(instance).toBe(ahu?.deviceInstance)
-  })
-
-  it('読んだ室温（analog-input,0）が、教材の室温と同じ', () => {
-    expect(valueOf(/Complex-ACK\s+readProperty\[\s*\d+\] analog-input,0/)).toBe(
-      INITIAL_DEVICE.presentValue,
-    )
   })
 
   it('書き込んだ設定値（analog-value,0）が、教材で攻撃者が書く値と同じ', () => {

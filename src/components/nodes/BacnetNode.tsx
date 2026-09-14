@@ -50,9 +50,8 @@ export function BacnetNode({ data }: NodeProps<BacnetFlowNode>) {
 
       {device && (
         <span className="node__readout">
-          <span>室温 {device.presentValue.toFixed(1)} ℃</span>
           <span className={device.compromised ? 'is-alert' : ''}>
-            設定 {device.setpoint.toFixed(1)} ℃
+            設定温度 {device.setpoint.toFixed(1)} ℃
             {device.compromised && ' ← 書き換えられた'}
           </span>
         </span>

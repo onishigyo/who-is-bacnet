@@ -162,8 +162,6 @@ export interface PlaybackState {
 }
 
 export interface DeviceState {
-  /** 室温（analog-input,0 present-value 相当） */
-  presentValue: number
   /** 設定温度（analog-value,0 present-value 相当） */
   setpoint: number
   /** 書き換えられたか */

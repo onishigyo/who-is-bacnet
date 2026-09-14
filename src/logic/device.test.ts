@@ -38,8 +38,6 @@ describe('会話から組み立てる機器の状態', () => {
     const device = deviceFrom(attack.messages, ATTACKER_ID)
     expect(device.setpoint).toBe(ATTACK_SETPOINT)
     expect(device.compromised).toBe(true)
-    // 室温は書き換えていないので初期のまま
-    expect(device.presentValue).toBe(INITIAL_DEVICE.presentValue)
   })
 
   it('同じ書き込みでも、話し手が攻撃者でなければ改ざん印は付かない', () => {

@@ -103,8 +103,8 @@ export default function App() {
     ? selectedMessages(activeConversation, playback)
     : []
   const deviceReadouts = useMemo<Record<NodeId, DeviceState>>(() => {
-    // 機器の値表示は IP 編だけ。SC 編は外から中身が見えないのが主眼なので出さない
-    if (order !== 3 && order !== 4) return {}
+    // 会話のあるステップ（IP 編 3/4・SC 編 5/6）で、機器の設定温度を出す
+    if (order < 3 || order > 6) return {}
     // いま選んでいるまとまりまでの、その時点の機器状態を出す
     const upto =
       activeConversation && playback.selected !== null
