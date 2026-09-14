@@ -1,8 +1,9 @@
-import type { AttackAction, Conversation } from '../domain/types'
+import type { Conversation } from '../domain/types'
 import { BROADCAST } from '../domain/types'
 import { AHU_ID, ATTACKER_ID, SUPERVISOR_ID } from './diagram'
 
 export const NORMAL_CONVERSATION_ID = 'normal-operation'
+export const ATTACK_CONVERSATION_ID = 'attack'
 
 /**
  * ステップ3（正常運用）とステップ4（攻撃）の会話は、意図的に同じ形をしている。
@@ -154,8 +155,8 @@ export const conversations: Conversation[] = [
     ],
   },
   {
-    id: 'attack-discover',
-    title: '持ち込まれた PC から「どなたかいますか？」',
+    id: ATTACK_CONVERSATION_ID,
+    title: '持ち込まれた PC から、機器を操作する',
     messages: [
       {
         id: 'a1',
@@ -226,12 +227,6 @@ export const conversations: Conversation[] = [
         annotation: '呼びかけ 1 回で、中央監視まで含めた機器一覧が手に入る',
         annotationTone: 'alert',
       },
-    ],
-  },
-  {
-    id: 'attack-read',
-    title: '持ち込まれた PC から、室温を読む',
-    messages: [
       {
         id: 'a6',
         from: ATTACKER_ID,
@@ -263,12 +258,6 @@ export const conversations: Conversation[] = [
         annotation: '中央監視に返したのと同じ値を、そのまま返す',
         annotationTone: 'alert',
       },
-    ],
-  },
-  {
-    id: 'attack-write',
-    title: '持ち込まれた PC から、設定温度を書き換える',
-    messages: [
       {
         id: 'a8',
         from: ATTACKER_ID,
@@ -300,12 +289,6 @@ export const conversations: Conversation[] = [
         annotation: '設定温度も、そのまま読めてしまう',
         annotationTone: 'alert',
       },
-    ],
-  },
-  {
-    id: 'attack-overwrite',
-    title: '持ち込まれた PC から、設定温度を書き換える',
-    messages: [
       {
         id: 'a10',
         from: ATTACKER_ID,
@@ -337,12 +320,6 @@ export const conversations: Conversation[] = [
           '認証の確認なし。中央監視からの指示とまったく同じ扱いで受け入れられた',
         annotationTone: 'alert',
       },
-    ],
-  },
-  {
-    id: 'attack-verify',
-    title: '持ち込まれた PC から、書き換わったか確かめる',
-    messages: [
       {
         id: 'a12',
         from: ATTACKER_ID,
@@ -376,44 +353,5 @@ export const conversations: Conversation[] = [
         annotationTone: 'alert',
       },
     ],
-  },
-]
-
-/** ステップ4のガイド付き操作。上から順に開いていく */
-export const attackActions: AttackAction[] = [
-  {
-    id: 'discover',
-    label: '① 機器を探す（Who-Is）',
-    hint: 'ネットワーク全体に呼びかけて、どんな機器がいるかを一覧にする。',
-    requires: null,
-    conversationId: 'attack-discover',
-  },
-  {
-    id: 'read',
-    label: '② 室温を読む（ReadProperty）',
-    hint: '見つけた空調コントローラに、いまの室温を尋ねる。',
-    requires: 'discover',
-    conversationId: 'attack-read',
-  },
-  {
-    id: 'readSetpoint',
-    label: '③ 今の設定温度を読む（ReadProperty）',
-    hint: '書き換える前に、狙う設定温度の現状を確かめる。',
-    requires: 'read',
-    conversationId: 'attack-write',
-  },
-  {
-    id: 'write',
-    label: '④ 設定温度を書き換える（WriteProperty）',
-    hint: '設定温度を 99.0 ℃に書き換える。ここが「読むだけ」との決定的な違い。',
-    requires: 'readSetpoint',
-    conversationId: 'attack-overwrite',
-  },
-  {
-    id: 'verify',
-    label: '⑤ 書き換わったか確かめる（ReadProperty）',
-    hint: '書き換えた設定温度を読み直して、本当に 99.0 ℃になったかを見る。',
-    requires: 'write',
-    conversationId: 'attack-verify',
   },
 ]

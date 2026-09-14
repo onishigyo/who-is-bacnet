@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest'
-import { conversations, NORMAL_CONVERSATION_ID } from '../content/conversations'
+import {
+  ATTACK_CONVERSATION_ID,
+  conversations,
+  NORMAL_CONVERSATION_ID,
+} from '../content/conversations'
 import { diagramNodes, NETWORK_NODE_ID } from '../content/diagram'
 import type { Conversation } from '../domain/types'
 import { BROADCAST } from '../domain/types'
@@ -94,7 +98,7 @@ describe('会話データ', () => {
       expected(3, 'supervisor'),
     )
     // ステップ4では攻撃者が尋ねるので、中央監視も返す
-    expect(responders('attack-discover')).toEqual(expected(4, 'attacker'))
+    expect(responders(ATTACK_CONVERSATION_ID)).toEqual(expected(4, 'attacker'))
   })
 
   it('メッセージ id はアプリ全体で一意', () => {
@@ -108,7 +112,7 @@ describe('会話データ', () => {
     )
     const attackWrite = conversationById(
       conversations,
-      'attack-overwrite',
+      ATTACK_CONVERSATION_ID,
     ).messages.find((m) => m.protocol.includes('writeProperty'))
     expect(normalWrite?.from).toBe('supervisor')
     expect(attackWrite?.from).toBe('attacker')
@@ -158,10 +162,13 @@ describe('会話の再生', () => {
     ])
   })
 
-  it('攻撃側も同じく、返事は 4 台ぶんまとめて飛ぶ', () => {
-    const discover = conversationById(conversations, 'attack-discover')
-    const groups = messageGroups(discover)
-    expect(groups.map((group) => group.length)).toEqual([1, 4])
+  it('攻撃側も同じく、i-Am の返事は 4 台ぶんがひとまとまりで飛ぶ', () => {
+    const attack = conversationById(conversations, ATTACK_CONVERSATION_ID)
+    const groups = messageGroups(attack)
+    // who-Is（1）→ i-Am ×4（まとまり）→ 以降は 1 通ずつ
+    expect(groups[0]).toHaveLength(1)
+    expect(groups[1]).toHaveLength(4)
+    expect(groups.slice(2).every((group) => group.length === 1)).toBe(true)
   })
 
   it('まとまりの数だけ操作すれば終わる', () => {
@@ -335,7 +342,10 @@ describe('ブロードキャストの広がり', () => {
 })
 
 describe('読み直しの単位', () => {
-  const transcript = conversationById(conversations, 'attack-discover').messages
+  const transcript = conversationById(
+    conversations,
+    ATTACK_CONVERSATION_ID,
+  ).messages
 
   it('まとめて飛んだ 1 通を選ぶと、まとまり全体が返る', () => {
     expect(groupOf(transcript, 'a3').map((m) => m.id)).toEqual([
@@ -350,18 +360,20 @@ describe('読み直しの単位', () => {
     expect(groupOf(transcript, 'a1').map((m) => m.id)).toEqual(['a1'])
   })
 
-  it('会話をまたいで積んだ記録でも、まとまりを取り違えない', () => {
-    const mixed = [
-      ...conversationById(conversations, 'attack-discover').messages,
-      ...conversationById(conversations, 'attack-read').messages,
-    ]
-    expect(groupOf(mixed, 'a5').map((m) => m.id)).toEqual([
+  it('i-Am のまとまりの後ろの 1 通は、それ 1 通だけ', () => {
+    const attack = conversationById(
+      conversations,
+      ATTACK_CONVERSATION_ID,
+    ).messages
+    // i-Am の 1 つ（a3）を選ぶと、まとまり全体
+    expect(groupOf(attack, 'a3').map((m) => m.id)).toEqual([
       'a2',
       'a3',
       'a4',
       'a5',
     ])
-    expect(groupOf(mixed, 'a6').map((m) => m.id)).toEqual(['a6'])
+    // その次の read 要求（a6）は 1 通だけ
+    expect(groupOf(attack, 'a6').map((m) => m.id)).toEqual(['a6'])
   })
 
   it('知らない id なら空', () => {

@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { ipCapture, scCapture } from '../content/captures'
-import { attackActions, conversations } from '../content/conversations'
+import { ATTACK_CONVERSATION_ID, conversations } from '../content/conversations'
 import { AHU_ID, diagramNodes } from '../content/diagram'
-import { ATTACK_SETPOINT, INITIAL_DEVICE } from './attack'
+import { ATTACK_SETPOINT, INITIAL_DEVICE } from './device'
 
 const valueOf = (info: RegExp) => {
   const row = ipCapture.rows.find((r) => info.test(r.info))
@@ -53,11 +53,9 @@ describe('公開する範囲の点検', () => {
 })
 
 describe('デモの攻撃は、実験キャプチャと 1 対 1 で対応する', () => {
-  // 操作の順に並べた、攻撃側の全メッセージ
-  const attackMessages = attackActions.flatMap(
-    (action) =>
-      conversations.find((c) => c.id === action.conversationId)?.messages ?? [],
-  )
+  // 攻撃の会話の全メッセージ（1 本に繋がっている）
+  const attackMessages =
+    conversations.find((c) => c.id === ATTACK_CONVERSATION_ID)?.messages ?? []
 
   it('番号を持つメッセージは、その番号の行と Info 欄・値が一字一句同じ', () => {
     for (const message of attackMessages.filter((m) => m.frame !== undefined)) {

@@ -874,8 +874,7 @@ button:disabled {
   background: transparent;
 }
 
-.stagebar__preview,
-.stagebar__hint {
+.stagebar__preview {
   font-size: 12px;
   color: var(--muted);
   text-align: center;
@@ -1025,93 +1024,6 @@ button:disabled {
 
 .stagebar__annotation.is-alert {
   color: var(--alert);
-}
-
-/* ---------- 攻撃コンソール ---------- */
-
-.console {
-  padding: 16px;
-  border-radius: 12px;
-  border: 1px solid var(--alert);
-  background: linear-gradient(180deg, rgba(209, 36, 47, 0.06), var(--bg-raise));
-}
-
-.console__note {
-  font-size: 12px;
-  color: var(--muted);
-  margin-bottom: 12px;
-}
-
-.console__list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.console__button {
-  width: 100%;
-  text-align: left;
-  padding: 10px 12px;
-  border-radius: 10px;
-  border: 1px solid var(--line);
-  background: var(--bg-soft);
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.console__button:disabled {
-  opacity: 0.55;
-}
-
-.console__button.is-next:not(:disabled) {
-  border-color: var(--alert);
-  box-shadow: 0 0 0 3px var(--alert-soft);
-}
-
-.console__button.is-done {
-  border-color: var(--ok);
-}
-
-.console__label {
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text-strong);
-}
-
-.console__hint {
-  font-size: 12px;
-  color: var(--muted);
-}
-
-.console__state {
-  font-size: 11px;
-  color: var(--muted);
-}
-
-.console__verdict {
-  margin-top: 14px;
-  padding: 12px;
-  border-radius: 10px;
-  background: var(--alert-soft);
-  font-size: 13px;
-  color: var(--text-strong);
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.console__reset {
-  margin-top: 14px;
-  padding: 6px 12px;
-  border-radius: 8px;
-  border: 1px solid var(--line);
-  background: transparent;
-  font-size: 12px;
-  color: var(--muted);
 }
 
 /* ---------- Wireshark 答え合わせ ---------- */

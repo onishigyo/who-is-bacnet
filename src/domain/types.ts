@@ -134,32 +134,13 @@ export interface PlaybackState {
   inFlightGroup: number | null
 }
 
-export type AttackActionId =
-  'discover' | 'read' | 'readSetpoint' | 'write' | 'verify'
-
-export interface AttackAction {
-  id: AttackActionId
-  label: string
-  hint: string
-  /** 先に済ませておく必要のある操作（ガイド付き進行） */
-  requires: AttackActionId | null
-  conversationId: string
-}
-
 export interface DeviceState {
-  /** 攻撃者に発見されたか */
-  discovered: boolean
   /** 室温（analog-input,0 present-value 相当） */
   presentValue: number
   /** 設定温度（analog-value,0 present-value 相当） */
   setpoint: number
   /** 書き換えられたか */
   compromised: boolean
-}
-
-export interface AttackState {
-  completed: AttackActionId[]
-  device: DeviceState
 }
 
 /** キャプチャの 1 行（Wireshark のパケット一覧と同じ列） */
