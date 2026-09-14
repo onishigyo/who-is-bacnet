@@ -25,6 +25,11 @@ describe('ガイド付きの攻撃操作', () => {
     expect(nextActionId(attackActions, state)).toBe('read')
 
     state = runAction(attackActions, state, 'read')
+    expect(nextActionId(attackActions, state)).toBe('readSetpoint')
+    expect(state.device.compromised).toBe(false)
+
+    // 設定温度を読むだけでは、まだ書き換わらない
+    state = runAction(attackActions, state, 'readSetpoint')
     expect(nextActionId(attackActions, state)).toBe('write')
     expect(state.device.compromised).toBe(false)
 

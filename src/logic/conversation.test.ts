@@ -108,7 +108,7 @@ describe('会話データ', () => {
     )
     const attackWrite = conversationById(
       conversations,
-      'attack-write',
+      'attack-overwrite',
     ).messages.find((m) => m.protocol.includes('writeProperty'))
     expect(normalWrite?.from).toBe('supervisor')
     expect(attackWrite?.from).toBe('attacker')
@@ -198,7 +198,7 @@ describe('会話の再生', () => {
   it('groupId のないメッセージは 1 通ずつのまとまりになる', () => {
     const groups = messageGroups(normal)
     expect(groups[0].map((m) => m.id)).toEqual(['n1'])
-    expect(groups.at(-1)?.map((m) => m.id)).toEqual(['n8'])
+    expect(groups.at(-1)?.map((m) => m.id)).toEqual(['n10'])
   })
 })
 

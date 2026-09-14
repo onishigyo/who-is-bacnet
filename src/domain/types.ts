@@ -134,7 +134,8 @@ export interface PlaybackState {
   inFlightGroup: number | null
 }
 
-export type AttackActionId = 'discover' | 'read' | 'write' | 'verify'
+export type AttackActionId =
+  'discover' | 'read' | 'readSetpoint' | 'write' | 'verify'
 
 export interface AttackAction {
   id: AttackActionId

@@ -46,6 +46,7 @@ function applyOutcome(device: DeviceState, id: AttackActionId): DeviceState {
     case 'discover':
       return { ...device, discovered: true }
     case 'read':
+    case 'readSetpoint':
       // 読むだけでは機器の状態は変わらない（が、値は攻撃者に渡っている）
       return device
     case 'write':
