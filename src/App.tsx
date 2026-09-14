@@ -6,7 +6,7 @@ import { NetworkCanvas } from './components/NetworkCanvas'
 import { StepNav } from './components/StepNav'
 import { StepNotes } from './components/StepNotes'
 import { StepPanel } from './components/StepPanel'
-import { ipCapture, scCapture } from './content/captures'
+import { ipCapture, scCapture, scRejectedCapture } from './content/captures'
 import {
   ATTACK_CONVERSATION_ID,
   conversations,
@@ -217,11 +217,12 @@ export default function App() {
             />
           )}
 
-          {/* SC 編ステップ6：IP（読める）と SC（読めない）を並べる Before/After */}
+          {/* SC 編ステップ6：IP（読める）と SC（読めない・拒否）を並べる Before/After */}
           {order === 6 && (
             <div className="beforeafter">
               <CaptureEvidenceCard capture={ipCapture} />
               <CaptureEvidenceCard capture={scCapture} />
+              <CaptureEvidenceCard capture={scRejectedCapture} />
             </div>
           )}
 
