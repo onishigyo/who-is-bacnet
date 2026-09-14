@@ -1114,43 +1114,77 @@ button:disabled {
   border: 1px solid var(--line);
 }
 
-.capture__placeholder {
-  border: 1px dashed var(--line);
-  border-radius: 10px;
-  padding: 10px;
-  background: #f7f9fb;
+/* Wireshark のパケット一覧に寄せる。等幅・細い罫・行ごとの縞 */
+.capture__sheet {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fbfcfd;
+  overflow: hidden;
 }
 
-.capture__placeholder-label {
+.capture__filter {
+  padding: 6px 10px;
+  border-bottom: 1px solid var(--line);
+  background: #eef6ee;
   font-size: 11px;
   color: var(--muted);
-  margin-bottom: 8px;
 }
 
-.capture__info {
+.capture__filter code {
+  color: var(--text-strong);
+}
+
+.capture__packets {
   list-style: none;
   margin: 0;
   padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  line-height: 1.45;
+  color: var(--text-strong);
 }
 
-.capture__info li {
+.capture__packet {
+  padding: 5px 10px;
+}
+
+.capture__packet:nth-child(even) {
+  background: #f3f6f9;
+}
+
+.capture__head {
   display: flex;
-  gap: 10px;
-  align-items: baseline;
+  gap: 8px;
+  color: var(--muted);
 }
 
 .capture__no {
-  font-family: var(--mono);
-  font-size: 10px;
-  color: var(--muted);
-  min-width: 14px;
+  min-width: 32px;
 }
 
-.capture__info code {
+.capture__route {
+  flex: 1;
+  min-width: 0;
+}
+
+.capture__proto {
+  white-space: nowrap;
+}
+
+/* Info 欄は空白の数まで tshark の出力どおりに見せる（折り返しは許す） */
+.capture__info {
+  padding-left: 40px;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.capture__value {
+  padding-left: 40px;
+  color: var(--accent);
+}
+
+.capture__provenance {
+  margin-top: 10px;
   font-size: 11px;
-  color: var(--text-strong);
-  word-break: break-all;
+  color: var(--muted);
 }

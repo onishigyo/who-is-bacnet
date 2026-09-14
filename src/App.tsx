@@ -7,7 +7,7 @@ import { NetworkCanvas } from './components/NetworkCanvas'
 import { StepNav } from './components/StepNav'
 import { StepNotes } from './components/StepNotes'
 import { StepPanel } from './components/StepPanel'
-import { captures } from './content/captures'
+import { ipCapture } from './content/captures'
 import {
   attackActions,
   conversations,
@@ -253,10 +253,9 @@ export default function App() {
                 onRun={runAttack}
                 onReset={resetAttack}
               />
-              {attack.completed.length > 0 &&
-                captures.map((capture) => (
-                  <CaptureEvidenceCard key={capture.id} capture={capture} />
-                ))}
+              {attack.completed.length > 0 && (
+                <CaptureEvidenceCard capture={ipCapture} />
+              )}
               <StepNotes notes={step.notes} />
             </>
           )}
