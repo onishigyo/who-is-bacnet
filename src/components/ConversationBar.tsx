@@ -119,8 +119,6 @@ export function ConversationBar({ current, nodes, idle }: Props) {
           </p>
         )}
       </div>
-
-      <div className="stagebar__controls">{idle}</div>
     </section>
   )
 }

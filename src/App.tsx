@@ -173,11 +173,9 @@ export default function App() {
                     if (id) startConversation(id)
                   }}
                 >
-                  {activeConversation
-                    ? 'もう一度、最初から'
-                    : order === 3 || order === 5
-                      ? '会話を始める'
-                      : '持ち込まれた PC を操作する'}
+                  {order === 3 || order === 5
+                    ? '会話を始める'
+                    : '持ち込まれた PC を操作する'}
                 </button>
               }
             />
