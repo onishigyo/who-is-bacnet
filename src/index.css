@@ -1030,12 +1030,6 @@ button:disabled {
   font-weight: 700;
 }
 
-.track__go {
-  margin-left: 2px;
-  font-size: 11px;
-  color: var(--accent);
-}
-
 @keyframes next-chip {
   0%,
   100% {

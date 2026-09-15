@@ -92,12 +92,7 @@ export function ConversationTrack({
                     </>
                   )}
                 </span>
-                {upNext && (
-                  <span className="track__go">
-                    <span aria-hidden="true">▶</span>
-                    <span className="sr-only">次に押す</span>
-                  </span>
-                )}
+                {upNext && <span className="sr-only">（次に押す）</span>}
               </button>
             </li>
           )
