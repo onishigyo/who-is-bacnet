@@ -15,8 +15,8 @@ export const LEGACY_SWITCH_ID: NodeId = 'legacy-switch'
  * BACnet ルータでつながる建物。右の説明の 2 つの課題をそのまま描く。
  *
  * 1. 既存の機器：旧来の区画にある SC 非対応の機器は、IP 編と同じく
- *    持ち込まれた PC から操作できる（事実）。PC の要求がルータを越えて
- *    SC 側まで届くかは確かめていないので、線を unverified にして区別する
+ *    持ち込まれた PC から操作できる。ルータで通信を絞っていなければ、
+ *    PC の要求は SC 側にも届く（ASHRAE Managed BACnet Guidance 14.4）
  * 2. 証明書の運用：期限の切れた証明書では、ハブに繋がれない
  *
  * 機器の id は IP 編・SC 編と同じものを流用する。
@@ -145,7 +145,7 @@ export const mixedDiagramEdges: DiagramEdgeSpec[] = [
     source: ATTACKER_ID,
     target: MIXED_ROUTER_ID,
     appearsAt: 7,
-    tone: 'unverified',
-    label: '？ ルータを越えて届くか（要検証）',
+    tone: 'danger',
+    label: 'ルータで絞らなければ SC 側にも届く',
   },
 ]

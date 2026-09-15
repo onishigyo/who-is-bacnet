@@ -150,14 +150,13 @@ describe('SC の限界の図（SC と旧来の BACnet/IP が混ざる建物）',
     expect(edge(ATTACKER_ID, SC_HUB_ID)).toBeUndefined()
   })
 
-  it('ルータを越えて届くかは、要検証の線としてだけ描く', () => {
+  it('SC 側へ届くのはルータを通る経路だけで、「絞らなければ」という条件を札に書く', () => {
     const across = edge(ATTACKER_ID, MIXED_ROUTER_ID)
-    expect(across?.tone).toBe('unverified')
-    expect(across?.label).toContain('要検証')
-    // 要検証の線のほかに、SC 側へ「届く」と断定する線はない
-    const scSide = new Set([SC_HUB_ID, 'ahu', 'lighting', 'supervisor'])
-    for (const e of mixedDiagramEdges.filter((e) => e.tone === 'danger')) {
-      expect(scSide.has(e.source) || scSide.has(e.target)).toBe(false)
+    expect(across?.tone).toBe('danger')
+    expect(across?.label).toContain('絞らなければ')
+    // 持ち込まれた PC から、ハブや SC の機器へ直接の線はない
+    for (const id of [SC_HUB_ID, 'ahu', 'lighting', 'supervisor']) {
+      expect(edge(ATTACKER_ID, id)).toBeUndefined()
     }
   })
 

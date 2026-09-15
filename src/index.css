@@ -5,7 +5,7 @@
  *   赤 --alert  : 危険（攻撃者・書き換えられた値・注意書き・攻撃者が関わる通信）
  *                 攻撃の場面では、チップの「次に押す」やホバーも赤にそろえる
  *   緑 --ok     : 正規・確か（中央監視など正規の側、「規格・公式資料」のバッジ）
- *   黄 --warn   : 要検証（SC の限界の図で「届くかは要検証」の点線にも使う）
+ *   黄 --warn   : 要検証
  *   灰          : 意味を持たせない
  * 要求と返事は色でも線の形でも分けない（文言と「誰 → 誰」で分かる）
  */
@@ -436,17 +436,10 @@ button:disabled {
   border-color: var(--alert);
 }
 
-/* 線の意味（SC の限界の図）。赤＝攻撃者が操作できる経路、黄の点線＝届くか要検証、
-   灰の点線＝繋がれない */
+/* 線の意味（SC の限界の図）。赤＝攻撃者の要求が届く経路、灰の点線＝繋がれない */
 .react-flow__edge.link.tone-danger .react-flow__edge-path {
   stroke: var(--alert);
   stroke-width: 2.5;
-}
-
-.react-flow__edge.link.tone-unverified .react-flow__edge-path {
-  stroke: var(--warn);
-  stroke-width: 2;
-  stroke-dasharray: 7 5;
 }
 
 .react-flow__edge.link.tone-broken .react-flow__edge-path {
@@ -461,14 +454,6 @@ button:disabled {
 
 .react-flow__edge.link.tone-danger .react-flow__edge-text {
   fill: var(--alert);
-}
-
-.react-flow__edge.link.tone-unverified .react-flow__edge-text {
-  fill: var(--warn);
-}
-
-.react-flow__edge.link.tone-unverified .react-flow__edge-textbg {
-  fill: #fdf5e0;
 }
 
 .react-flow__edge.link.tone-broken .react-flow__edge-text {
