@@ -39,11 +39,15 @@ function MessageLine({
   if (compact) {
     return (
       <div className="stagebar__row">
-        <span className="stagebar__who">{nameOf(nodes, message.from)}</span>
+        <span className="stagebar__who">
+          {nameOf(nodes, message.from)}
+          {message.frame !== undefined && (
+            <span className="stagebar__frame">
+              Wireshark No.{message.frame}
+            </span>
+          )}
+        </span>
         <code className="stagebar__protocol">{message.protocol}</code>
-        {message.frame !== undefined && (
-          <span className="stagebar__frame">No.{message.frame}</span>
-        )}
       </div>
     )
   }

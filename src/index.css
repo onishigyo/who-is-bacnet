@@ -796,7 +796,7 @@ button:disabled {
 
 .stagebar__row {
   display: grid;
-  grid-template-columns: 116px minmax(0, 1fr) auto;
+  grid-template-columns: 116px minmax(0, 1fr);
   gap: 10px;
   align-items: baseline;
   padding: 2px 0 2px 8px;
@@ -807,8 +807,6 @@ button:disabled {
   font-size: 12px;
   color: var(--text-strong);
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
 .stagebar__protocol,
@@ -848,10 +846,17 @@ button:disabled {
   color: var(--muted);
 }
 
+/* ID が切れないよう、幅が足りなければ折り返す */
 .stagebar__row .stagebar__protocol {
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  word-break: normal;
+  overflow-wrap: break-word;
+}
+
+/* 同時に返事したうち、実験キャプチャにある 1 通だけ、機器名の下に番号を出す */
+.stagebar__who .stagebar__frame {
+  display: block;
+  width: fit-content;
+  margin: 2px 0 0;
 }
 
 .stagebar__explain {
