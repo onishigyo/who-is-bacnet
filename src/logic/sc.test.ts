@@ -7,6 +7,12 @@ import {
 } from '../content/conversations-sc'
 import { ATTACKER_ID } from '../content/diagram'
 import {
+  LEGACY_SWITCH_ID,
+  MIXED_ROUTER_ID,
+  mixedDiagramEdges,
+  mixedDiagramNodes,
+} from '../content/diagram-mixed'
+import {
   SC_HUB_ID,
   scDiagramEdges,
   scDiagramNodes,
@@ -123,5 +129,41 @@ describe('SC の門前払いは、実験キャプチャと 1 対 1 で対応す�
     expect([...lit].sort((a, b) => a - b)).toEqual(
       scRejectedCapture.rows.map((row) => row.no),
     )
+  })
+})
+
+describe('SC の限界の図（SC と旧来の BACnet/IP が混ざる建物）', () => {
+  const edge = (a: string, b: string) =>
+    mixedDiagramEdges.find(
+      (e) =>
+        (e.source === a && e.target === b) ||
+        (e.source === b && e.target === a),
+    )
+
+  it('BACnet ルータが、SC ハブと旧来の区画をつなぐ', () => {
+    expect(edge(MIXED_ROUTER_ID, SC_HUB_ID)).toBeDefined()
+    expect(edge(MIXED_ROUTER_ID, LEGACY_SWITCH_ID)).toBeDefined()
+  })
+
+  it('持ち込まれた PC は旧来の区画にいて、ハブには直接つながらない', () => {
+    expect(edge(ATTACKER_ID, LEGACY_SWITCH_ID)?.tone).toBe('danger')
+    expect(edge(ATTACKER_ID, SC_HUB_ID)).toBeUndefined()
+  })
+
+  it('ルータを越えて届くかは、要検証の線としてだけ描く', () => {
+    const across = edge(ATTACKER_ID, MIXED_ROUTER_ID)
+    expect(across?.tone).toBe('unverified')
+    expect(across?.label).toContain('要検証')
+    // 要検証の線のほかに、SC 側へ「届く」と断定する線はない
+    const scSide = new Set([SC_HUB_ID, 'ahu', 'lighting', 'supervisor'])
+    for (const e of mixedDiagramEdges.filter((e) => e.tone === 'danger')) {
+      expect(scSide.has(e.source) || scSide.has(e.target)).toBe(false)
+    }
+  })
+
+  it('証明書の期限切れの機器は、ハブと繋がれない線で描く', () => {
+    const expired = mixedDiagramNodes.filter((n) => n.certificateExpired)
+    expect(expired.length).toBeGreaterThan(0)
+    for (const n of expired) expect(edge(n.id, SC_HUB_ID)?.tone).toBe('broken')
   })
 })

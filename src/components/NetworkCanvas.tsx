@@ -203,7 +203,11 @@ export function NetworkCanvas({
         animated: litEdges.has(edge.id),
         className: litEdges.has(edge.id)
           ? `link is-active ${dangerEdges.has(edge.id) ? 'is-danger' : ''}`
-          : 'link',
+          : `link ${edge.tone ? `tone-${edge.tone}` : ''}`,
+        label: edge.label,
+        labelShowBg: Boolean(edge.label),
+        labelBgPadding: [6, 3] as [number, number],
+        labelBgBorderRadius: 4,
       })),
     [diagram.edges, litEdges, dangerEdges],
   )

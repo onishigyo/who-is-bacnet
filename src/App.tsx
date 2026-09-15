@@ -17,15 +17,9 @@ import {
   SC_NORMAL_CONVERSATION_ID,
   scConversations,
 } from './content/conversations-sc'
-import {
-  AHU_ID,
-  ATTACKER_ID,
-  diagramEdges,
-  diagramNodes,
-  NETWORK_NODE_ID,
-} from './content/diagram'
-import { SC_HUB_ID, scDiagramEdges, scDiagramNodes } from './content/diagram-sc'
+import { AHU_ID, ATTACKER_ID } from './content/diagram'
 import { steps } from './content/steps'
+import { worlds } from './content/worlds'
 import type { DeviceState, NodeId, StepOrder } from './domain/types'
 import { deviceFrom } from './logic/device'
 import {
@@ -54,12 +48,12 @@ export default function App() {
   const panelRef = useRef<HTMLElement>(null)
 
   const step = stepByOrder(steps, order)
-  const isSc = step.world === 'sc'
-
-  // world ごとに、図・会話・中継ノードを丸ごと切り替える
-  const worldNodes = isSc ? scDiagramNodes : diagramNodes
-  const worldEdges = isSc ? scDiagramEdges : diagramEdges
-  const networkNodeId = isSc ? SC_HUB_ID : NETWORK_NODE_ID
+  // world ごとに、図と中継ノードを丸ごと切り替える
+  const {
+    nodes: worldNodes,
+    edges: worldEdges,
+    networkNodeId,
+  } = worlds[step.world]
   const allConversations = useMemo(
     () => [...conversations, ...scConversations],
     [],
