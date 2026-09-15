@@ -8,7 +8,6 @@ import {
   NODE_WIDTH,
   nodeCenter,
   nodePath,
-  reachableFrom,
 } from './layout'
 
 describe('ノードの中心', () => {
@@ -116,33 +115,5 @@ describe('配線をたどる経路（多ホップ）', () => {
 
   it('繋がっていなければ経路は空', () => {
     expect(nodePath(diagramEdges, 'attacker', 'ghost')).toEqual([])
-  })
-})
-
-describe('配線から到達できるノード', () => {
-  it('スター型では、ネットワークから他の全機器に到達できる', () => {
-    const reachable = reachableFrom(diagramEdges, NETWORK_NODE_ID)
-    for (const node of diagramNodes) {
-      if (node.id === NETWORK_NODE_ID) continue
-      expect(reachable.has(node.id)).toBe(true)
-    }
-  })
-
-  it('自分自身は含まない', () => {
-    expect(reachableFrom(diagramEdges, NETWORK_NODE_ID).has(NETWORK_NODE_ID)).toBe(
-      false,
-    )
-  })
-
-  it('サブネットが分かれていれば、境界の先には到達できない', () => {
-    const edges = [
-      { id: 'e1', source: 'a', target: 'netA', appearsAt: 1 as const },
-      { id: 'e2', source: 'b', target: 'netB', appearsAt: 1 as const },
-      // netA と netB を繋ぐ線がない
-    ]
-    const reachable = reachableFrom(edges, 'netA')
-    expect(reachable.has('a')).toBe(true)
-    expect(reachable.has('b')).toBe(false)
-    expect(reachable.has('netB')).toBe(false)
   })
 })

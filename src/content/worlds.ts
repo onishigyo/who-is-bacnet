@@ -4,6 +4,7 @@ import type {
   NodeId,
   World,
 } from '../domain/types'
+import { bbmdDiagramEdges, bbmdDiagramNodes, SUBNET_A_ID } from './diagram-bbmd'
 import { diagramEdges, diagramNodes, NETWORK_NODE_ID } from './diagram'
 import { mixedDiagramEdges, mixedDiagramNodes } from './diagram-mixed'
 import { SC_HUB_ID, scDiagramEdges, scDiagramNodes } from './diagram-sc'
@@ -27,5 +28,10 @@ export const worlds: Record<
     nodes: mixedDiagramNodes,
     edges: mixedDiagramEdges,
     networkNodeId: SC_HUB_ID,
+  },
+  bbmd: {
+    nodes: bbmdDiagramNodes,
+    edges: bbmdDiagramEdges,
+    networkNodeId: SUBNET_A_ID,
   },
 }

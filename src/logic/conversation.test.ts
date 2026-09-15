@@ -28,6 +28,7 @@ import {
   messagesUpToGroup,
   nextGroupIndex,
   playGroup,
+  relayNodeFor,
   selectedMessages,
   speakersOf,
 } from './conversation'
@@ -177,6 +178,35 @@ describe('図の上の飛び方', () => {
       flightPath(msg({ from: 'attacker', to: 'ahu' }), NETWORK_NODE_ID),
     ).toEqual({ from: 'attacker', to: 'ahu' })
   })
+})
+
+describe('実効的な中継点（relayNodeFor）', () => {
+  const msg = (over: Partial<ConversationMessage>): ConversationMessage => ({
+    id: 'x',
+    from: 'supervisor',
+    to: BROADCAST,
+    kind: 'request',
+    plain: '',
+    protocol: '',
+    transport: '',
+    action: '',
+    explain: '',
+    ...over,
+  })
+
+  it('送信元が機器なら、world 固定の中継点を使う（IP 編・SC 編のスター型）', () => {
+    expect(
+      relayNodeFor(msg({ from: 'supervisor' }), diagramNodes, NETWORK_NODE_ID),
+    ).toBe(NETWORK_NODE_ID)
+  })
+
+  it('送信元がすでに中継点自身（switch/hub/router）なら、その送信元が中継点になる', () => {
+    const nodes = [
+      { id: 'netA', kind: 'switch' as const },
+      { id: 'netB', kind: 'switch' as const },
+    ]
+    expect(relayNodeFor(msg({ from: 'netB' }), nodes, 'netA')).toBe('netB')
+  })
 
   it('話し手を重複なく取り出せる', () => {
     expect(speakersOf(normal)).toEqual([
@@ -191,7 +221,12 @@ describe('図の上の飛び方', () => {
 describe('ブロードキャストの広がり', () => {
   it('ネットワークから、送信元以外のすべての機器へ広がる（スター型なので全機器に届く）', () => {
     expect(
-      broadcastTargets(diagramNodes, diagramEdges, 'supervisor', NETWORK_NODE_ID),
+      broadcastTargets(
+        diagramNodes,
+        diagramEdges,
+        'supervisor',
+        NETWORK_NODE_ID,
+      ),
     ).toEqual(['ahu', 'lighting', 'meter', 'attacker'])
   })
 
@@ -206,14 +241,37 @@ describe('ブロードキャストの広がり', () => {
     expect(targets).not.toContain(NETWORK_NODE_ID)
   })
 
-  it('配線がたどれない（別サブネットの）ノードには広がらない', () => {
-    const nodes = [{ id: 'a' }, { id: 'net' }, { id: 'b' }, { id: 'island' }]
+  it('中継点に直接つながっていないノードには広がらない', () => {
+    const nodes = [
+      { id: 'a', kind: 'controller' as const },
+      { id: 'net', kind: 'switch' as const },
+      { id: 'b', kind: 'controller' as const },
+      { id: 'island', kind: 'controller' as const },
+    ]
     const edges = [
       { id: 'e1', source: 'a', target: 'net', appearsAt: 1 as const },
       { id: 'e2', source: 'net', target: 'b', appearsAt: 1 as const },
-      // 'island' は配線がなく、どこからも到達できない
+      // 'island' は配線がなく、どこからも届かない
     ]
     expect(broadcastTargets(nodes, edges, 'a', 'net')).toEqual(['b'])
+  })
+
+  it('中継点どうしが線でつながっていても、その先の中継点自体には広がらない（区画をまたがない）', () => {
+    // BBMD 番外編のような、2 つの中継点（サブネットの境）が線でつながる図
+    const nodes = [
+      { id: 'supervisor', kind: 'supervisor' as const },
+      { id: 'netA', kind: 'switch' as const },
+      { id: 'netB', kind: 'switch' as const },
+      { id: 'ahu', kind: 'controller' as const },
+    ]
+    const edges = [
+      { id: 'e1', source: 'supervisor', target: 'netA', appearsAt: 1 as const },
+      { id: 'e2', source: 'netA', target: 'netB', appearsAt: 1 as const },
+      { id: 'e3', source: 'netB', target: 'ahu', appearsAt: 1 as const },
+    ]
+    // netA から見た送り先は、直接つながる supervisor 自身を除いた機器だけ。
+    // netB（中継点）は境をまたぐ先なので含まれない。ahu にも直接は届かない
+    expect(broadcastTargets(nodes, edges, 'supervisor', 'netA')).toEqual([])
   })
 })
 

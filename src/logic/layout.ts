@@ -76,30 +76,6 @@ export function nodePath(
 }
 
 /**
- * 配線（エッジ）をたどって from から到達できる、from 自身を除く全ノード。
- * サブネットが分かれている図では、境界を越えた先は含まれない
- * （BBMD 番外編で「越えられない」を表現するのに使う）。
- */
-export function reachableFrom(edges: DiagramEdgeSpec[], from: NodeId): Set<NodeId> {
-  const neighbors = neighborsOf(edges)
-  const seen = new Set<NodeId>([from])
-  let frontier: NodeId[] = [from]
-  while (frontier.length > 0) {
-    const next: NodeId[] = []
-    for (const node of frontier) {
-      for (const neighbor of neighbors.get(node) ?? []) {
-        if (seen.has(neighbor)) continue
-        seen.add(neighbor)
-        next.push(neighbor)
-      }
-    }
-    frontier = next
-  }
-  seen.delete(from)
-  return seen
-}
-
-/**
  * パケットが図の上を飛ぶ経路。配線をたどって、送信元 → …中継… → 宛先 の
  * 各ノードの中心を返す。端点が図に出ていない、または繋がっていなければ空配列。
  */

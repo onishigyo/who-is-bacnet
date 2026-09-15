@@ -239,6 +239,7 @@ button:disabled {
   background: var(--bg-raise);
   color: var(--muted);
   font-size: 13px;
+  white-space: nowrap;
   transition:
     border-color 0.2s,
     color 0.2s;
@@ -259,6 +260,29 @@ button:disabled {
   font-family: var(--mono);
   font-size: 11px;
   opacity: 0.8;
+}
+
+/* 番外編のドロップダウン。pill と同じ高さ・丸みに合わせる */
+.stepnav__extra {
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--bg-raise);
+  color: var(--muted);
+  font-size: 13px;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.stepnav__extra:hover {
+  border-color: var(--accent);
+  color: var(--text);
+}
+
+.stepnav__extra.is-active {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--text-strong);
 }
 
 .stepnav__arrow {
@@ -925,6 +949,14 @@ button:disabled {
 
 .play:disabled {
   opacity: 0.5;
+}
+
+/* BBMD 番外編：Before/After を選ぶ 2 つのボタンを横に並べる */
+.bbmd-choices {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
 }
 
 .track {
