@@ -42,10 +42,10 @@ describe('ステップ内容', () => {
 
   it('各ステップは world と章を持つ（IP 編 1〜4 / SC 編 5〜7）', () => {
     for (const step of steps) {
-      expect(['ip', 'sc']).toContain(step.world)
+      expect(['ip', 'sc', 'mixed']).toContain(step.world)
       expect(step.chapter.length).toBeGreaterThan(0)
       if (step.world === 'ip') expect(step.order).toBeLessThanOrEqual(4)
-      if (step.world === 'sc') expect(step.order).toBeGreaterThanOrEqual(5)
+      if (step.world !== 'ip') expect(step.order).toBeGreaterThanOrEqual(5)
     }
   })
 

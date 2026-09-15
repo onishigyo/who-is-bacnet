@@ -14,8 +14,11 @@ export type StepId =
   | 'sc-defense'
   | 'sc-limits'
 
-/** ステップが属する「世界」。IP 編と SC 編で図もコンテンツも別セット */
-export type World = 'ip' | 'sc'
+/**
+ * ステップが属する「世界」。世界ごとに図が別セット。
+ * mixed は SC と旧来の BACnet/IP がルータでつながる建物（SC の限界で使う）
+ */
+export type World = 'ip' | 'sc' | 'mixed'
 
 /** 記述の確からしさ。教材上、両者を視覚的に区別するために使う */
 export type Confidence =
@@ -56,6 +59,8 @@ export type NodeKind =
   | 'switch'
   /** BACnet/SC ハブ（証明書を持つ機器だけが繋がる集線点） */
   | 'hub'
+  /** BACnet ルータ（BACnet のネットワーク同士をつなぐ。SC と BACnet/IP など） */
+  | 'router'
   /** 攻撃者（同じネットワークに持ち込まれた PC） */
   | 'attacker'
 
@@ -71,16 +76,28 @@ export interface DiagramNodeSpec {
   ip?: string
   /** SC 編で、この機器が証明書を持つか（持たない攻撃者はハブに入れない） */
   hasCertificate?: boolean
+  /** 証明書の有効期限が切れているか（ハブに繋がれない） */
+  certificateExpired?: boolean
   /** このノードが図に現れるステップ */
   appearsAt: StepOrder
   position: { x: number; y: number }
 }
+
+/**
+ * 線の意味。指定なしはふつうの接続。
+ * danger = 攻撃者の要求が届く経路
+ * broken = 繋がれない
+ */
+export type EdgeTone = 'danger' | 'broken'
 
 export interface DiagramEdgeSpec {
   id: string
   source: NodeId
   target: NodeId
   appearsAt: StepOrder
+  tone?: EdgeTone
+  /** 線に添える短い札 */
+  label?: string
 }
 
 /** 図の表示状態（純粋ロジックが組み立て、描画層はこれを描くだけ） */

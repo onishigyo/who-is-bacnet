@@ -19,6 +19,7 @@ const kindLabel: Record<NodeKind, string> = {
   supervisor: '中央監視',
   switch: 'ネットワーク',
   hub: 'SC ハブ',
+  router: 'ルータ',
   attacker: '攻撃者',
 }
 
@@ -31,6 +32,7 @@ export function BacnetNode({ data }: NodeProps<BacnetFlowNode>) {
     speaking ? 'is-speaking' : '',
     speaking && speakingDanger ? 'is-danger' : '',
     device?.compromised ? 'is-compromised' : '',
+    spec.certificateExpired ? 'is-expired' : '',
   ]
     .filter(Boolean)
     .join(' ')

@@ -22,7 +22,7 @@ import {
   involvesAttacker,
   isBroadcast,
 } from '../logic/conversation'
-import { activeEdgeIds, flightWaypoints, type Point } from '../logic/layout'
+import { activeEdgeIds, flightWaypoints, toOffsetPath } from '../logic/layout'
 import { BacnetNode, type BacnetFlowNode } from './nodes/BacnetNode'
 
 const nodeTypes: NodeTypes = { bacnet: BacnetNode }
@@ -31,14 +31,31 @@ const nodeTypes: NodeTypes = { bacnet: BacnetNode }
 // 手動のホイール操作では maxZoom まで寄れる
 const FIT_VIEW_OPTIONS = { padding: 0.18, maxZoom: 1.2 }
 
-/** 画面幅が変わっても図全体が見えるようにする（ReactFlow の内側でのみ使える） */
+/**
+ * 画面幅が変わっても図全体が見えるようにする（ReactFlow の内側でのみ使える）。
+ * ウィンドウの resize だけでなく、下の帯（会話を始めると 88px → 156px に
+ * 伸びる）でキャンバス自体の高さが変わったときも再フィットする。そうしないと、
+ * 前のフィットのまま領域だけ縮み、図の上下が切れて見える。
+ */
 function FitViewOnResize() {
   const { fitView } = useReactFlow()
+
   useEffect(() => {
     const refit = () => void fitView(FIT_VIEW_OPTIONS)
     window.addEventListener('resize', refit)
     return () => window.removeEventListener('resize', refit)
   }, [fitView])
+
+  useEffect(() => {
+    const pane = document.querySelector<HTMLElement>('.canvas')
+    if (!pane) return
+    const observer = new ResizeObserver(() => {
+      requestAnimationFrame(() => fitView(FIT_VIEW_OPTIONS))
+    })
+    observer.observe(pane)
+    return () => observer.disconnect()
+  }, [fitView])
+
   return null
 }
 
@@ -79,17 +96,6 @@ interface Props {
   durationMs: number
 }
 
-/** 2点しかない経路でも同じ keyframes を使えるよう、中継点を補う */
-function withMidpoint(points: Point[]): [Point, Point, Point] | null {
-  if (points.length >= 3)
-    return [points[0], points[1], points[points.length - 1]]
-  if (points.length === 2) {
-    const [a, b] = points
-    return [a, { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }, b]
-  }
-  return null
-}
-
 export function NetworkCanvas({
   diagram,
   deviceReadouts,
@@ -114,23 +120,22 @@ export function NetworkCanvas({
           message,
           broadcasting,
           danger: involvesAttacker(message, attackerId),
-          main: withMidpoint(
-            flightWaypoints(diagram.nodes, path.from, path.to, networkNodeId),
+          main: flightWaypoints(
+            diagram.nodes,
+            diagram.edges,
+            path.from,
+            path.to,
+            networkNodeId,
           ),
-          fans: fanOut
-            .map((target) =>
-              withMidpoint(
-                flightWaypoints(
-                  diagram.nodes,
-                  networkNodeId,
-                  target,
-                  networkNodeId,
-                ),
-              ),
-            )
-            .filter((points): points is [Point, Point, Point] =>
-              Boolean(points),
+          fans: fanOut.map((target) =>
+            flightWaypoints(
+              diagram.nodes,
+              diagram.edges,
+              networkNodeId,
+              target,
+              networkNodeId,
             ),
+          ),
           legs: activeEdgeIds(
             diagram.edges,
             path.from,
@@ -203,7 +208,11 @@ export function NetworkCanvas({
         animated: litEdges.has(edge.id),
         className: litEdges.has(edge.id)
           ? `link is-active ${dangerEdges.has(edge.id) ? 'is-danger' : ''}`
-          : 'link',
+          : `link ${edge.tone ? `tone-${edge.tone}` : ''}`,
+        label: edge.label,
+        labelShowBg: Boolean(edge.label),
+        labelBgPadding: [6, 3] as [number, number],
+        labelBgBorderRadius: 4,
       })),
     [diagram.edges, litEdges, dangerEdges],
   )
@@ -256,9 +265,11 @@ export function NetworkCanvas({
             ? mainDuration * FAN_SPLIT
             : mainDuration
 
+          const mainPath = toOffsetPath(flight.main)
+
           return (
             <div key={`${flightKey}-${flight.message.id}`}>
-              {flight.main && (
+              {mainPath && (
                 <div
                   className={`packet ${
                     flight.broadcasting ? 'packet--parked' : ''
@@ -267,12 +278,8 @@ export function NetworkCanvas({
                   }`}
                   style={
                     {
-                      '--x0': `${flight.main[0].x}px`,
-                      '--y0': `${flight.main[0].y}px`,
-                      '--x1': `${flight.main[1].x}px`,
-                      '--y1': `${flight.main[1].y}px`,
-                      '--x2': `${flight.main[2].x}px`,
-                      '--y2': `${flight.main[2].y}px`,
+                      offsetPath: `path('${mainPath}')`,
+                      offsetRotate: '0deg',
                       animationDuration: `${duration}ms`,
                       animationDelay: `${delay}ms`,
                     } as CSSProperties
@@ -291,32 +298,32 @@ export function NetworkCanvas({
                 </div>
               )}
 
-              {flight.fans.map((points, fanIndex) => (
-                <div
-                  key={`fan-${fanIndex}`}
-                  className={`packet packet--fan ${
-                    flight.danger ? 'packet--danger' : ''
-                  }`}
-                  style={
-                    {
-                      '--x0': `${points[0].x}px`,
-                      '--y0': `${points[0].y}px`,
-                      '--x1': `${points[1].x}px`,
-                      '--y1': `${points[1].y}px`,
-                      '--x2': `${points[2].x}px`,
-                      '--y2': `${points[2].y}px`,
-                      animationDuration: `${mainDuration * (1 - FAN_SPLIT)}ms`,
-                      animationDelay: `${delay + mainDuration * FAN_SPLIT}ms`,
-                    } as CSSProperties
-                  }
-                >
-                  <div className="packet__bubble packet__bubble--fan">
-                    <code className="packet__protocol">
-                      {flight.message.protocol}
-                    </code>
+              {flight.fans.map((points, fanIndex) => {
+                const fanPath = toOffsetPath(points)
+                if (!fanPath) return null
+                return (
+                  <div
+                    key={`fan-${fanIndex}`}
+                    className={`packet packet--fan ${
+                      flight.danger ? 'packet--danger' : ''
+                    }`}
+                    style={
+                      {
+                        offsetPath: `path('${fanPath}')`,
+                        offsetRotate: '0deg',
+                        animationDuration: `${mainDuration * (1 - FAN_SPLIT)}ms`,
+                        animationDelay: `${delay + mainDuration * FAN_SPLIT}ms`,
+                      } as CSSProperties
+                    }
+                  >
+                    <div className="packet__bubble packet__bubble--fan">
+                      <code className="packet__protocol">
+                        {flight.message.protocol}
+                      </code>
+                    </div>
                   </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
           )
         })}

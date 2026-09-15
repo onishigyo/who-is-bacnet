@@ -5,7 +5,17 @@ import {
   SC_ATTACK_CONVERSATION_ID,
   SC_NORMAL_CONVERSATION_ID,
 } from '../content/conversations-sc'
-import { ATTACKER_ID } from '../content/diagram'
+import { AHU_ID, ATTACKER_ID } from '../content/diagram'
+import {
+  MIXED_ATTACK_CONVERSATION_ID,
+  mixedConversations,
+} from '../content/conversations-mixed'
+import {
+  LEGACY_SWITCH_ID,
+  MIXED_ROUTER_ID,
+  mixedDiagramEdges,
+  mixedDiagramNodes,
+} from '../content/diagram-mixed'
 import {
   SC_HUB_ID,
   scDiagramEdges,
@@ -123,5 +133,73 @@ describe('SC の門前払いは、実験キャプチャと 1 対 1 で対応す�
     expect([...lit].sort((a, b) => a - b)).toEqual(
       scRejectedCapture.rows.map((row) => row.no),
     )
+  })
+})
+
+describe('SC の限界の図（SC と旧来の BACnet/IP が混ざる建物）', () => {
+  const edge = (a: string, b: string) =>
+    mixedDiagramEdges.find(
+      (e) =>
+        (e.source === a && e.target === b) ||
+        (e.source === b && e.target === a),
+    )
+
+  it('BACnet ルータが、SC ハブと旧来の区画をつなぐ', () => {
+    expect(edge(MIXED_ROUTER_ID, SC_HUB_ID)).toBeDefined()
+    expect(edge(MIXED_ROUTER_ID, LEGACY_SWITCH_ID)).toBeDefined()
+  })
+
+  it('持ち込まれた PC は旧来の区画にいて、ハブには直接つながらない', () => {
+    expect(edge(ATTACKER_ID, LEGACY_SWITCH_ID)?.tone).toBe('danger')
+    expect(edge(ATTACKER_ID, SC_HUB_ID)).toBeUndefined()
+  })
+
+  it('持ち込まれた PC は旧来スイッチにだけ物理接続し、ルータや SC 側へ直接の線はない', () => {
+    // ルータ越えは論理経路なので図に線を引かず、会話（多ホップ飛行）で見せる
+    for (const id of [
+      MIXED_ROUTER_ID,
+      SC_HUB_ID,
+      'ahu',
+      'lighting',
+      'supervisor',
+    ]) {
+      expect(edge(ATTACKER_ID, id)).toBeUndefined()
+    }
+    expect(edge(ATTACKER_ID, LEGACY_SWITCH_ID)?.tone).toBe('danger')
+  })
+
+  it('証明書の期限切れの機器は、ハブと繋がれない線で描く', () => {
+    const expired = mixedDiagramNodes.filter((n) => n.certificateExpired)
+    expect(expired.length).toBeGreaterThan(0)
+    for (const n of expired) expect(edge(n.id, SC_HUB_ID)?.tone).toBe('broken')
+  })
+})
+
+describe('SC の限界の会話（ルータ越え・要検証）', () => {
+  const attack = mixedConversations.find(
+    (c) => c.id === MIXED_ATTACK_CONVERSATION_ID,
+  )!
+
+  it('実験キャプチャは持たない（frame も captureId もない）', () => {
+    expect(attack.captureId).toBeUndefined()
+    for (const m of attack.messages) expect(m.frame).toBeUndefined()
+  })
+
+  it('まず、SC 非対応の電力計を同じ区画から読む（IP 編と同じ手口）', () => {
+    const read = attack.messages.find((m) => m.to === 'meter')
+    expect(read?.from).toBe(ATTACKER_ID)
+    expect(/readProperty/i.test(read?.protocol ?? '')).toBe(true)
+    const reply = attack.messages.find((m) => m.from === 'meter')
+    expect(reply?.to).toBe(ATTACKER_ID)
+  })
+
+  it('続けて、PC から SC 側の空調コントローラへの書き込みで、要検証を明示する', () => {
+    const write = attack.messages.find(
+      (m) => m.from === ATTACKER_ID && m.to === AHU_ID,
+    )
+    expect(write).toBeDefined()
+    expect(/writeProperty/i.test(write!.protocol)).toBe(true)
+    expect(write!.annotation).toContain('未確認')
+    expect(write!.annotationTone).toBe('alert')
   })
 })
