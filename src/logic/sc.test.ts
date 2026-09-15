@@ -5,7 +5,11 @@ import {
   SC_ATTACK_CONVERSATION_ID,
   SC_NORMAL_CONVERSATION_ID,
 } from '../content/conversations-sc'
-import { ATTACKER_ID } from '../content/diagram'
+import { AHU_ID, ATTACKER_ID } from '../content/diagram'
+import {
+  MIXED_ATTACK_CONVERSATION_ID,
+  mixedConversations,
+} from '../content/conversations-mixed'
 import {
   LEGACY_SWITCH_ID,
   MIXED_ROUTER_ID,
@@ -150,19 +154,43 @@ describe('SC の限界の図（SC と旧来の BACnet/IP が混ざる建物）',
     expect(edge(ATTACKER_ID, SC_HUB_ID)).toBeUndefined()
   })
 
-  it('SC 側へ届くのはルータを通る経路だけで、「絞らなければ」という条件を札に書く', () => {
-    const across = edge(ATTACKER_ID, MIXED_ROUTER_ID)
-    expect(across?.tone).toBe('danger')
-    expect(across?.label).toContain('絞らなければ')
-    // 持ち込まれた PC から、ハブや SC の機器へ直接の線はない
-    for (const id of [SC_HUB_ID, 'ahu', 'lighting', 'supervisor']) {
+  it('持ち込まれた PC は旧来スイッチにだけ物理接続し、ルータや SC 側へ直接の線はない', () => {
+    // ルータ越えは論理経路なので図に線を引かず、会話（多ホップ飛行）で見せる
+    for (const id of [
+      MIXED_ROUTER_ID,
+      SC_HUB_ID,
+      'ahu',
+      'lighting',
+      'supervisor',
+    ]) {
       expect(edge(ATTACKER_ID, id)).toBeUndefined()
     }
+    expect(edge(ATTACKER_ID, LEGACY_SWITCH_ID)?.tone).toBe('danger')
   })
 
   it('証明書の期限切れの機器は、ハブと繋がれない線で描く', () => {
     const expired = mixedDiagramNodes.filter((n) => n.certificateExpired)
     expect(expired.length).toBeGreaterThan(0)
     for (const n of expired) expect(edge(n.id, SC_HUB_ID)?.tone).toBe('broken')
+  })
+})
+
+describe('SC の限界の会話（ルータ越え・要検証）', () => {
+  const attack = mixedConversations.find(
+    (c) => c.id === MIXED_ATTACK_CONVERSATION_ID,
+  )!
+
+  it('実験キャプチャは持たない（frame も captureId もない）', () => {
+    expect(attack.captureId).toBeUndefined()
+    for (const m of attack.messages) expect(m.frame).toBeUndefined()
+  })
+
+  it('PC から SC 側の空調コントローラへの書き込みで、要検証を明示する', () => {
+    const write = attack.messages[0]
+    expect(write.from).toBe(ATTACKER_ID)
+    expect(write.to).toBe(AHU_ID)
+    expect(/writeProperty/i.test(write.protocol)).toBe(true)
+    expect(write.annotation).toContain('未確認')
+    expect(write.annotationTone).toBe('alert')
   })
 })

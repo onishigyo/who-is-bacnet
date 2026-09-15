@@ -140,12 +140,4 @@ export const mixedDiagramEdges: DiagramEdgeSpec[] = [
     appearsAt: 7,
     tone: 'danger',
   },
-  {
-    id: 'mx-attacker-router',
-    source: ATTACKER_ID,
-    target: MIXED_ROUTER_ID,
-    appearsAt: 7,
-    tone: 'danger',
-    label: 'ルータで絞らなければ SC 側にも届く',
-  },
 ]

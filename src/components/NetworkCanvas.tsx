@@ -79,10 +79,11 @@ interface Props {
   durationMs: number
 }
 
-/** 2点しかない経路でも同じ keyframes を使えるよう、中継点を補う */
+/** 始点・中間・終点の 3 点に整える（keyframes が 3 点固定なので）。
+    多ホップの経路は、真ん中のノードを中間点にする */
 function withMidpoint(points: Point[]): [Point, Point, Point] | null {
   if (points.length >= 3)
-    return [points[0], points[1], points[points.length - 1]]
+    return [points[0], points[Math.floor(points.length / 2)], points.at(-1)!]
   if (points.length === 2) {
     const [a, b] = points
     return [a, { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 }, b]
@@ -115,13 +116,20 @@ export function NetworkCanvas({
           broadcasting,
           danger: involvesAttacker(message, attackerId),
           main: withMidpoint(
-            flightWaypoints(diagram.nodes, path.from, path.to, networkNodeId),
+            flightWaypoints(
+              diagram.nodes,
+              diagram.edges,
+              path.from,
+              path.to,
+              networkNodeId,
+            ),
           ),
           fans: fanOut
             .map((target) =>
               withMidpoint(
                 flightWaypoints(
                   diagram.nodes,
+                  diagram.edges,
                   networkNodeId,
                   target,
                   networkNodeId,

@@ -17,6 +17,10 @@ import {
   SC_NORMAL_CONVERSATION_ID,
   scConversations,
 } from './content/conversations-sc'
+import {
+  MIXED_ATTACK_CONVERSATION_ID,
+  mixedConversations,
+} from './content/conversations-mixed'
 import { AHU_ID, ATTACKER_ID } from './content/diagram'
 import { steps } from './content/steps'
 import { worlds } from './content/worlds'
@@ -55,7 +59,7 @@ export default function App() {
     networkNodeId,
   } = worlds[step.world]
   const allConversations = useMemo(
-    () => [...conversations, ...scConversations],
+    () => [...conversations, ...scConversations, ...mixedConversations],
     [],
   )
 
@@ -123,6 +127,8 @@ export default function App() {
         return SC_NORMAL_CONVERSATION_ID
       case 6:
         return SC_ATTACK_CONVERSATION_ID
+      case 7:
+        return MIXED_ATTACK_CONVERSATION_ID
       default:
         return null
     }
