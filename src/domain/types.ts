@@ -16,9 +16,10 @@ export type StepId =
 
 /**
  * ステップが属する「世界」。世界ごとに図が別セット。
- * mixed は SC と旧来の BACnet/IP がルータでつながる建物（SC の限界で使う）
+ * mixed は SC と旧来の BACnet/IP がルータでつながる建物（SC の限界で使う）。
+ * bbmd は番外編（本編の 1〜7 には含まれない、別入り口から開く読み物）
  */
-export type World = 'ip' | 'sc' | 'mixed'
+export type World = 'ip' | 'sc' | 'mixed' | 'bbmd'
 
 /** 記述の確からしさ。教材上、両者を視覚的に区別するために使う */
 export type Confidence =
@@ -47,6 +48,26 @@ export interface StepContent {
   paragraphs: string[]
   notes: ContentNote[]
 }
+
+/** 番外編の id。本編の 1〜7 とは別の入り口（ドロップダウン）から開く */
+export type ExtraId = 'bbmd'
+
+/**
+ * 番外編の読み物。StepContent と同じ形だが、本編の順序（order・chapter）を
+ * 持たない。StepPanel・StepNotes は両者を区別せず描画できる。
+ */
+export interface ExtraContent {
+  id: ExtraId
+  world: World
+  navLabel: string
+  title: string
+  lead: string
+  paragraphs: string[]
+  notes: ContentNote[]
+}
+
+/** 読み物パネルに渡せる中身（本編・番外編どちらでもよい） */
+export type PanelContent = StepContent | ExtraContent
 
 export type NodeId = string
 

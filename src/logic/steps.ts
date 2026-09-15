@@ -2,6 +2,8 @@ import type {
   DiagramEdgeSpec,
   DiagramNodeSpec,
   DiagramState,
+  ExtraContent,
+  ExtraId,
   StepContent,
   StepOrder,
 } from '../domain/types'
@@ -42,6 +44,15 @@ export function stepByOrder(
   const step = steps.find((s) => s.order === order)
   if (!step) throw new Error(`ステップ ${order} の内容が見つかりません`)
   return step
+}
+
+export function extraContentById(
+  extras: ExtraContent[],
+  id: ExtraId,
+): ExtraContent {
+  const extra = extras.find((e) => e.id === id)
+  if (!extra) throw new Error(`番外編 ${id} の内容が見つかりません`)
+  return extra
 }
 
 export function showIp(order: StepOrder): boolean {

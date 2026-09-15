@@ -21,17 +21,8 @@ function centerOf(nodes: DiagramNodeSpec[], id: NodeId): Point | null {
   return spec ? nodeCenter(spec) : null
 }
 
-/**
- * 配線（エッジ）をたどった、from → to の最短のノード列。
- * BFS なので経路は一意でなくてよい。繋がっていなければ空配列。
- * networkId は同点のときの優先中継点（スター型で確実にネットワークを通すため）。
- */
-export function nodePath(
-  edges: DiagramEdgeSpec[],
-  from: NodeId,
-  to: NodeId,
-): NodeId[] {
-  if (from === to) return [from]
+/** 配線（エッジ）から、双方向の隣接リストを作る */
+function neighborsOf(edges: DiagramEdgeSpec[]): Map<NodeId, NodeId[]> {
   const neighbors = new Map<NodeId, NodeId[]>()
   const link = (a: NodeId, b: NodeId) => {
     const list = neighbors.get(a) ?? []
@@ -42,6 +33,20 @@ export function nodePath(
     link(edge.source, edge.target)
     link(edge.target, edge.source)
   }
+  return neighbors
+}
+
+/**
+ * 配線（エッジ）をたどった、from → to の最短のノード列。
+ * BFS なので経路は一意でなくてよい。繋がっていなければ空配列。
+ */
+export function nodePath(
+  edges: DiagramEdgeSpec[],
+  from: NodeId,
+  to: NodeId,
+): NodeId[] {
+  if (from === to) return [from]
+  const neighbors = neighborsOf(edges)
 
   const prev = new Map<NodeId, NodeId>()
   const seen = new Set<NodeId>([from])

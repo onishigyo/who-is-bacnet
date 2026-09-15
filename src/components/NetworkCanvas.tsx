@@ -21,6 +21,7 @@ import {
   flightPath,
   involvesAttacker,
   isBroadcast,
+  relayNodeFor,
 } from '../logic/conversation'
 import { activeEdgeIds, flightWaypoints, toOffsetPath } from '../logic/layout'
 import { BacnetNode, type BacnetFlowNode } from './nodes/BacnetNode'
@@ -111,9 +112,15 @@ export function NetworkCanvas({
   const flights = useMemo(
     () =>
       inFlight.map((message) => {
-        const path = flightPath(message, networkNodeId)
+        const relayNode = relayNodeFor(message, diagram.nodes, networkNodeId)
+        const path = flightPath(message, relayNode)
         const fanOut = isBroadcast(message.to)
-          ? broadcastTargets(diagram.nodes, message.from, networkNodeId)
+          ? broadcastTargets(
+              diagram.nodes,
+              diagram.edges,
+              message.from,
+              relayNode,
+            )
           : []
         const broadcasting = fanOut.length > 0
         return {
@@ -125,30 +132,25 @@ export function NetworkCanvas({
             diagram.edges,
             path.from,
             path.to,
-            networkNodeId,
+            relayNode,
           ),
           fans: fanOut.map((target) =>
             flightWaypoints(
               diagram.nodes,
               diagram.edges,
-              networkNodeId,
+              relayNode,
               target,
-              networkNodeId,
+              relayNode,
             ),
           ),
           legs: activeEdgeIds(
             diagram.edges,
             path.from,
             path.to,
-            networkNodeId,
+            relayNode,
           ).concat(
             fanOut.flatMap((target) =>
-              activeEdgeIds(
-                diagram.edges,
-                networkNodeId,
-                target,
-                networkNodeId,
-              ),
+              activeEdgeIds(diagram.edges, relayNode, target, relayNode),
             ),
           ),
         }

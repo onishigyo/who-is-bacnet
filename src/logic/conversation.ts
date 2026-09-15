@@ -1,11 +1,20 @@
 import type {
   Conversation,
   ConversationMessage,
+  DiagramEdgeSpec,
+  DiagramNodeSpec,
   MessageTarget,
   NodeId,
   PlaybackState,
 } from '../domain/types'
 import { BROADCAST } from '../domain/types'
+
+/** ブロードキャストを中継するだけで、話し相手にはならない種類のノード */
+const RELAY_KINDS = new Set<DiagramNodeSpec['kind']>([
+  'switch',
+  'hub',
+  'router',
+])
 
 export const IDLE_PLAYBACK: PlaybackState = {
   selected: null,
@@ -134,31 +143,57 @@ export function isBroadcast(target: MessageTarget): boolean {
 }
 
 /**
+ * そのメッセージにとっての、ブロードキャストの中継点。送信元がすでに
+ * 中継点自身（switch/hub/router）なら、その送信元が中継点になる ── BBMD
+ * 編で「転送を受け取った側の区画に配り直す」ときのように、中継点どうしが
+ * 線でつながる図では、world 固定の中継点と実際の送り主が別になりうるため。
+ * それ以外（送信元が機器）では、world 固定の networkNodeId を使う
+ * （IP 編・SC 編のスター型と同じ動き）。
+ */
+export function relayNodeFor(
+  message: ConversationMessage,
+  nodes: Pick<DiagramNodeSpec, 'id' | 'kind'>[],
+  networkNodeId: NodeId,
+): NodeId {
+  const fromKind = nodes.find((node) => node.id === message.from)?.kind
+  return fromKind && RELAY_KINDS.has(fromKind) ? message.from : networkNodeId
+}
+
+/**
  * メッセージが図のどの区間を飛ぶか。BACnet/IP ではブロードキャストも
- * 同じネットワーク（スイッチ）を経由するので、宛先をスイッチに読み替える。
+ * 同じネットワーク（スイッチ）を経由するので、宛先を中継点に読み替える。
  */
 export function flightPath(
   message: ConversationMessage,
-  networkNodeId: NodeId,
+  relayNode: NodeId,
 ): { from: NodeId; to: NodeId } {
   return {
     from: message.from,
-    to: isBroadcast(message.to) ? networkNodeId : message.to,
+    to: isBroadcast(message.to) ? relayNode : message.to,
   }
 }
 
 /**
  * ブロードキャストが、ネットワークから先どこへ広がるか。
- * 送信元とネットワーク自身を除いた、図に出ているすべてのノード。
+ * その中継点（スイッチ/ハブ/ルータ）に直接つながる「機器」だけに届く。
+ * 送信元と、ほかの中継点（BBMD 番外編のように中継点どうしが線でつながる
+ * 図では、その先の中継点）は含まない ── ブロードキャストは 1 区画の中で
+ * しか広がらず、区画をまたぐ中継は別のメッセージとして描くため。
  */
 export function broadcastTargets(
-  nodes: { id: NodeId }[],
+  nodes: Pick<DiagramNodeSpec, 'id' | 'kind'>[],
+  edges: DiagramEdgeSpec[],
   from: NodeId,
   networkId: NodeId,
 ): NodeId[] {
-  return nodes
-    .map((node) => node.id)
-    .filter((id) => id !== from && id !== networkId)
+  const kindOf = new Map(nodes.map((node) => [node.id, node.kind]))
+  const directNeighbors = edges
+    .filter((edge) => edge.source === networkId || edge.target === networkId)
+    .map((edge) => (edge.source === networkId ? edge.target : edge.source))
+
+  return directNeighbors.filter(
+    (id) => id !== from && !RELAY_KINDS.has(kindOf.get(id)!),
+  )
 }
 
 /** そのステップの会話に登場する話し手（図の強調に使う） */
