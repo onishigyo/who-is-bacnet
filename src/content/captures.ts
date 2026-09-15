@@ -94,7 +94,7 @@ export const ipCapture: CaptureEvidence = {
  */
 export const scRejectedCapture: CaptureEvidence = {
   id: 'sc-rejected',
-  title: '実験で取った BACnet/SC の通信（証明書なし）',
+  title: '実験で取った BACnet/SC の通信',
   caption:
     'TLS のあいさつ（271, 276）のあと、PC は証明書を出せず、小さなデータ（278）しか送れません。ハブは 19 バイト返しただけで（279）、接続は終わりました（280-282）。',
   filter: 'tcp.port==47900',

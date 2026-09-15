@@ -14,7 +14,7 @@ export function CaptureEvidenceCard({
 }) {
   return (
     <section className="capture">
-      <h3 className="capture__title">答え合わせ: {capture.title}</h3>
+      <h3 className="capture__title">{capture.title}</h3>
       {capture.durationLabel && (
         <p
           className={`capture__duration ${
