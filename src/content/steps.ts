@@ -4,6 +4,7 @@ import type { StepContent } from '../domain/types'
  * 各ステップの解説文。
  * 断定してよいのは規格で確立している事柄だけ。制作者の理解・解釈は
  * notes に confidence: 'interpretation' として分離し、本文で断定しない。
+ * 初心者向けなので短く保つ。本文は 2〜3 段落、注記は 1〜2 文を目安にする。
  */
 export const steps: StepContent[] = [
   {
@@ -15,22 +16,21 @@ export const steps: StepContent[] = [
     title: 'BACnet とは何か',
     lead: 'メーカーの違う設備機器どうしが、同じ言葉で会話するための共通語。',
     paragraphs: [
-      'BACnet（Building Automation and Control Networks）は、ビルの空調・照明・電力といった設備機器が情報をやりとりするための通信仕様です。ANSI/ASHRAE Standard 135 として標準化され、ISO 16484-5 にもなっています。',
-      'BACnet の世界では、機器は「オブジェクト」の集まりとして表現されます。たとえば温度センサの測定値は analog-input オブジェクトの present-value プロパティ、設定温度は analog-value オブジェクトの present-value、という具合に、読み書きの対象が決まった形に整理されています。',
-      'メーカーが違っても、この形に従っていれば同じ手順で読み書きできます。「A 社の機器と B 社の機器が会話できない」という問題を解くために作られた共通語が BACnet です。',
-      'いま図にあるのは空調コントローラ 1 台だけ。ここではまだネットワークの話をしません。BACnet はまず「機器が喋る言葉」の取り決めである、という点を押さえてください。',
+      'BACnet は、空調・照明・電力などのビル設備が情報をやりとりするための通信の決まりです。ANSI/ASHRAE Standard 135 として標準化され、ISO 16484-5 にもなっています。',
+      '機器の中身は「オブジェクト」として表します。たとえば設定温度なら、analog-value というオブジェクトの present-value という値です。メーカーが違っても、この形に従えば同じ手順で読み書きできます。',
+      'いま図にあるのは空調コントローラ 1 台だけ。まずは「機器が話す言葉」の決まりだと押さえてください。',
     ],
     notes: [
       {
         id: 'std-135',
         confidence: 'standard',
-        text: 'BACnet は ANSI/ASHRAE Standard 135 として標準化された公開仕様であり、特定メーカーの独自規格ではありません。',
+        text: 'BACnet は公開された標準規格で、特定メーカーの独自規格ではありません。',
         source: 'ANSI/ASHRAE Standard 135 / ISO 16484-5',
       },
       {
         id: 'std-device-object',
         confidence: 'standard',
-        text: 'すべての BACnet 機器は Device オブジェクトを 1 つ持ち、そこに機器を識別するデバイスインスタンス番号（0〜4194302）があります。',
+        text: 'どの BACnet 機器も Device オブジェクトを 1 つ持ち、機器を見分けるデバイスインスタンス番号（0〜4194302）を持ちます。',
         source: 'ANSI/ASHRAE Standard 135（Device オブジェクト）',
       },
     ],
@@ -42,18 +42,23 @@ export const steps: StepContent[] = [
     world: 'ip',
     navLabel: 'BACnet/IP とは',
     title: 'BACnet/IP とは何か',
-    lead: 'その言葉を、ふだんの IP ネットワーク（LAN）の上で喋れるようにしたもの。',
+    lead: 'その言葉を、ふだんの LAN（IP ネットワーク）の上で話せるようにしたもの。',
     paragraphs: [
-      '機器に IP アドレスが付き、すでにある LAN・スイッチ・ルータをそのまま使って BACnet を運べるようにしたのが BACnet/IP です。設備専用の配線を新たに引かなくてよいので、導入のハードルが大きく下がりました。',
-      '実体はシンプルです。BACnet のメッセージの前に BVLC（BACnet Virtual Link Control）という小さなヘッダを付け、UDP のポート 47808（16 進で 0xBAC0）で送る。それだけです。',
-      '「どなたかいますか？」のような呼びかけは、サブネット内のブロードキャストとして飛びます。サブネットをまたいで届けたいときは、BBMD（BACnet Broadcast Management Device）や Foreign Device 登録という仕組みで中継します。',
-      'ここで覚えておいてほしいのは、BACnet/IP は「IP ネットワークの上で動く」ということです。つまり、その IP ネットワークに入れる人は、BACnet の会話にも入れます。',
+      '機器に IP アドレスを付け、今ある LAN やスイッチをそのまま使って BACnet を運ぶのが BACnet/IP です。専用の配線が要らないので、導入しやすくなりました。',
+      '中身はシンプルで、BACnet のメッセージに小さなヘッダ（BVLC）を付け、UDP のポート 47808 で送るだけです。全員への呼びかけは、LAN のブロードキャストで飛びます。',
+      '覚えておいてほしいのは一点だけ。その LAN に入れる人は、BACnet の会話にも入れます。',
     ],
     notes: [
       {
         id: 'std-annex-j',
         confidence: 'standard',
-        text: 'BACnet/IP は規格の Annex J で定義されています。UDP ポート 47808（0xBAC0）は既定値で、設定で変更することもできます。',
+        text: 'BACnet/IP は規格の Annex J で定められています。UDP 47808（16 進で 0xBAC0）は既定値で、変更もできます。',
+        source: 'ANSI/ASHRAE Standard 135 Annex J',
+      },
+      {
+        id: 'std-bbmd',
+        confidence: 'standard',
+        text: 'ブロードキャストはサブネットを越えません。越えて届けたいときは、BBMD や Foreign Device 登録という中継の仕組みを使います。',
         source: 'ANSI/ASHRAE Standard 135 Annex J',
       },
     ],
@@ -65,51 +70,31 @@ export const steps: StepContent[] = [
     world: 'ip',
     navLabel: '便利な側面',
     title: '便利な側面 ── 実際の会話を見る',
-    lead: 'メーカーの違う機器が同じネットワークに並び、中央監視から一括で読み書きできる。',
+    lead: 'メーカーの違う機器が同じ LAN に並び、中央監視から一括で読み書きできる。',
     paragraphs: [
-      '図に機器が増え、中央監視装置（スーパーバイザ）が繋がりました。ここから先は、中央監視が機器を探し、値を読み、値を書く、というだけで建物中の設備を扱えます。',
-      '会話は驚くほど素直です。「どなたかいますか？」（Who-Is）に対して「私はここにいます、ID はこれです」（I-Am）と返る。あとは「このオブジェクトのこのプロパティを読ませて」（ReadProperty）、「この値を書いて」（WriteProperty）。これだけで成立します。',
-      'この素直さこそ、BACnet が広く使われている理由です。特別な準備をしなくても、同じネットワークに繋げば会話が成立する。まずはこの便利さを見てください。',
-      '図の下にある「会話を始める」を押すと、やり取りが図の下にずらりと並びます。ひとつ押すと、その通信が図の上で再生され、意訳・実際のコマンド・宛先・いま何が起きているかの解説が出ます。左から順に押していけば、会話の流れをたどれます。',
+      '中央監視装置が加わりました。機器を探し（Who-Is）、名乗ってもらい（I-Am）、値を読み（ReadProperty）、書く（WriteProperty）。これだけで建物中の設備を扱えます。',
+      '特別な準備がなくても、同じ LAN に繋げば会話が成り立つ。この手軽さが BACnet の大きな魅力です。',
+      '図の下の「会話を始める」を押すと、やり取りが並びます。ひとつ押すと図で再生されます。',
     ],
     notes: [
       {
         id: 'std-services',
         confidence: 'standard',
-        text: 'Who-Is / I-Am は確認応答を伴わないサービス（unconfirmed service）です。ReadProperty / WriteProperty は確認応答を伴うサービス（confirmed service）で、読み取りは値を含む ComplexACK、書き込みの成功は SimpleACK が返ります。',
+        text: 'Who-Is と I-Am は、届いたことの確認（ACK）を返さない通信です。ReadProperty と WriteProperty は確認を返す決まりで、読むと値入りの ComplexACK、書き込めると SimpleACK が返ります。',
         source:
           'ANSI/ASHRAE Standard 135（Object Access Services / Remote Device Management Services）',
       },
       {
         id: 'std-addressing',
         confidence: 'standard',
-        text: 'ReadProperty / WriteProperty の要求そのものには、相手の機器を指す情報は入っていません。中身は「どのオブジェクトの、どのプロパティか」だけです。どの機器に届くかは、その下の層 ── BACnet/IP なら宛先 IP アドレスと UDP ポート ── が決めます。つまり会話の相手は、IP で指定されています。',
-        source:
-          'ANSI/ASHRAE Standard 135（ReadProperty / WriteProperty Service、Annex J）',
-      },
-      {
-        id: 'std-iam-address',
-        confidence: 'standard',
-        text: 'I-Am が伝えるのは、デバイスインスタンス番号・受け入れ可能な APDU の最大長・セグメンテーション対応・ベンダー ID です。IP アドレスは入っていません。「どの IP にどの機器がいるか」が分かるのは、その I-Am が届いたパケットの送信元アドレスからです。中央監視は、この対応を覚えてから名指しの読み書きに移ります。',
-        source: 'ANSI/ASHRAE Standard 135（I-Am Service）',
-      },
-      {
-        id: 'std-iam-burst',
-        confidence: 'standard',
-        text: 'Who-Is の条件に当てはまる機器は、それぞれが I-Am を返します。呼びかけは 1 回でも、返事は台数ぶん発生します。この図で返事がまとめて飛ぶのは、そのためです。',
-        source: 'ANSI/ASHRAE Standard 135（Who-Is / I-Am Service）',
-      },
-      {
-        id: 'interp-whois-storm',
-        confidence: 'interpretation',
-        text: '機器の多い環境では、この返事が短時間に集中してネットワークを圧迫することがあると、ベンダーの技術記事で指摘されています（現場では「Who-Is ストーム」と呼ばれます）。規格そのものの記述ではなく、制作者も実環境では未確認です。',
+        text: 'ReadProperty などの要求には、相手の機器の番号は入っていません。同じ LAN の中では、届け先は宛先の IP アドレスで決まります。相手の IP は、I-Am が届いたパケットの送信元アドレスから分かります（I-Am の中身に IP は入っていません）。',
+        source: 'ANSI/ASHRAE Standard 135（ReadProperty / I-Am、Annex J）',
       },
       {
         id: 'std-iam-broadcast',
         confidence: 'standard',
-        text: 'I-Am は、もともと規格ではブロードキャストで送ることが求められていました。Addendum 135-2008q でこれが緩和され、ブロードキャストまたはユニキャストのどちらでもよくなっています（ただし Who-Is を送った相手に必ず届く形で送ること）。この図では、尋ねた相手へ返す形で描いています。制作者の実験でも、機器は尋ねた相手へユニキャストで返していました（IP 版のキャプチャで確認）。',
-        source:
-          'ANSI/ASHRAE Addendum q to Standard 135-2008（135-2008q-1、Clause 16.10.4 の変更）',
+        text: 'I-Am は以前はブロードキャストで返す決まりでしたが、Addendum 135-2008q でユニキャストでもよくなりました。この図も制作者の実験も、尋ねた相手へユニキャストで返しています。',
+        source: 'ANSI/ASHRAE Addendum q to Standard 135-2008',
       },
     ],
   },
@@ -120,41 +105,34 @@ export const steps: StepContent[] = [
     world: 'ip',
     navLabel: '危険性',
     title: '危険性 ── 話し手が変わるだけ',
-    lead: '同じネットワークに現れた誰かが、中央監視とまったく同じ言葉で割り込める。',
+    lead: '同じ LAN に現れた誰かが、中央監視とまったく同じ言葉で割り込める。',
     paragraphs: [
-      '平和だったネットワークに、持ち込まれた PC が 1 台つながりました。図の下の「持ち込まれた PC を操作する」を押すと、その PC からの通信が並びます。ひとつ押すと図で再生される ── ステップ3とまったく同じ操作です。',
-      'やることは前のステップとまったく同じです。機器を探し（Who-Is）、値を読み（ReadProperty）、値を書く（WriteProperty）。違うのは話し手だけ。それでも機器は同じように応答します。',
-      'BACnet/IP には、相手が誰かを確かめる仕組み（認証）も、中身を隠す仕組み（暗号化）もありません。届いた要求が中央監視から来たのか、持ち込まれたノート PC から来たのかを、機器は区別できません。',
-      'つまり BACnet/IP のセキュリティは、「そのネットワークに入れないこと」だけに乗っています。入られた時点で、設備は操作できる状態になります。',
+      '持ち込まれた PC が 1 台つながりました。やることはステップ3と同じ ── 探して、読んで、書く。違うのは話し手だけです。それでも機器は同じように応じます。',
+      'BACnet/IP には、送り主が本物の中央監視かを確かめる仕組み（認証）も、中身を隠す仕組み（暗号化）もありません。守りは「その LAN に入れないこと」だけ。入られた時点で、設備は操作できてしまいます。',
+      '図の下の「持ち込まれた PC を操作する」を押すと、やり取りと、実験で取った Wireshark の記録が並びます。',
     ],
     notes: [
       {
         id: 'std-no-auth',
         confidence: 'standard',
-        text: 'BACnet/IP（Annex J）自体には、送信元を検証する認証の仕組みも、通信を暗号化する仕組みもありません。ネットワーク的に到達できるノードからの要求は、送信元を確認されずに処理されます。',
+        text: 'BACnet/IP（Annex J）そのものには、送り主を確かめる仕組みも、暗号化の仕組みもありません。届いた要求は、送り主を確かめずに処理されます。',
         source: 'ANSI/ASHRAE Standard 135 Annex J',
       },
       {
         id: 'std-write-may-fail',
         confidence: 'standard',
-        text: '「認証がない」ことと「どんな書き込みも必ず通る」ことは別の話です。プロパティが読み取り専用だったり、値が範囲外だったり、Priority Array の優先度で上書きされたりすれば Error や Reject が返ります。ただしこれはデータモデル上の制約であって、送信元を確かめるセキュリティ機構ではありません。',
-        source: 'ANSI/ASHRAE Standard 135（WriteProperty / Priority Array）',
-      },
-      {
-        id: 'std-target-by-ip',
-        confidence: 'standard',
-        text: '攻撃側も、特別なことは何もしていません。Who-Is への返事で「どの IP にどの機器がいるか」を知り、その IP へ普通のユニキャストで読み書きを送っているだけです。機器から見れば、宛先 IP に届いた正しい形の要求であり、中央監視からのものと区別する材料がありません。',
-        source: 'ANSI/ASHRAE Standard 135 Annex J',
+        text: 'どんな書き込みでも通るわけではありません。読み取り専用のプロパティや範囲外の値なら Error が返ります。ただしこれは値の決まりによる制限で、送り主を確かめる仕組みではありません。',
+        source: 'ANSI/ASHRAE Standard 135（WriteProperty）',
       },
       {
         id: 'interp-segmentation',
         confidence: 'interpretation',
-        text: '実際の建物ネットワークがどの程度ほかのネットワークから分離されているかは現場ごとに異なります。「同じネットワークに入れてしまえば」という前提がどれだけ現実に起きやすいかについては、制作者の理解であり検証が必要です。',
+        text: '実際の建物で「同じ LAN に入られる」ことがどれほど起きやすいかは、ネットワークの分け方しだいです。制作者は確かめていません。',
       },
       {
         id: 'std-sc-answer',
         confidence: 'standard',
-        text: 'この問題に対する規格側の答えが BACnet/SC です。Addendum 135-2016bj として追加され、ANSI/ASHRAE 135-2020 に取り込まれました。TLS の上で WebSocket を使い、X.509 証明書を持つ機器だけがハブに参加できます（このアプリでは SC 編として別途扱います）。',
+        text: 'この問題への規格の答えが BACnet/SC です（Addendum 135-2016bj として追加され、135-2020 に収録）。SC 編で扱います。',
         source: 'ANSI/ASHRAE Standard 135-2020（Addendum 135-2016bj）',
       },
     ],
@@ -166,38 +144,39 @@ export const steps: StepContent[] = [
     world: 'sc',
     navLabel: 'BACnet/SC とは',
     title: 'BACnet/SC ── 参加に証明書が要る',
-    lead: '同じネットワークにいるだけでは、もう入れない。証明書を持つ機器だけが、ハブを通して会話する。',
+    lead: '同じ LAN にいるだけでは、もう入れない。証明書を持つ機器だけが、ハブを通して会話する。',
     paragraphs: [
-      'ここまで見てきた無認証・丸見えの問題に、規格の側から答えたのが BACnet/SC（Secure Connect）です。図が変わりました。真ん中に「ハブ」があり、証明書を持つ機器が ── 中央監視装置も含めて ── それぞれハブに繋ぎにいきます。',
-      '繋ぎ方は、いつもの Web と同じ仕組みです。機器はハブに wss（TLS で暗号化した WebSocket）で接続し、そのとき X.509 証明書を示します。ハブは証明書を確かめ、正しければ参加を認めます。以降のやり取りは、すべてこの暗号化されたトンネルの中を通ります。',
-      'IP 編との一番の違いは「参加できるかどうかが、証明書だけで決まる」ことです。同じネットワークに繋がっているかどうかは、もう関係ありません。ブロードキャストで探し回る必要もなく、ハブが相手へメッセージを配ります。',
-      '流れは二段です。まず証明書を持つ機器がハブに参加し（入り口の認証）、そのあと中央監視が機器を読み書きします（暗号化された運用）。下の「会話を始める」を押すと、この流れが図の下に並びます。ひとつ押せば図で再生されます。中身は暗号化されていて傍受しても読めない ── それは次のステップの答え合わせで確かめます。',
+      'IP 編の「無認証・丸見え」に、規格が出した答えが BACnet/SC（Secure Connect）です。真ん中にハブがあり、証明書を持つ機器が ── 中央監視も含めて ── それぞれハブに繋ぎます。',
+      '繋ぎ方は Web と同じ仕組みです。機器は TLS で暗号化した WebSocket（wss）でハブに繋ぎ、証明書を見せ合います。そのあとのやり取りは、すべて暗号化されます。',
+      '図の下の「会話を始める」を押すと、機器がハブに参加し、中央監視が設定温度を読み書きする流れが並びます。',
     ],
     notes: [
       {
         id: 'sc-std-topology',
         confidence: 'standard',
-        text: 'BACnet/SC は hub-and-spoke のトポロジを取ります。中央のハブ機能がノード間のトラフィックを中継し、各ノードはハブへ WebSocket（wss スキーム）で接続します。通信は TLS 1.3 で暗号化され、機器は X.509 証明書で相互に認証します。',
+        text: 'BACnet/SC では、各機器がハブに wss で繋ぎ、基本はハブが機器どうしのメッセージを中継します。通信は TLS 1.3 で暗号化され、機器とハブは X.509 証明書で互いを確かめます。',
         source:
-          'ANSI/ASHRAE Standard 135（Addendum 135-2016bj）/ ASHRAE BACnet/SC ホワイトペーパー',
+          'ANSI/ASHRAE Standard 135-2020 Annex AB / ASHRAE BACnet/SC ホワイトペーパー',
       },
       {
         id: 'sc-std-hub-function',
         confidence: 'standard',
-        text: 'この図では分かりやすさのため専用のハブを 1 つ置いていますが、ハブは専用の箱とは限りません。「ハブ機能（hub function）」という役割で、単純な機器から施設全体のワークステーションまで、どのノードでも担えます（たとえば中央監視装置がハブを兼ねることもできます）。ハブは単一障害点になるため、規格はプライマリのハブとフェイルオーバー用のハブの両方に繋げることをノードに求めています。',
-        source: 'ASHRAE BACnet/SC ホワイトペーパー（Topology）',
-      },
-      {
-        id: 'sc-std-handshake',
-        confidence: 'standard',
-        text: 'ハブへの接続は段階を踏みます。まず TCP の 3way ハンドシェイク（SYN → SYN/ACK → ACK）で土台を作り、その上で TLS ハンドシェイク（TLS 1.3 は 1 往復）で証明書を交換して暗号化を確立し、さらに WebSocket に切り替えて BACnet/SC のメッセージを流します。「3way ハンドシェイク」は TCP の用語で、TLS のハンドシェイクとは別のものです。',
-        source: 'RFC 793（TCP）/ RFC 8446（TLS 1.3）/ RFC 6455（WebSocket）',
+        text: 'この図では専用のハブを置いていますが、ハブは役割（ハブ機能）で、中央監視装置などの機器が兼ねることもできます。',
+        source:
+          'ANSI/ASHRAE Standard 135-2020 Annex AB / ASHRAE BACnet/SC ホワイトペーパー',
       },
       {
         id: 'sc-std-no-broadcast',
         confidence: 'standard',
-        text: 'BACnet/SC では、IP 編で使っていたブロードキャストや BBMD、固定 IP アドレスへの依存がなくなります。相手を探して一斉に呼びかける代わりに、ハブがメッセージを配ります。',
-        source: 'ASHRAE BACnet/SC ホワイトペーパー',
+        text: 'IP のブロードキャストや BBMD は要らなくなります。Who-Is のような全員あての呼びかけも、ハブが各機器へ配ります。',
+        source:
+          'ANSI/ASHRAE Standard 135-2020 Annex AB / ASHRAE BACnet/SC ホワイトペーパー',
+      },
+      {
+        id: 'sc-std-handshake',
+        confidence: 'standard',
+        text: 'ハブへの接続は 3 段階です。TCP の 3way ハンドシェイク → TLS のハンドシェイク（証明書の確認と暗号化）→ WebSocket への切り替え。3way は TCP の言葉で、TLS のハンドシェイクとは別物です。',
+        source: 'RFC 9293（TCP）/ RFC 8446（TLS 1.3）/ RFC 6455（WebSocket）',
       },
     ],
   },
@@ -208,37 +187,30 @@ export const steps: StepContent[] = [
     world: 'sc',
     navLabel: '危険性は防げるか',
     title: '危険性は防げるか ── 入り口で止める',
-    lead: 'IP 編では同じ言葉で割り込めた攻撃者が、SC では会話に入る前に弾かれる。',
+    lead: 'IP 編では割り込めた PC が、SC では会話に入る前に断られる。',
     paragraphs: [
-      'IP 編と同じ「持ち込まれた PC」が、SC のネットワークにも現れます。やることも同じ ── ハブに繋いで、機器と会話しようとします。',
-      'ですが、今度は入り口で止まります。ハブは相手に証明書を求め、持ち込まれた PC はそれを出せません。ハブは短い返事を 1 つ返し、接続はそこで終わります。Who-Is も ReadProperty も、送る前に締め出されました。IP 編では「同じネットワークにいれば会話に割り込めた」のが、SC では「証明書がなければ会話に入れない」に変わります。',
-      'もう 1 つの危険だった盗み見も防がれます。このやり取りも、最初のあいさつ（Client Hello / Server Hello）より後は暗号化されていて、証明書を求めるやり取りも断りの返事も、Wireshark には Application Data としか映りません。証明書を持つ機器どうしの通信も同じく暗号化されるので、傍受しても中身は読めません。',
-      '図の下の「持ち込まれた PC を操作する」を押すと、ハブに断られて接続が切れるまでのやり取りが並びます。ひとつ押せば図で再生され、右の答え合わせの該当行が光ります。',
+      '同じ「持ち込まれた PC」がハブに繋ごうとします。ハブは証明書を求めますが、PC は出せません。ハブは短い返事を 1 つ返し、接続はそこで終わります。Who-Is も ReadProperty も送れません。',
+      '盗み見も防がれます。最初のあいさつ（Client Hello / Server Hello）より後は暗号化されていて、Wireshark には Application Data としか映りません。',
+      '図の下の「持ち込まれた PC を操作する」を押すと、やり取りと Wireshark の記録が並び、対応する行が光ります。',
     ],
     notes: [
       {
         id: 'sc-std-cert-gate',
         confidence: 'standard',
-        text: 'BACnet/SC では、ハブと機器が互いに X.509 証明書を確かめ合います（相互認証）。証明書を示せないノードはハブとの接続を確立できず、BACnet/SC の会話（Who-Is や ReadProperty）までたどり着けません。',
+        text: 'BACnet/SC では、ハブと機器が互いに証明書を確かめます（相互認証）。証明書を示せない機器は、BACnet の会話までたどり着けません。',
         source:
-          'ANSI/ASHRAE Standard 135-2020 Annex AB（BACnet/SC）/ ASHRAE BACnet/SC ホワイトペーパー',
+          'ANSI/ASHRAE Standard 135-2020 Annex AB / ASHRAE BACnet/SC ホワイトペーパー',
       },
       {
-        id: 'sc-std-tls13-client-auth',
+        id: 'sc-std-tls13',
         confidence: 'standard',
-        text: 'TLS 1.3 で相手にも証明書を求めるとき、サーバーは自分の証明書に続けて CertificateRequest を送ります。証明書を持たないクライアントは空の Certificate を返し、サーバーはそこで certificate_required の Alert を送って打ち切ることができます。クライアントは自分の Finished を送った時点で次のデータを送り始められるため、クライアント側からは「ハンドシェイクが終わったあとで断られた」ように見えます。',
-        source: 'RFC 8446（TLS 1.3）4.3.2 / 4.4.2.4',
-      },
-      {
-        id: 'sc-std-encrypted',
-        confidence: 'standard',
-        text: 'TLS 1.3 では、Server Hello より後のやり取りが暗号化されます。暗号化されたレコードは、中身がデータでもエラー通知（Alert）でも、外から見える種別は常に Application Data です。証明書の交換も拒否の通知も、Wireshark には Application Data としか映りません。「読めない」ことは弱点ではなく、盗み見を防ぐという目的の達成そのものです。',
-        source: 'RFC 8446（TLS 1.3）5.2',
+        text: 'TLS 1.3 で証明書を求められた側が証明書を持っていなければ、空の証明書を返します。求めた側は、certificate_required の Alert を送って打ち切れます。暗号化されたレコードは、中身が Alert でも外からは Application Data に見えます。',
+        source: 'RFC 8446（TLS 1.3）4.4.2 / 4.4.2.4 / 5.2',
       },
       {
         id: 'sc-interp-rejection',
         confidence: 'interpretation',
-        text: '暗号化されていても、データの大きさは読めます。証明書なしで繋いだとき、持ち込まれた PC がハブに送ったデータは 77 バイト（No.278）。同じ環境で証明書を持たせて繋いだときの 1157 バイトと比べ、空の証明書と Finished だけが入る大きさでした。ハブの返事（No.279）は 19 バイトで、暗号化の付け足しを除くと 2 バイト ── Alert 1 つと同じ大きさです。ここから「証明書がないので断られた」と読んでいますが、中身を復号したわけではありません。どの Alert だったか（certificate_required など）は、ハブ側のログで確かめられるまで要検証です。',
+        text: '断りの中身は暗号化されて読めないので、大きさで判断しています。PC が送ったデータは 77 バイト（証明書ありなら 1157 バイト）、ハブの返事は Alert 1 つ分の 19 バイトでした。どの Alert だったかは、ハブのログで確かめるまで要検証です。',
       },
     ],
   },
@@ -249,34 +221,29 @@ export const steps: StepContent[] = [
     world: 'sc',
     navLabel: 'SC の限界',
     title: 'SC の限界 ── 銀の弾丸ではない',
-    lead: '証明書は入り口を固める。だが、現実の建物すべてを守れるわけではない。',
+    lead: '証明書は入り口を固める。でも、それだけで建物すべてを守れるわけではない。',
     paragraphs: [
-      'BACnet/SC は「参加の可否を証明書で決める」という点で、IP 編の無認証・丸見えの問題に正面から答えます。ただし、これですべてが解決するわけではありません。公平に、限界も見ておきます。',
-      '一つは、既存機器の対応です。古い設備の多くは証明書を扱えず、現実の建物では全機器を一度に SC 化することは困難です。SC と旧来の BACnet/IP が混在すると、その境界が新たな弱点になりえます。',
-      'もう一つは、運用です。証明書は「持っていれば安全」ではなく、正しく発行し、期限を管理し、設定を誤らないことまで含めて、はじめて機能します。設定ミス一つでセキュリティが働かなくなる余地は残ります。',
-      'このアプリは、実務者が壁打ちで学んだ内容を教材にしたものです。SC についても、確立した規格の事実と、制作者の理解・要検証の事柄を分けて示しています。ここから先は、一次情報（ANSI/ASHRAE 135）と実機の仕様で確かめてください。',
+      'SC は IP 編の問題に正面から答えますが、万能ではありません。たとえば、証明書を扱えない既存の機器は SC に参加できません。SC と BACnet/IP が混ざる建物では、その境目が弱点になるかもしれません。',
+      '証明書も、持っているだけでは守れません。正しく発行し、期限を管理して、はじめて役に立ちます。',
+      'この教材は、実務者が学んだ内容をまとめたものです。最後は、規格（ANSI/ASHRAE 135）と実機の仕様で確かめてください。',
     ],
     notes: [
       {
         id: 'sc-std-backward',
         confidence: 'standard',
-        text: 'BACnet/SC は既存の BACnet と後方互換で、ルータを介して旧来の BACnet/IP・MS-TP セグメントと相互接続できます。段階的な導入が前提の設計です。',
-        source: 'ASHRAE BACnet/SC ホワイトペーパー',
+        text: 'BACnet/SC は BACnet の通信方式（データリンク）の一つです。BACnet ルータを介して、BACnet/IP や MS/TP のネットワークとつなげられます。',
+        source:
+          'ANSI/ASHRAE Standard 135-2020 Annex AB / ASHRAE BACnet/SC ホワイトペーパー',
       },
       {
         id: 'sc-interp-legacy',
         confidence: 'interpretation',
-        text: '「既存機器の多くが証明書に対応できず、全機器の SC 化は現実には難しい」というのは、制作者の理解です。個々の製品の対応状況は、その製品の仕様で確認が必要です。特定の製品・メーカーについての断定は避けています。',
+        text: '既存機器の多くが SC に対応できないこと、混在の境目が弱点になりうることは、制作者の理解です。個々の製品の対応は、その製品の仕様で確かめてください。',
       },
       {
         id: 'sc-interp-operation',
         confidence: 'interpretation',
-        text: '証明書運用の難しさ（発行・失効・設定ミスのリスク）は、制作者が実験中に実際に遭遇した範囲の理解です。どの設定ミスがどの結果を招くかは、環境ごとに検証が必要です。',
-      },
-      {
-        id: 'sc-interp-mixed',
-        confidence: 'interpretation',
-        text: 'IP と SC の混在で境界が弱点になりうる、というのは制作者の理解であり要検証です。実際の被害の広がりやすさは、ネットワーク構成に依存します。',
+        text: '証明書の運用の難しさは、制作者が実験で証明書を作って試した範囲の実感です。',
       },
     ],
   },

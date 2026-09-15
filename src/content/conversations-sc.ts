@@ -37,7 +37,7 @@ export const scConversations: Conversation[] = [
         transport: 'TCP → ハブ:47900',
         action: 'ハブに接続する',
         explain:
-          '空調コントローラが、ハブに向かって接続します。まず TCP の 3way ハンドシェイクで土台を作り、その上で TLS 1.3 のハンドシェイクで X.509 証明書を交換します。同じネットワークにいるかどうかではなく、正しい証明書を持っているかが問われます。',
+          '空調コントローラがハブに繋ぎます。TCP で繋いだあと、TLS 1.3 のハンドシェイクで証明書を見せ合います。',
       },
       {
         id: 's2',
@@ -49,8 +49,8 @@ export const scConversations: Conversation[] = [
         transport: 'TCP（ハブ:47900 → 空調コントローラ）',
         action: '参加を認める',
         explain:
-          'ハブが証明書を確かめ、正しかったので参加を認めます。ここから先、この機器のやり取りはすべて暗号化されたトンネルの中を通ります。照明・電力計・中央監視も、同じように証明書を見せてハブに参加しています。',
-        annotation: '参加できるかどうかは、証明書だけで決まる',
+          'ハブが証明書を確かめ、参加を認めます。照明・電力計・中央監視も、同じように参加しています。',
+        annotation: '参加できるかは、証明書で決まる',
       },
       {
         id: 's3',
@@ -63,7 +63,7 @@ export const scConversations: Conversation[] = [
         action: '設定温度を聞く',
         encrypted: true,
         explain:
-          '参加が済んだので、中央監視が空調コントローラに設定温度を尋ねます。中身は IP 編とまったく同じ ReadProperty。違うのは、これがハブを経由し、暗号化されたトンネルの中を通ることです。傍受しても、この要求は読めません。',
+          '中央監視が設定温度を尋ねます。中身は IP 編と同じ ReadProperty ですが、ハブを通って暗号化されたまま届きます。',
       },
       {
         id: 's4',
@@ -76,7 +76,7 @@ export const scConversations: Conversation[] = [
         action: '設定温度を返す',
         encrypted: true,
         explain:
-          '値も暗号化されて返ります。Wireshark で見えるのは Application Data だけ。何を読んだのか、いくつだったのかは、外からは分かりません。',
+          '値も暗号化されて返ります。傍受しても Application Data としか見えません。',
         annotation: '傍受しても、中身は読めない',
       },
       {
@@ -90,8 +90,7 @@ export const scConversations: Conversation[] = [
         transport: 'ハブ経由（wss / TLS 1.3）',
         action: '書き換えを頼む',
         encrypted: true,
-        explain:
-          '書き込みも同じく暗号化されて通ります。正規の機器どうしなら、これまでと変わらず設備を扱えます。変わったのは「入り口の固さ」と「中身の見えなさ」です。',
+        explain: '書き込みも暗号化されて届きます。',
       },
       {
         id: 's6',
@@ -103,8 +102,7 @@ export const scConversations: Conversation[] = [
         transport: 'ハブ経由（wss / TLS 1.3）',
         action: '受け入れる',
         encrypted: true,
-        explain:
-          '正規の機器どうしの運用は、IP 編と同じように成立します。SC は使い勝手を奪わずに、入り口と中身を守ります。',
+        explain: '正規の機器どうしなら、IP 編と同じように設備を扱えます。',
       },
     ],
   },
@@ -125,8 +123,8 @@ export const scConversations: Conversation[] = [
         transport: 'TCP → ハブ:47900（TLS 1.3 を開始）',
         action: 'ハブに接続を試みる',
         explain:
-          'IP 編と同じ「持ち込まれた PC」が、今度はハブに繋ごうとします。TCP の 3way ハンドシェイク（265-267）は通ります ── ここまでは誰でも叩けるからです。続けて TLS 1.3 のハンドシェイクを始めます。',
-        annotation: 'IP 編では、ここから先で会話に割り込めた',
+          'IP 編と同じ PC が、ハブに繋ごうとします。TCP の 3way（265-267）までは誰でも通れます。',
+        annotation: 'IP 編では、この先で割り込めた',
       },
       {
         id: 'sa2',
@@ -141,7 +139,7 @@ export const scConversations: Conversation[] = [
         action: '証明書を求める',
         encrypted: true,
         explain:
-          'ハブは自分の証明書を示し、相手にも証明書を求めます。BACnet/SC では、ハブと機器が互いに証明書を確かめ合うことになっているからです。ただしこの求めは暗号化の内側にあり、Wireshark には Application Data としか映りません。',
+          'ハブは自分の証明書を示し、PC にも証明書を求めます。この求めは暗号化されていて、Wireshark には Application Data としか映りません。',
       },
       {
         id: 'sa3',
@@ -156,7 +154,7 @@ export const scConversations: Conversation[] = [
         action: '証明書を出せない',
         encrypted: true,
         explain:
-          '持ち込まれた PC は証明書を持っていません。返した暗号化データは 77 バイト。証明書ありで繋いだときは 1157 バイトありました。この差は、証明書の中身が入っていないことを示しています（中身は読めないので、大きさからの読み取りです）。',
+          'PC は証明書を持っていません。送ったデータは 77 バイトで、証明書ありのとき（1157 バイト）よりずっと小さく、証明書が入っていない大きさです。',
       },
       {
         id: 'sa4',
@@ -173,9 +171,8 @@ export const scConversations: Conversation[] = [
         encrypted: true,
         rejected: true,
         explain:
-          'ハブが返したのは 19 バイトだけ。暗号化のための付け足し（17 バイト）を除くと中身は 2 バイトで、TLS のエラー通知（Alert）とちょうど同じ大きさです。このあと PC が送ったデータ（280）に返事はなく、接続はそのまま終わります（281, 282）。繋ぎ始め（265）からわずか 0.05 秒。Who-Is も ReadProperty も送れないままでした。',
-        annotation:
-          'IP 編との決定的な違い。ネットワークに届いても、証明書がなければ会話に入れない',
+          'ハブの返事は 19 バイトだけ。TLS のエラー通知（Alert）1 つ分の大きさです。このあと PC が送ったデータにも返事はなく、接続は終わります（280-282）。Who-Is も ReadProperty も送れませんでした。',
+        annotation: 'ネットワークに届いても、証明書がなければ会話に入れない',
         annotationTone: 'alert',
       },
     ],
