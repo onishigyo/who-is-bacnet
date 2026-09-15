@@ -95,9 +95,10 @@ export function highlightedFrames(
   captureId: string,
 ): number[] {
   if (conversation?.captureId !== captureId) return []
-  return current.flatMap((message) =>
-    message.frame === undefined ? [] : [message.frame],
-  )
+  return current.flatMap((message) => [
+    ...(message.frame === undefined ? [] : [message.frame]),
+    ...(message.relatedFrames ?? []),
+  ])
 }
 
 /** そのまとまりを再生する状態へ進める */

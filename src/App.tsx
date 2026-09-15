@@ -6,7 +6,7 @@ import { NetworkCanvas } from './components/NetworkCanvas'
 import { StepNav } from './components/StepNav'
 import { StepNotes } from './components/StepNotes'
 import { StepPanel } from './components/StepPanel'
-import { ipCapture, scDefenseEvidence } from './content/captures'
+import { ipCapture, scRejectedCapture } from './content/captures'
 import {
   ATTACK_CONVERSATION_ID,
   conversations,
@@ -131,6 +131,12 @@ export default function App() {
   }
   const hasConversation = conversationIdFor(order) !== null
 
+  /** 攻撃の会話が指す実験キャプチャ（答え合わせに出す） */
+  const activeCaptureId = activeConversation?.captureId
+  const activeCapture = [ipCapture, scRejectedCapture].find(
+    (capture) => capture.id === activeCaptureId,
+  )
+
   return (
     <div className="app">
       <header className="app__header">
@@ -208,36 +214,17 @@ export default function App() {
             <StepNotes notes={step.notes} />
           )}
 
-          {/* IP 編ステップ4：攻撃を始めた時点から、選んでいる行を光らせる */}
-          {order === 4 && activeConversation && (
+          {/* 攻撃（ステップ4・6）を始めた時点から、その会話の実験キャプチャを出し、選んでいる行を光らせる */}
+          {activeCapture && (
             <CaptureEvidenceCard
-              capture={ipCapture}
+              capture={activeCapture}
               highlight={highlightedFrames(
                 activeConversation,
                 current,
-                ipCapture.id,
+                activeCapture.id,
               )}
             />
           )}
-
-          {/* SC 編ステップ6：割り込み（拒否の記録）と盗み見（IP と SC の対比）に 1 つずつ答える */}
-          {order === 6 &&
-            scDefenseEvidence.map((section) => (
-              <section key={section.id} className="evidence">
-                <h3 className="evidence__heading">{section.heading}</h3>
-                {section.captures.map((capture) => (
-                  <CaptureEvidenceCard
-                    key={capture.id}
-                    capture={capture}
-                    highlight={highlightedFrames(
-                      activeConversation,
-                      current,
-                      capture.id,
-                    )}
-                  />
-                ))}
-              </section>
-            ))}
 
           {order !== 1 && order !== 2 && order !== 5 && (
             <StepNotes notes={step.notes} />

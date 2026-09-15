@@ -13,11 +13,13 @@ export const SC_ATTACK_CONVERSATION_ID = 'sc-attack'
  * 中央監視が機器を読み書きする ── 中身はすべて TLS の中を通る。
  * encrypted: true は、傍受しても Wireshark には Application Data としか
  * 映らない（＝中身が読めない）ことを表す。
- * rejected: true は、証明書のないノードがハブに門前払いされたことを表し、
- * そこで会話が止まる。
+ * rejected: true は、証明書のないノードがハブに門前払いされたことを表す。
+ * そこから先、BACnet の会話（Who-Is や ReadProperty）には進まない。
  *
  * ステップ6の門前払いは実験キャプチャ（scRejectedCapture）と frame で結びつき、
- * protocol は Wireshark の Info 欄と同じ表記で書く（logic/sc.test.ts で照合）。
+ * protocol は Wireshark の Info 欄と同じ表記で書く。チップにしない TCP の行も
+ * relatedFrames で前後のチップに割り当て、キャプチャの全行がどれかのチップで
+ * 光るようにしている（logic/sc.test.ts で照合）。
  */
 export const scConversations: Conversation[] = [
   {
@@ -119,6 +121,7 @@ export const scConversations: Conversation[] = [
         plain: 'ハブに参加させてください',
         protocol: 'Client Hello',
         frame: 271,
+        relatedFrames: [265, 266, 267, 272],
         transport: 'TCP → ハブ:47900（TLS 1.3 を開始）',
         action: 'ハブに接続を試みる',
         explain:
@@ -133,6 +136,7 @@ export const scConversations: Conversation[] = [
         plain: '証明書を見せてください',
         protocol: 'Server Hello, Change Cipher Spec, Application Data',
         frame: 276,
+        relatedFrames: [277],
         transport: 'TCP（ハブ:47900 → 持ち込まれた PC）',
         action: '証明書を求める',
         encrypted: true,
@@ -168,9 +172,54 @@ export const scConversations: Conversation[] = [
         encrypted: true,
         rejected: true,
         explain:
-          'ハブが返したのは 19 バイトだけ。暗号化のための付け足し（17 バイト）を除くと中身は 2 バイトで、TLS のエラー通知（Alert）とちょうど同じ大きさです。接続はこのまま終わり（281, 282）、Who-Is も ReadProperty も送れませんでした。会話の入り口で止まったのです。',
+          'ハブが返したのは 19 バイトだけ。暗号化のための付け足し（17 バイト）を除くと中身は 2 バイトで、TLS のエラー通知（Alert）とちょうど同じ大きさです。ハブはここで、参加を断りました。',
         annotation:
           'IP 編との決定的な違い。ネットワークに届いても、証明書がなければ会話に入れない',
+        annotationTone: 'alert',
+      },
+      {
+        id: 'sa5',
+        from: ATTACKER_ID,
+        to: SC_HUB_ID,
+        kind: 'request',
+        plain: '（気づかずに）続きを送ります',
+        protocol: 'Application Data',
+        value: 'Length: 221',
+        frame: 280,
+        transport: 'TCP → ハブ:47900',
+        action: '続きを送る',
+        encrypted: true,
+        explain:
+          'PC はまだ断られたことに気づかず、次のデータを送っています。TLS 1.3 では、PC は自分の分を送り終えた時点で「繋がった」とみなして先へ進めるからです。証明書ありで繋いだときも、ハンドシェイクの直後に同じ 221 バイトのデータを送っていました。今回は、ハブから返事がありません。',
+      },
+      {
+        id: 'sa6',
+        from: ATTACKER_ID,
+        to: SC_HUB_ID,
+        kind: 'request',
+        plain: '接続を閉じます',
+        protocol:
+          '40212 → 47900 [FIN, ACK] Seq=529 Ack=1376 Win=67584 Len=0 TSval=695913008 TSecr=3490435831',
+        frame: 281,
+        transport: 'TCP → ハブ:47900',
+        action: '接続を閉じる',
+        explain:
+          'PC はここで接続を閉じにいきます。FIN は TCP の「こちらからは終わります」という合図です。',
+      },
+      {
+        id: 'sa7',
+        from: SC_HUB_ID,
+        to: ATTACKER_ID,
+        kind: 'response',
+        plain: '（もう閉じています）',
+        protocol:
+          '47900 → 40212 [RST, ACK] Seq=1376 Ack=530 Win=65024 Len=0 TSval=3490435831 TSecr=695913008',
+        frame: 282,
+        transport: 'TCP（ハブ:47900 → 持ち込まれた PC）',
+        action: '接続を打ち切る',
+        explain:
+          'ハブの答えは RST ── 接続を強制的に打ち切る合図です。ハブ側は、断りの返事（279）を送った時点で接続を閉じていたと読めます。繋ぎ始め（265）からわずか 0.05 秒。Who-Is も ReadProperty も送れないまま終わりました。',
+        annotation: 'BACnet の会話には、一度も入れなかった',
         annotationTone: 'alert',
       },
     ],

@@ -114,6 +114,8 @@ export interface ConversationMessage {
   value?: string
   /** 実験キャプチャで対応するパケットの番号。実験にない通信なら持たない */
   frame?: number
+  /** frame と一緒に答え合わせで光らせる行（前後の TCP の ACK など、チップにしない行） */
+  relatedFrames?: number[]
   /** どこへ届くか。BACnet の要求自体に相手の識別子は入らず、宛先は IP が決める */
   transport: string
   /**
@@ -199,11 +201,4 @@ export interface CaptureEvidence {
   durationLabel?: string
   /** durationLabel の調子（正常なら neutral、異常の強調なら alert） */
   durationTone?: 'neutral' | 'alert'
-}
-
-/** 1 つの問いに答える、答え合わせのまとまり */
-export interface EvidenceSection {
-  id: string
-  heading: string
-  captures: CaptureEvidence[]
 }

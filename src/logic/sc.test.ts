@@ -61,11 +61,11 @@ describe('SC 会話', () => {
     for (const m of payload) expect(m.encrypted).toBe(true)
   })
 
-  it('攻撃は、ハブの拒否で終わる（rejected で止まる）', () => {
-    const last = attack.messages.at(-1)!
-    expect(last.rejected).toBe(true)
-    expect(last.from).toBe(SC_HUB_ID)
-    // 拒否より後に、Read や Write は 1 通も無い
+  it('ハブが断り（rejected）、最後もハブが接続を打ち切って終わる', () => {
+    const rejection = attack.messages.find((m) => m.rejected)
+    expect(rejection?.from).toBe(SC_HUB_ID)
+    expect(attack.messages.at(-1)?.from).toBe(SC_HUB_ID)
+    // BACnet の会話（Read や Write）には 1 通も進まない
     expect(
       attack.messages.some((m) =>
         /ReadProperty|WriteProperty/.test(m.protocol),
@@ -113,5 +113,15 @@ describe('SC の門前払いは、実験キャプチャと 1 対 1 で対応す�
   it('チップの順番は、キャプチャの順番どおり', () => {
     const frames = attack.messages.map((m) => m.frame)
     expect(frames).toEqual([...frames].sort((a, b) => a! - b!))
+  })
+
+  it('キャプチャの全行が、どれか 1 つのチップで光る（左とつながらない行がない）', () => {
+    const lit = attack.messages.flatMap((m) => [
+      ...(m.frame === undefined ? [] : [m.frame]),
+      ...(m.relatedFrames ?? []),
+    ])
+    expect([...lit].sort((a, b) => a - b)).toEqual(
+      scRejectedCapture.rows.map((row) => row.no),
+    )
   })
 })

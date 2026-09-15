@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { ipCapture, scCapture, scRejectedCapture } from '../content/captures'
+import { ipCapture, scRejectedCapture } from '../content/captures'
 import { ATTACK_CONVERSATION_ID, conversations } from '../content/conversations'
 import { AHU_ID, diagramNodes } from '../content/diagram'
 import { ATTACK_SETPOINT } from './device'
@@ -32,31 +32,17 @@ describe('公開する範囲の点検', () => {
     }
   })
 
-  it('SC 版（成功・拒否とも）はハブ（TCP 47900）とのやり取りだけ', () => {
-    for (const row of [...scCapture.rows, ...scRejectedCapture.rows]) {
+  it('SC 版はハブ（TCP 47900）とのやり取りだけ', () => {
+    for (const row of scRejectedCapture.rows) {
       expect(['TCP', 'TLSv1.3']).toContain(row.protocol)
     }
   })
 
   it('載せるアドレスは実験の閉域網（192.168.222.0/24）のものだけ', () => {
-    for (const row of [
-      ...ipCapture.rows,
-      ...scCapture.rows,
-      ...scRejectedCapture.rows,
-    ]) {
+    for (const row of [...ipCapture.rows, ...scRejectedCapture.rows]) {
       expect(row.source).toMatch(/^192\.168\.222\.\d+$/)
       expect(row.destination).toMatch(/^192\.168\.222\.\d+$/)
     }
-  })
-
-  it('拒否キャプチャは、成功キャプチャより短時間で終わっている', () => {
-    // frame.time_relative から算出した接続時間（秒）
-    const rejectedDuration = 0.052
-    const successDuration = 24.044
-    expect(rejectedDuration).toBeLessThan(successDuration)
-    // ほぼ 1 桁以上の差があることを、durationLabel の文言でも固定する
-    expect(scRejectedCapture.durationLabel).toContain('0.05')
-    expect(scCapture.durationLabel).toContain('24.0')
   })
 })
 
