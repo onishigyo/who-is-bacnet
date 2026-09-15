@@ -197,8 +197,4 @@ export interface CaptureEvidence {
   /** 同じ範囲を Wireshark で表示したスクリーンショット（任意） */
   imageSrc?: string
   alt: string
-  /** 接続の生存時間を強調表示したいときの見出し（例: "接続時間 24.0 秒"） */
-  durationLabel?: string
-  /** durationLabel の調子（正常なら neutral、異常の強調なら alert） */
-  durationTone?: 'neutral' | 'alert'
 }

@@ -15,15 +15,6 @@ export function CaptureEvidenceCard({
   return (
     <section className="capture">
       <h3 className="capture__title">{capture.title}</h3>
-      {capture.durationLabel && (
-        <p
-          className={`capture__duration ${
-            capture.durationTone === 'alert' ? 'is-alert' : ''
-          }`}
-        >
-          {capture.durationLabel}
-        </p>
-      )}
       <p className="capture__caption">{capture.caption}</p>
 
       {capture.imageSrc && (

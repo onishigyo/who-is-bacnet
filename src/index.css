@@ -1064,23 +1064,6 @@ button:disabled {
   background: var(--bg-raise);
 }
 
-.capture__duration {
-  display: inline-block;
-  margin-bottom: 8px;
-  padding: 4px 12px;
-  border-radius: 999px;
-  font-size: 13px;
-  font-weight: 700;
-  font-family: var(--mono);
-  background: var(--ok-soft);
-  color: var(--ok);
-}
-
-.capture__duration.is-alert {
-  background: var(--alert-soft);
-  color: var(--alert);
-}
-
 .capture__caption {
   font-size: 13px;
   margin-bottom: 12px;

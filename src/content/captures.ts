@@ -99,8 +99,6 @@ export const scRejectedCapture: CaptureEvidence = {
     'TLS のあいさつ（271, 276）のあと、PC は証明書を出せず、小さなデータ（278）しか送れません。ハブは 19 バイト返しただけで（279）、接続は終わりました（280-282）。',
   filter: 'tcp.port==47900',
   provenance: SC_PROVENANCE_BASE,
-  durationLabel: '0.05 秒で終了（ハブの短い返事の直後）',
-  durationTone: 'alert',
   rows: [
     {
       no: 265,
