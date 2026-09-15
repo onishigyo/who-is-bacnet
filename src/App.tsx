@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { CaptureEvidenceCard } from './components/CaptureEvidenceCard'
 import { ConversationBar } from './components/ConversationBar'
 import { ConversationTrack } from './components/ConversationTrack'
@@ -50,6 +50,7 @@ export default function App() {
     string | null
   >(null)
   const [playback, setPlayback] = useState(IDLE_PLAYBACK)
+  const panelRef = useRef<HTMLElement>(null)
 
   const step = stepByOrder(steps, order)
   const isSc = step.world === 'sc'
@@ -88,6 +89,8 @@ export default function App() {
     setOrder(next)
     setActiveConversationId(null)
     setPlayback(IDLE_PLAYBACK)
+    // 別のステップの解説は、先頭から読み始められるようにする
+    panelRef.current?.scrollTo({ top: 0 })
   }, [])
 
   /** その会話を開始し、先頭のまとまりを再生する */
@@ -207,7 +210,7 @@ export default function App() {
           <StepNav steps={steps} current={order} onChange={goToStep} />
         </div>
 
-        <aside className="app__panel">
+        <aside className="app__panel" ref={panelRef}>
           <StepPanel step={step} />
 
           {(order === 1 || order === 2 || order === 5) && (
