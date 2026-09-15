@@ -61,7 +61,7 @@ describe('SC 会話', () => {
     for (const m of payload) expect(m.encrypted).toBe(true)
   })
 
-  it('ハブが断り（rejected）、最後もハブが接続を打ち切って終わる', () => {
+  it('ハブの断り（rejected）で終わり、BACnet の会話には進まない', () => {
     const rejection = attack.messages.find((m) => m.rejected)
     expect(rejection?.from).toBe(SC_HUB_ID)
     expect(attack.messages.at(-1)?.from).toBe(SC_HUB_ID)
