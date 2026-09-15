@@ -154,7 +154,7 @@ export const scConversations: Conversation[] = [
         action: '証明書を出せない',
         encrypted: true,
         explain:
-          'PC は証明書を持っていません。送ったデータは 77 バイトで、証明書ありのとき（1157 バイト）よりずっと小さく、証明書が入っていない大きさです。',
+          'PC は証明書を持っていないので、出せません。送ったのは 77 バイトの小さなデータだけです。',
       },
       {
         id: 'sa4',
