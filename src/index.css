@@ -1017,6 +1017,53 @@ button:disabled {
   box-shadow: 0 0 0 2px var(--accent-soft);
 }
 
+/* 次に押してほしいチップ。飛び終わってから、薄い青で塗り、輪をゆっくり点滅させる。
+   再生中のチップ（白地・薄い輪）と見分けられるようにする */
+.track__item.is-next {
+  opacity: 1;
+  background: #e8f1fe;
+  animation: next-chip 1.4s ease-in-out infinite;
+}
+
+.track__item.is-next .track__no {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+@keyframes next-chip {
+  0%,
+  100% {
+    box-shadow: 0 0 0 2px var(--accent);
+  }
+  50% {
+    box-shadow:
+      0 0 0 2px var(--accent),
+      0 0 0 7px rgba(31, 111, 235, 0.28);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .track__item.is-next {
+    animation: none;
+    box-shadow:
+      0 0 0 2px var(--accent),
+      0 0 0 5px var(--accent-soft);
+  }
+}
+
+/* 画面には出さず、読み上げにだけ伝える */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 .track__no {
   font-family: var(--mono);
   font-size: 10px;

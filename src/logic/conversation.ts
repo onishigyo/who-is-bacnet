@@ -101,6 +101,16 @@ export function highlightedFrames(
   ])
 }
 
+/** 次に押してほしいまとまりの index。飛んでいる最中や、最後まで来たときは null */
+export function nextGroupIndex(
+  conversation: Conversation,
+  state: PlaybackState,
+): number | null {
+  if (state.selected === null || state.phase === 'flying') return null
+  const next = state.selected + 1
+  return next < messageGroups(conversation).length ? next : null
+}
+
 /** そのまとまりを再生する状態へ進める */
 export function playGroup(state: PlaybackState, index: number): PlaybackState {
   return { selected: index, phase: 'flying', nonce: state.nonce + 1 }

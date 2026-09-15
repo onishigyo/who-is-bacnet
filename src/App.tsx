@@ -36,6 +36,7 @@ import {
   landGroup,
   messageGroups,
   messagesUpToGroup,
+  nextGroupIndex,
   playGroup,
   selectedMessages,
 } from './logic/conversation'
@@ -198,6 +199,11 @@ export default function App() {
               }
               nodes={worldNodes}
               activeIndex={playback.selected}
+              nextIndex={
+                activeConversation
+                  ? nextGroupIndex(activeConversation, playback)
+                  : null
+              }
               onSelect={play}
               emptyText={
                 order === 3 || order === 5

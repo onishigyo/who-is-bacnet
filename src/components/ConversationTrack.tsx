@@ -11,6 +11,8 @@ interface Props {
   nodes: DiagramNodeSpec[]
   /** いま再生しているまとまりの index（なければ null） */
   activeIndex: number | null
+  /** 次に押してほしいまとまりの index（なければ null）。光らせて誘導する */
+  nextIndex: number | null
   onSelect: (index: number) => void
   emptyText: string
 }
@@ -28,18 +30,21 @@ export function ConversationTrack({
   groups,
   nodes,
   activeIndex,
+  nextIndex,
   onSelect,
   emptyText,
 }: Props) {
   const active = useRef<HTMLButtonElement>(null)
+  const next = useRef<HTMLButtonElement>(null)
 
+  // 次に押すチップがあればそれを、なければ再生中のチップを見える位置に出す
   useEffect(() => {
-    active.current?.scrollIntoView({
+    ;(next.current ?? active.current)?.scrollIntoView({
       behavior: 'smooth',
       block: 'nearest',
       inline: 'nearest',
     })
-  }, [groups.length, activeIndex])
+  }, [groups.length, activeIndex, nextIndex])
 
   if (groups.length === 0) {
     return (
@@ -55,16 +60,17 @@ export function ConversationTrack({
         {groups.map((group, index) => {
           const first = group[0]
           const selected = index === activeIndex
+          const upNext = index === nextIndex
           const together = group.length > 1
           const alert = group.some((m) => m.annotationTone === 'alert')
           return (
             <li key={first.id}>
               <button
                 type="button"
-                ref={selected ? active : null}
+                ref={selected ? active : upNext ? next : null}
                 className={`track__item track__item--${first.kind} ${
                   selected ? 'is-active' : ''
-                } ${alert ? 'is-alert' : ''}`}
+                } ${upNext ? 'is-next' : ''} ${alert ? 'is-alert' : ''}`}
                 onClick={() => onSelect(index)}
                 aria-current={selected ? 'true' : undefined}
               >
@@ -86,6 +92,7 @@ export function ConversationTrack({
                     </>
                   )}
                 </span>
+                {upNext && <span className="sr-only">（次に押す）</span>}
               </button>
             </li>
           )
