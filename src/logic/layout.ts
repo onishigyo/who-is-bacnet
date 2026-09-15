@@ -97,6 +97,19 @@ export function flightWaypoints(
     .filter((point): point is Point => point !== null)
 }
 
+/**
+ * 経路（2 点以上）を、CSS の offset-path で使える SVG パス文字列にする。
+ * "M x0 y0 L x1 y1 L x2 y2 …" の形で、何ホップの経路でも折れ線をそのまま
+ * なぞれる（3 点固定の keyframes では、中継点の一部が無視されてしまうため）。
+ * 2 点未満は描けないので undefined。
+ */
+export function toOffsetPath(points: Point[]): string | undefined {
+  if (points.length < 2) return undefined
+  const [head, ...rest] = points
+  const lineTo = rest.map((p) => `L ${p.x} ${p.y}`).join(' ')
+  return `M ${head.x} ${head.y} ${lineTo}`
+}
+
 function connects(edge: DiagramEdgeSpec, a: NodeId, b: NodeId): boolean {
   return (
     (edge.source === a && edge.target === b) ||

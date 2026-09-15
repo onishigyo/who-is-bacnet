@@ -469,34 +469,37 @@ button:disabled {
 
 /* ---------- 飛んでいくパケット（会話の吹き出し） ---------- */
 
+/*
+ * offset-path（経路の折れ線）+ offset-distance のアニメーションで、
+ * 何ホップの経路でも実際の配線をそのままなぞる。offset-path 自体は
+ * NetworkCanvas 側で経路ごとに inline style として渡す。
+ */
 .packet {
   position: absolute;
   left: 0;
   top: 0;
+  offset-rotate: 0deg;
   animation-name: packet-fly;
   animation-timing-function: cubic-bezier(0.4, 0.05, 0.35, 1);
   animation-fill-mode: forwards;
-  will-change: transform;
+  will-change: offset-distance;
   pointer-events: none;
   z-index: 10;
 }
 
 @keyframes packet-fly {
   0% {
-    transform: translate(var(--x0), var(--y0));
+    offset-distance: 0%;
     opacity: 0;
   }
   6% {
     opacity: 1;
   }
-  50% {
-    transform: translate(var(--x1), var(--y1));
-  }
   88% {
     opacity: 1;
   }
   100% {
-    transform: translate(var(--x2), var(--y2));
+    offset-distance: 100%;
     opacity: 0.85;
   }
 }
@@ -510,20 +513,17 @@ button:disabled {
 /* 広がった先では、機器のラベルを隠さないよう着いたところで消える */
 @keyframes packet-fan {
   0% {
-    transform: translate(var(--x0), var(--y0));
+    offset-distance: 0%;
     opacity: 0;
   }
   8% {
     opacity: 1;
   }
-  50% {
-    transform: translate(var(--x1), var(--y1));
-  }
   80% {
     opacity: 1;
   }
   100% {
-    transform: translate(var(--x2), var(--y2));
+    offset-distance: 100%;
     opacity: 0;
   }
 }
@@ -575,11 +575,11 @@ button:disabled {
 
   @keyframes packet-appear {
     from {
-      transform: translate(var(--x2), var(--y2));
+      offset-distance: 100%;
       opacity: 0;
     }
     to {
-      transform: translate(var(--x2), var(--y2));
+      offset-distance: 100%;
       opacity: 1;
     }
   }

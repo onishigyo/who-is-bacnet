@@ -185,12 +185,21 @@ describe('SC の限界の会話（ルータ越え・要検証）', () => {
     for (const m of attack.messages) expect(m.frame).toBeUndefined()
   })
 
-  it('PC から SC 側の空調コントローラへの書き込みで、要検証を明示する', () => {
-    const write = attack.messages[0]
-    expect(write.from).toBe(ATTACKER_ID)
-    expect(write.to).toBe(AHU_ID)
-    expect(/writeProperty/i.test(write.protocol)).toBe(true)
-    expect(write.annotation).toContain('未確認')
-    expect(write.annotationTone).toBe('alert')
+  it('まず、SC 非対応の電力計を同じ区画から読む（IP 編と同じ手口）', () => {
+    const read = attack.messages.find((m) => m.to === 'meter')
+    expect(read?.from).toBe(ATTACKER_ID)
+    expect(/readProperty/i.test(read?.protocol ?? '')).toBe(true)
+    const reply = attack.messages.find((m) => m.from === 'meter')
+    expect(reply?.to).toBe(ATTACKER_ID)
+  })
+
+  it('続けて、PC から SC 側の空調コントローラへの書き込みで、要検証を明示する', () => {
+    const write = attack.messages.find(
+      (m) => m.from === ATTACKER_ID && m.to === AHU_ID,
+    )
+    expect(write).toBeDefined()
+    expect(/writeProperty/i.test(write!.protocol)).toBe(true)
+    expect(write!.annotation).toContain('未確認')
+    expect(write!.annotationTone).toBe('alert')
   })
 })

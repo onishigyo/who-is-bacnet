@@ -131,7 +131,7 @@ export const mixedDiagramEdges: DiagramEdgeSpec[] = [
     target: LEGACY_SWITCH_ID,
     appearsAt: 7,
     tone: 'danger',
-    label: 'IP 編と同じく操作できる',
+    label: 'IP 編と同じく読み書きできる',
   },
   {
     id: 'mx-attacker-switch',
