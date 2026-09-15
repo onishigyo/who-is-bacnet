@@ -25,7 +25,7 @@ main にマージすると GitHub Actions で自動ビルドされ、GitHub Page
 
 - https://onishigyo.github.io/who-is-bacnet/
 
-ブラウザ内だけで動く静的サイトです（バックエンドなし）。
+ブラウザ内だけで動く静的サイトです（バックエンドなし）。`pnpm build` の結果は JS・CSS を埋め込んだ 1 つの HTML（`dist/index.html`）で、ダブルクリックで開けばネットのない場所でも動きます。
 
 ## 開発
 
@@ -35,7 +35,7 @@ main にマージすると GitHub Actions で自動ビルドされ、GitHub Page
 pnpm install
 pnpm dev           # Vite dev サーバ
 pnpm build         # 型チェック → バンドル
-pnpm preview       # ビルド結果を確認（http://localhost:4173/who-is-bacnet/）
+pnpm preview       # ビルド結果を確認（http://localhost:4173/）
 pnpm lint          # ESLint
 pnpm format:check  # Prettier（CI と同じ）
 pnpm test          # Vitest
