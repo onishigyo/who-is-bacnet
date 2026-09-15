@@ -4,6 +4,8 @@ import type { DiagramEdgeSpec, DiagramNodeSpec, NodeId } from '../domain/types'
 export const NETWORK_NODE_ID: NodeId = 'net'
 
 export const AHU_ID: NodeId = 'ahu'
+/** 空調コントローラのデバイスインスタンス。実験の I-Am（ipCapture）に合わせる */
+export const AHU_DEVICE_INSTANCE = 3056489
 export const SUPERVISOR_ID: NodeId = 'supervisor'
 export const ATTACKER_ID: NodeId = 'attacker'
 
@@ -21,7 +23,7 @@ export const diagramNodes: DiagramNodeSpec[] = [
     kind: 'controller',
     label: '空調コントローラ',
     sublabel: 'メーカーA 製',
-    deviceInstance: 3056526,
+    deviceInstance: AHU_DEVICE_INSTANCE,
     ip: '192.168.222.130',
     appearsAt: 1,
     position: { x: 0, y: 0 },

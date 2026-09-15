@@ -11,261 +11,181 @@ import type { CaptureEvidence } from '../domain/types'
  * 個人を特定しうる情報が含まれるため、リポジトリにも教材にも置かない。
  */
 
+const CAPTURED_BY =
+  '制作者が閉域の実験環境（仮想マシン 2 台）で取ったキャプチャを、tshark で絞り込んで載せています。'
+
 const PROVENANCE_BASE =
-  '制作者が閉域の実験環境（VMware 上の仮想マシン 2 台）で取得したキャプチャを、tshark 4.6.8 で表示フィルタをかけて出力したものです。図のアドレスも、この実験に合わせてあります。実験に登場するのは、送信側（192.168.222.128 = 図の「持ち込まれた PC」）と BACnet 機器（192.168.222.130 = 図の「空調コントローラ」）の 2 台だけです。照明コントローラ・電力計・中央監視装置は、教材の物語として置いた機器で、実験には登場しません。'
+  CAPTURED_BY +
+  '192.168.222.128 が図の「持ち込まれた PC」、192.168.222.130 が「空調コントローラ」です。ほかの機器は物語上の存在で、実験にはいません。'
+
+const SC_PROVENANCE_BASE =
+  CAPTURED_BY +
+  '192.168.222.130 で SC ハブを動かし、192.168.222.128 から証明書を持たせずに繋ぎました。ほかの機器は物語上の存在で、実験にはいません。'
 
 /** BACnet/IP：何をしているかが平文で全部読める（ステップ4の答え合わせ） */
 export const ipCapture: CaptureEvidence = {
   id: 'ip-plaintext',
   title: '実験で取った BACnet/IP の通信',
   caption:
-    'Info 欄に、何をしているかがそのまま並びます。誰が誰に、どのオブジェクトの何を読んだか・書いたか。値も詳細を開けば読めます。どれも隠れていません。',
+    '誰が誰に、何を読んだか・書いたかが、Info 欄にそのまま並びます。値も読めます。何も隠れていません。',
   filter: 'bacnet',
   provenance:
     PROVENANCE_BASE +
-    '読んだ室温 22 と、書き込んだ 99 は実験で取った値です。ステップ3で中央監視が設定する 24.0 は、物語上の値です。',
+    '24 と 99 は実験の値、ステップ3 の 26.0 は物語上の値です。',
   rows: [
     {
-      no: 2238,
+      no: 550,
       source: '192.168.222.128',
       destination: '192.168.222.255',
       protocol: 'BACnet-APDU',
       info: 'Unconfirmed-REQ who-Is',
     },
     {
-      no: 2239,
+      no: 551,
       source: '192.168.222.130',
       destination: '192.168.222.128',
       protocol: 'BACnet-APDU',
-      info: 'Unconfirmed-REQ i-Am device,3056526',
+      info: 'Unconfirmed-REQ i-Am device,3056489',
     },
     {
-      no: 2538,
+      no: 997,
       source: '192.168.222.128',
       destination: '192.168.222.130',
       protocol: 'BACnet-APDU',
-      info: 'Confirmed-REQ   readProperty[  0] analog-input,0 present-value',
+      info: 'Confirmed-REQ   readProperty[  0] analog-value,0 present-value',
     },
     {
-      no: 2539,
+      no: 998,
       source: '192.168.222.130',
       destination: '192.168.222.128',
       protocol: 'BACnet-APDU',
-      info: 'Complex-ACK     readProperty[  0] analog-input,0 present-value',
-      value: 'Present Value (real): 22',
-    },
-    {
-      no: 2949,
-      source: '192.168.222.128',
-      destination: '192.168.222.130',
-      protocol: 'BACnet-APDU',
-      info: 'Confirmed-REQ   readProperty[  1] analog-value,0 present-value',
-    },
-    {
-      no: 2950,
-      source: '192.168.222.130',
-      destination: '192.168.222.128',
-      protocol: 'BACnet-APDU',
-      info: 'Complex-ACK     readProperty[  1] analog-value,0 present-value',
+      info: 'Complex-ACK     readProperty[  0] analog-value,0 present-value',
       value: 'Present Value (real): 24',
     },
     {
-      no: 3296,
+      no: 1509,
       source: '192.168.222.128',
       destination: '192.168.222.130',
       protocol: 'BACnet-APDU',
-      info: 'Confirmed-REQ   writeProperty[  2] analog-value,0 present-value',
+      info: 'Confirmed-REQ   writeProperty[  1] analog-value,0 present-value',
       value: 'Present Value (real): 99',
     },
     {
-      no: 3297,
+      no: 1510,
       source: '192.168.222.130',
       destination: '192.168.222.128',
       protocol: 'BACnet-APDU',
-      info: 'Simple-ACK      writeProperty[  2]',
-    },
-    {
-      no: 3690,
-      source: '192.168.222.128',
-      destination: '192.168.222.130',
-      protocol: 'BACnet-APDU',
-      info: 'Confirmed-REQ   readProperty[  3] analog-value,0 present-value',
-    },
-    {
-      no: 3691,
-      source: '192.168.222.130',
-      destination: '192.168.222.128',
-      protocol: 'BACnet-APDU',
-      info: 'Complex-ACK     readProperty[  3] analog-value,0 present-value',
-      value: 'Present Value (real): 99',
+      info: 'Simple-ACK      writeProperty[  1]',
     },
   ],
   alt: '実験で取得した BACnet/IP の通信を Wireshark で bacnet フィルタ表示した一覧',
 }
 
-/** BACnet/SC：TLS に包まれて中身が読めない（SC 編の Before/After で使う） */
-export const scCapture: CaptureEvidence = {
-  id: 'sc-encrypted',
+/**
+ * BACnet/SC：証明書を送らずに SC ハブへ繋ごうとした記録（ステップ6で使う）。
+ *
+ * TLS 1.3 では暗号化後のレコードは外から見ると全部 Application Data なので、
+ * 拒否の通知（Alert）そのものは読めない。読めるのは大きさだけ
+ * （TLS_AES_256_GCM_SHA384、認証タグ 16 バイト）:
+ * - 278 の 77 バイト = 空の Certificate 8 + Finished 52 + 種別 1 + タグ 16
+ *   （同じ環境で証明書を持たせて繋いだ記録では、同じ位置が 1157 バイト）
+ * - 279 の 19 バイト = 中身 2 + 種別 1 + タグ 16。2 バイトは Alert の大きさ
+ * どの Alert かは復号鍵かハブ側のログがないと分からない（要検証のまま）。
+ */
+export const scRejectedCapture: CaptureEvidence = {
+  id: 'sc-rejected',
   title: '実験で取った BACnet/SC の通信',
   caption:
-    'TLS のハンドシェイクのあとは Application Data が並ぶだけで、何をしているかは読めません。盗み見を防ぐという目的どおりの見え方です。',
+    'TLS のあいさつ（271, 276）のあと、PC は証明書を出せず、小さなデータ（278）しか送れません。ハブは 19 バイト返しただけで（279）、接続は終わりました（280-282）。',
   filter: 'tcp.port==47900',
-  provenance: PROVENANCE_BASE,
+  provenance: SC_PROVENANCE_BASE,
   rows: [
     {
-      no: 4884,
+      no: 265,
       source: '192.168.222.128',
       destination: '192.168.222.130',
       protocol: 'TCP',
-      info: '51116 → 47900 [SYN] Seq=0 Win=64240 Len=0 MSS=1460 SACK_PERM TSval=3615033600 TSecr=0 WS=512',
+      info: '40212 → 47900 [SYN] Seq=0 Win=64240 Len=0 MSS=1460 SACK_PERM TSval=695912956 TSecr=0 WS=512',
     },
     {
-      no: 4885,
+      no: 266,
       source: '192.168.222.130',
       destination: '192.168.222.128',
       protocol: 'TCP',
-      info: '47900 → 51116 [SYN, ACK] Seq=0 Ack=1 Win=65160 Len=0 MSS=1460 SACK_PERM TSval=1133259609 TSecr=3615033600 WS=512',
+      info: '47900 → 40212 [SYN, ACK] Seq=0 Ack=1 Win=65160 Len=0 MSS=1460 SACK_PERM TSval=3490435779 TSecr=695912956 WS=512',
     },
     {
-      no: 4886,
+      no: 267,
       source: '192.168.222.128',
       destination: '192.168.222.130',
       protocol: 'TCP',
-      info: '51116 → 47900 [ACK] Seq=1 Ack=1 Win=64512 Len=0 TSval=3615033600 TSecr=1133259609',
+      info: '40212 → 47900 [ACK] Seq=1 Ack=1 Win=64512 Len=0 TSval=695912956 TSecr=3490435779',
     },
     {
-      no: 4890,
+      no: 271,
       source: '192.168.222.128',
       destination: '192.168.222.130',
       protocol: 'TLSv1.3',
       info: 'Client Hello',
     },
     {
-      no: 4891,
+      no: 272,
       source: '192.168.222.130',
       destination: '192.168.222.128',
       protocol: 'TCP',
-      info: '47900 → 51116 [ACK] Seq=1 Ack=215 Win=65024 Len=0 TSval=1133259633 TSecr=3615033624',
+      info: '47900 → 40212 [ACK] Seq=1 Ack=215 Win=65024 Len=0 TSval=3490435803 TSecr=695912980',
     },
     {
-      no: 4892,
+      no: 276,
       source: '192.168.222.130',
       destination: '192.168.222.128',
       protocol: 'TLSv1.3',
       info: 'Server Hello, Change Cipher Spec, Application Data',
     },
     {
-      no: 4893,
+      no: 277,
       source: '192.168.222.128',
       destination: '192.168.222.130',
       protocol: 'TCP',
-      info: '51116 → 47900 [ACK] Seq=215 Ack=1352 Win=67584 Len=0 TSval=3615033625 TSecr=1133259633',
+      info: '40212 → 47900 [ACK] Seq=215 Ack=1352 Win=67584 Len=0 TSval=695913007 TSecr=3490435830',
     },
     {
-      no: 4894,
+      no: 278,
       source: '192.168.222.128',
       destination: '192.168.222.130',
       protocol: 'TLSv1.3',
       info: 'Change Cipher Spec, Application Data',
+      value: 'Length: 77',
     },
     {
-      no: 4895,
+      no: 279,
       source: '192.168.222.130',
       destination: '192.168.222.128',
       protocol: 'TLSv1.3',
       info: 'Application Data',
+      value: 'Length: 19',
     },
     {
-      no: 4896,
+      no: 280,
       source: '192.168.222.128',
       destination: '192.168.222.130',
       protocol: 'TLSv1.3',
       info: 'Application Data',
     },
     {
-      no: 4897,
-      source: '192.168.222.130',
-      destination: '192.168.222.128',
-      protocol: 'TLSv1.3',
-      info: 'Application Data',
-    },
-    {
-      no: 4898,
-      source: '192.168.222.128',
-      destination: '192.168.222.130',
-      protocol: 'TLSv1.3',
-      info: 'Application Data',
-    },
-    {
-      no: 4899,
-      source: '192.168.222.130',
-      destination: '192.168.222.128',
-      protocol: 'TLSv1.3',
-      info: 'Application Data',
-    },
-    {
-      no: 4900,
-      source: '192.168.222.128',
-      destination: '192.168.222.130',
-      protocol: 'TLSv1.3',
-      info: 'Application Data',
-    },
-    {
-      no: 4909,
-      source: '192.168.222.130',
-      destination: '192.168.222.128',
-      protocol: 'TCP',
-      info: '47900 → 51116 [ACK] Seq=1785 Ack=1713 Win=69120 Len=0 TSval=1133259677 TSecr=3615033626',
-    },
-    {
-      no: 5204,
-      source: '192.168.222.128',
-      destination: '192.168.222.130',
-      protocol: 'TLSv1.3',
-      info: 'Application Data',
-    },
-    {
-      no: 5205,
+      no: 281,
       source: '192.168.222.128',
       destination: '192.168.222.130',
       protocol: 'TCP',
-      info: '51116 → 47900 [FIN, ACK] Seq=1745 Ack=1785 Win=73216 Len=0 TSval=3615036630 TSecr=1133259677',
+      info: '40212 → 47900 [FIN, ACK] Seq=529 Ack=1376 Win=67584 Len=0 TSval=695913008 TSecr=3490435831',
     },
     {
-      no: 5207,
+      no: 282,
       source: '192.168.222.130',
       destination: '192.168.222.128',
       protocol: 'TCP',
-      info: '47900 → 51116 [ACK] Seq=1785 Ack=1745 Win=69120 Len=0 TSval=1133262637 TSecr=3615036630',
-    },
-    {
-      no: 5209,
-      source: '192.168.222.130',
-      destination: '192.168.222.128',
-      protocol: 'TLSv1.3',
-      info: 'Application Data',
-    },
-    {
-      no: 5210,
-      source: '192.168.222.128',
-      destination: '192.168.222.130',
-      protocol: 'TCP',
-      info: '51116 → 47900 [RST] Seq=1746 Win=0 Len=0',
-    },
-    {
-      no: 5211,
-      source: '192.168.222.130',
-      destination: '192.168.222.128',
-      protocol: 'TLSv1.3',
-      info: 'Application Data',
-    },
-    {
-      no: 5212,
-      source: '192.168.222.128',
-      destination: '192.168.222.130',
-      protocol: 'TCP',
-      info: '51116 → 47900 [RST] Seq=1746 Win=0 Len=0',
+      info: '47900 → 40212 [RST, ACK] Seq=1376 Ack=530 Win=65024 Len=0 TSval=3490435831 TSecr=695913008',
     },
   ],
-  alt: '実験で取得した BACnet/SC の通信を Wireshark で tcp.port==47900 フィルタ表示した一覧',
+  alt: '実験で取得した、証明書なしで SC ハブへの接続を試みた通信を Wireshark で tcp.port==47900 フィルタ表示した一覧',
 }

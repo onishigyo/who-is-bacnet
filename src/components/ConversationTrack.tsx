@@ -6,13 +6,12 @@ import type {
 } from '../domain/types'
 
 interface Props {
-  /** 着信済みのメッセージ。会話をまたいで積み上がる */
-  messages: ConversationMessage[]
+  /** 同時に飛ぶまとまり単位のやり取り。まとめて飛んだものは 1 チップ */
+  groups: ConversationMessage[][]
   nodes: DiagramNodeSpec[]
-  /** いま帯に出しているメッセージ（まとめて飛んだものは複数） */
-  activeIds: string[]
-  /** 過去のやり取りを見直す */
-  onSelect: (id: string) => void
+  /** いま再生しているまとまりの index（なければ null） */
+  activeIndex: number | null
+  onSelect: (index: number) => void
   emptyText: string
 }
 
@@ -22,27 +21,27 @@ function nameOf(nodes: DiagramNodeSpec[], id: NodeId): string {
 
 /**
  * ここまでのやり取りを、図の下に一列で積む。
- * 押すとその 1 通を帯に出して読み直せる。
+ * 同時に飛ぶまとまり（Who-Is への返事など）は 1 チップにまとめる。
+ * 押すと、そのまとまりを図で再生する。
  */
 export function ConversationTrack({
-  messages,
+  groups,
   nodes,
-  activeIds,
+  activeIndex,
   onSelect,
   emptyText,
 }: Props) {
   const active = useRef<HTMLButtonElement>(null)
 
-  // 新しいやり取りが増えたら、その位置まで横スクロールする
   useEffect(() => {
     active.current?.scrollIntoView({
       behavior: 'smooth',
       block: 'nearest',
       inline: 'nearest',
     })
-  }, [messages.length, activeIds])
+  }, [groups.length, activeIndex])
 
-  if (messages.length === 0) {
+  if (groups.length === 0) {
     return (
       <section className="track track--empty">
         <p className="track__empty">{emptyText}</p>
@@ -53,27 +52,39 @@ export function ConversationTrack({
   return (
     <section className="track" aria-label="ここまでのやり取り">
       <ol className="track__list">
-        {messages.map((message, index) => {
-          const selected = activeIds.includes(message.id)
+        {groups.map((group, index) => {
+          const first = group[0]
+          const selected = index === activeIndex
+          const together = group.length > 1
+          const alert = group.some((m) => m.annotationTone === 'alert')
           return (
-            <li key={message.id}>
+            <li key={first.id}>
               <button
                 type="button"
-                ref={
-                  message.id === activeIds[activeIds.length - 1] ? active : null
-                }
-                className={`track__item track__item--${message.kind} ${
+                ref={selected ? active : null}
+                className={`track__item track__item--${first.kind} ${
                   selected ? 'is-active' : ''
-                } ${message.annotationTone === 'alert' ? 'is-alert' : ''}`}
-                onClick={() => onSelect(message.id)}
+                } ${alert ? 'is-alert' : ''}`}
+                onClick={() => onSelect(index)}
                 aria-current={selected ? 'true' : undefined}
               >
                 <span className="track__no">{index + 1}</span>
                 <span className="track__body">
-                  <span className="track__from">
-                    {nameOf(nodes, message.from)}
-                  </span>
-                  <span className="track__plain">{message.plain}</span>
+                  {together ? (
+                    <>
+                      <span className="track__from">
+                        {group.length} 台が同時に
+                      </span>
+                      <span className="track__plain">名乗って返事する</span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="track__from">
+                        {nameOf(nodes, first.from)}
+                      </span>
+                      <span className="track__plain">{first.plain}</span>
+                    </>
+                  )}
                 </span>
               </button>
             </li>

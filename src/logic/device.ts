@@ -1,8 +1,7 @@
 import type { ConversationMessage, DeviceState, NodeId } from '../domain/types'
 
-/** 会話が始まる前の機器の状態（室温 22.0 ℃・設定温度 24.0 ℃） */
+/** 会話が始まる前の機器の状態（設定温度 24.0 ℃） */
 export const INITIAL_DEVICE: DeviceState = {
-  presentValue: 22.0,
   setpoint: 24.0,
   compromised: false,
 }
@@ -17,13 +16,18 @@ export function parseReal(value: string | undefined): number | undefined {
 }
 
 function isWriteRequest(message: ConversationMessage): boolean {
+  // IP は writeProperty、SC は WriteProperty（暗号化表記）なので両対応
   return (
-    message.kind === 'request' && message.protocol.includes('writeProperty')
+    message.kind === 'request' &&
+    message.protocol.toLowerCase().includes('writeproperty')
   )
 }
 
 function isWriteAck(message: ConversationMessage): boolean {
-  return message.kind === 'response' && message.protocol.includes('Simple-ACK')
+  return (
+    message.kind === 'response' &&
+    message.protocol.toLowerCase().includes('simple-ack')
+  )
 }
 
 /**

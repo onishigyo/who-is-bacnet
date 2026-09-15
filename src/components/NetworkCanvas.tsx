@@ -10,7 +10,6 @@ import {
 } from '@xyflow/react'
 import '@xyflow/react/dist/style.css'
 import { useEffect, useMemo, useState, type CSSProperties } from 'react'
-import { NETWORK_NODE_ID } from '../content/diagram'
 import type {
   ConversationMessage,
   DeviceState,
@@ -70,6 +69,8 @@ interface Props {
   deviceReadouts: Record<NodeId, DeviceState>
   /** いま飛んでいるメッセージ。まとめて飛ぶものは複数通 */
   inFlight: ConversationMessage[]
+  /** ブロードキャストやハブ経由の中継点（IP=スイッチ / SC=ハブ） */
+  networkNodeId: NodeId
   /** アニメーションをやり直すためのキー */
   flightKey: string
   durationMs: number
@@ -90,6 +91,7 @@ export function NetworkCanvas({
   diagram,
   deviceReadouts,
   inFlight,
+  networkNodeId,
   flightKey,
   durationMs,
 }: Props) {
@@ -99,25 +101,25 @@ export function NetworkCanvas({
   const flights = useMemo(
     () =>
       inFlight.map((message) => {
-        const path = flightPath(message, NETWORK_NODE_ID)
+        const path = flightPath(message, networkNodeId)
         const fanOut = isBroadcast(message.to)
-          ? broadcastTargets(diagram.nodes, message.from, NETWORK_NODE_ID)
+          ? broadcastTargets(diagram.nodes, message.from, networkNodeId)
           : []
         const broadcasting = fanOut.length > 0
         return {
           message,
           broadcasting,
           main: withMidpoint(
-            flightWaypoints(diagram.nodes, path.from, path.to, NETWORK_NODE_ID),
+            flightWaypoints(diagram.nodes, path.from, path.to, networkNodeId),
           ),
           fans: fanOut
             .map((target) =>
               withMidpoint(
                 flightWaypoints(
                   diagram.nodes,
-                  NETWORK_NODE_ID,
+                  networkNodeId,
                   target,
-                  NETWORK_NODE_ID,
+                  networkNodeId,
                 ),
               ),
             )
@@ -128,20 +130,20 @@ export function NetworkCanvas({
             diagram.edges,
             path.from,
             path.to,
-            NETWORK_NODE_ID,
+            networkNodeId,
           ).concat(
             fanOut.flatMap((target) =>
               activeEdgeIds(
                 diagram.edges,
-                NETWORK_NODE_ID,
+                networkNodeId,
                 target,
-                NETWORK_NODE_ID,
+                networkNodeId,
               ),
             ),
           ),
         }
       }),
-    [inFlight, diagram],
+    [inFlight, diagram, networkNodeId],
   )
 
   const speaking = useMemo(

@@ -2,11 +2,20 @@
  * ドメイン型のみを置く層。ロジックも描画もここには書かない。
  */
 
-/** ステップの並び順（1 → 4）。学習順序そのもの */
-export type StepOrder = 1 | 2 | 3 | 4
+/** ステップの並び順（1 → 7）。学習順序そのもの。1〜4 が IP 編、5〜7 が SC 編 */
+export type StepOrder = 1 | 2 | 3 | 4 | 5 | 6 | 7
 
 export type StepId =
-  'what-is-bacnet' | 'bacnet-ip' | 'interoperability' | 'no-auth'
+  | 'what-is-bacnet'
+  | 'bacnet-ip'
+  | 'interoperability'
+  | 'no-auth'
+  | 'bacnet-sc'
+  | 'sc-defense'
+  | 'sc-limits'
+
+/** ステップが属する「世界」。IP 編と SC 編で図もコンテンツも別セット */
+export type World = 'ip' | 'sc'
 
 /** 記述の確からしさ。教材上、両者を視覚的に区別するために使う */
 export type Confidence =
@@ -26,6 +35,9 @@ export interface ContentNote {
 export interface StepContent {
   id: StepId
   order: StepOrder
+  /** この章の見出し（ナビでグループを分ける）。'IP 編' / 'SC 編' */
+  chapter: string
+  world: World
   navLabel: string
   title: string
   lead: string
@@ -42,6 +54,8 @@ export type NodeKind =
   | 'supervisor'
   /** ネットワーク（スイッチ） */
   | 'switch'
+  /** BACnet/SC ハブ（証明書を持つ機器だけが繋がる集線点） */
+  | 'hub'
   /** 攻撃者（同じネットワークに持ち込まれた PC） */
   | 'attacker'
 
@@ -55,6 +69,8 @@ export interface DiagramNodeSpec {
   deviceInstance?: number
   /** ステップ2以降に表示する IP アドレス */
   ip?: string
+  /** SC 編で、この機器が証明書を持つか（持たない攻撃者はハブに入れない） */
+  hasCertificate?: boolean
   /** このノードが図に現れるステップ */
   appearsAt: StepOrder
   position: { x: number; y: number }
@@ -98,8 +114,20 @@ export interface ConversationMessage {
   value?: string
   /** 実験キャプチャで対応するパケットの番号。実験にない通信なら持たない */
   frame?: number
+  /** frame と一緒に答え合わせで光らせる行（前後の TCP の ACK など、チップにしない行） */
+  relatedFrames?: number[]
   /** どこへ届くか。BACnet の要求自体に相手の識別子は入らず、宛先は IP が決める */
   transport: string
+  /**
+   * TLS で暗号化されて中身が見えない通信か（SC 編）。
+   * true のとき、傍受しても Wireshark には Application Data としか映らない。
+   */
+  encrypted?: boolean
+  /**
+   * ハブに拒否された応答か（SC 編）。証明書がないノードの門前払いを表す。
+   * この印が付いたメッセージで会話が止まる。
+   */
+  rejected?: boolean
   /** このメッセージで話し手が何をするか（「▸ 〇〇が〜する」の後半） */
   action: string
   /**
@@ -118,25 +146,26 @@ export interface Conversation {
   id: string
   title: string
   messages: ConversationMessage[]
+  /** messages の frame が指す答え合わせキャプチャの id */
+  captureId?: string
 }
 
-export type PlaybackStatus = 'idle' | 'playing' | 'finished'
+export type PlaybackPhase = 'flying' | 'landed'
 
 /**
- * 会話再生の状態。時間を持たない純粋な状態機械として扱う。
- * 進む単位はメッセージではなく「まとまり（group）」。
+ * 会話再生の状態。トラックのどのまとまりを、いま図で再生しているか。
+ * 順送りではなく、利用者が選んだまとまりを 1 回ずつ再生するモデル。
  */
 export interface PlaybackState {
-  status: PlaybackStatus
-  /** 到達済みのまとまりの数 */
-  deliveredGroups: number
-  /** いま飛んでいるまとまりの index。飛んでいなければ null */
-  inFlightGroup: number | null
+  /** いま選んでいるまとまりの index。未選択なら null */
+  selected: number | null
+  /** そのまとまりが図を飛んでいる最中か、着いたか */
+  phase: PlaybackPhase
+  /** 再生ごとに増える。同じまとまりを選び直してもアニメをやり直すため */
+  nonce: number
 }
 
 export interface DeviceState {
-  /** 室温（analog-input,0 present-value 相当） */
-  presentValue: number
   /** 設定温度（analog-value,0 present-value 相当） */
   setpoint: number
   /** 書き換えられたか */
