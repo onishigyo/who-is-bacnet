@@ -5,11 +5,14 @@ import type {
   NodeId,
 } from '../domain/types'
 import { BROADCAST } from '../domain/types'
+import { involvesAttacker } from '../logic/conversation'
 
 interface Props {
   /** いま図で再生しているまとまり（まとめて飛んだものは複数通） */
   current: ConversationMessage[]
   nodes: DiagramNodeSpec[]
+  /** 攻撃者のノード。これが関わる通信は危険として赤で見せる */
+  attackerId: NodeId
   /** 会話が始まっていないときに出すもの（開始ボタン） */
   idle: ReactNode
 }
@@ -76,7 +79,7 @@ function MessageLine({
  * 図のすぐ下に固定する、いま再生しているやり取りの実況。
  * 進める操作はしない（トラックのチップを押して再生する）。表示専用。
  */
-export function ConversationBar({ current, nodes, idle }: Props) {
+export function ConversationBar({ current, nodes, attackerId, idle }: Props) {
   const [first] = current
   if (!first) {
     return (
@@ -90,7 +93,11 @@ export function ConversationBar({ current, nodes, idle }: Props) {
 
   return (
     <section className="stagebar" aria-live="polite">
-      <div className={`stagebar__message stagebar__message--${first.kind}`}>
+      <div
+        className={`stagebar__message ${
+          involvesAttacker(first, attackerId) ? 'stagebar__message--danger' : ''
+        }`}
+      >
         {together && (
           <p className="stagebar__head">
             <span className="stagebar__together">

@@ -166,6 +166,7 @@ export default function App() {
               deviceReadouts={deviceReadouts}
               inFlight={inFlight}
               networkNodeId={networkNodeId}
+              attackerId={ATTACKER_ID}
               flightKey={`${activeConversationId ?? 'none'}-${playback.nonce}`}
               durationMs={FLIGHT_MS}
             />
@@ -175,6 +176,7 @@ export default function App() {
             <ConversationBar
               current={current}
               nodes={worldNodes}
+              attackerId={ATTACKER_ID}
               idle={
                 <button
                   type="button"
@@ -198,6 +200,7 @@ export default function App() {
                 activeConversation ? messageGroups(activeConversation) : []
               }
               nodes={worldNodes}
+              attackerId={ATTACKER_ID}
               activeIndex={playback.selected}
               nextIndex={
                 activeConversation
