@@ -62,7 +62,6 @@ export function ConversationTrack({
           const selected = index === activeIndex
           const upNext = index === nextIndex
           const together = group.length > 1
-          const alert = group.some((m) => m.annotationTone === 'alert')
           return (
             <li key={first.id}>
               <button
@@ -70,7 +69,7 @@ export function ConversationTrack({
                 ref={selected ? active : upNext ? next : null}
                 className={`track__item ${
                   selected ? 'is-active' : ''
-                } ${upNext ? 'is-next' : ''} ${alert ? 'is-alert' : ''}`}
+                } ${upNext ? 'is-next' : ''}`}
                 onClick={() => onSelect(index)}
                 aria-current={selected ? 'true' : undefined}
               >

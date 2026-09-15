@@ -1,6 +1,7 @@
 /*
  * 色のルール（意味は 1 色に 1 つ）
- *   青 --accent : 操作と注目（押せる・選んでいる・次に押す・今のステップ・いま動いている通常の通信）
+ *   青 --accent : 操作と注目（押せる・次に押す・今のステップ・いま動いている通常の通信）
+ *                 選んでいるチップは濃い灰にして、「次に押す」の青と区別する
  *   赤 --alert  : 危険（攻撃者・書き換えられた値・注意書き・攻撃者が関わる通信）
  *   緑 --ok     : 正規・確か（中央監視など正規の側、「規格・公式資料」のバッジ）
  *   黄 --warn   : 要検証
@@ -944,14 +945,11 @@ button:disabled {
   border-color: var(--accent);
 }
 
-.track__item.is-alert {
-  border-color: var(--alert);
-}
-
+/* 選んでいる（いま図で見ている）チップ。青は「次に押す」に取っておき、ここは濃い灰 */
 .track__item.is-active {
   opacity: 1;
   background: var(--bg-raise);
-  box-shadow: 0 0 0 2px var(--accent-soft);
+  border-color: var(--text);
 }
 
 /* 次に押してほしいチップ。飛び終わってから、薄い青で塗り、輪をゆっくり点滅させる。
