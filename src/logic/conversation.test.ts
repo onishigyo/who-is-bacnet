@@ -4,6 +4,7 @@ import {
   conversations,
   NORMAL_CONVERSATION_ID,
 } from '../content/conversations'
+import { ipCapture, scCapture } from '../content/captures'
 import { diagramNodes, NETWORK_NODE_ID } from '../content/diagram'
 import type { ConversationMessage } from '../domain/types'
 import { BROADCAST } from '../domain/types'
@@ -14,6 +15,7 @@ import {
   flyingMessages,
   groupAt,
   groupIndexOfMessage,
+  highlightedFrames,
   IDLE_PLAYBACK,
   landGroup,
   messageGroups,
@@ -190,5 +192,22 @@ describe('ブロードキャストの広がり', () => {
     const targets = broadcastTargets(diagramNodes, 'attacker', NETWORK_NODE_ID)
     expect(targets).not.toContain('attacker')
     expect(targets).not.toContain(NETWORK_NODE_ID)
+  })
+})
+
+describe('答え合わせで光らせる行', () => {
+  const written = attack.messages.filter((m) => m.frame === 1509)
+
+  it('会話が指すキャプチャなら、選んでいるメッセージの番号を返す', () => {
+    expect(highlightedFrames(attack, written, ipCapture.id)).toEqual([1509])
+  })
+
+  it('別のキャプチャには光を漏らさない（番号が偶然重なっても光らない）', () => {
+    expect(highlightedFrames(attack, written, scCapture.id)).toEqual([])
+  })
+
+  it('番号を持たないメッセージや、会話が無いときは何も光らせない', () => {
+    expect(highlightedFrames(normal, normal.messages, ipCapture.id)).toEqual([])
+    expect(highlightedFrames(null, written, ipCapture.id)).toEqual([])
   })
 })

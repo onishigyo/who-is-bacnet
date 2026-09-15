@@ -1,4 +1,4 @@
-import type { CaptureEvidence } from '../domain/types'
+import type { CaptureEvidence, EvidenceSection } from '../domain/types'
 
 /**
  * 実験で取得した Wireshark キャプチャによる答え合わせ素材。
@@ -11,8 +11,16 @@ import type { CaptureEvidence } from '../domain/types'
  * 個人を特定しうる情報が含まれるため、リポジトリにも教材にも置かない。
  */
 
+const CAPTURED_BY =
+  '制作者が閉域の実験環境（VMware 上の仮想マシン 2 台）で取得したキャプチャを、tshark 4.6.8 で表示フィルタをかけて出力したものです。'
+
 const PROVENANCE_BASE =
-  '制作者が閉域の実験環境（VMware 上の仮想マシン 2 台）で取得したキャプチャを、tshark 4.6.8 で表示フィルタをかけて出力したものです。図のアドレスも、この実験に合わせてあります。実験に登場するのは、送信側（192.168.222.128 = 図の「持ち込まれた PC」）と BACnet 機器（192.168.222.130 = 図の「空調コントローラ」）の 2 台だけです。照明コントローラ・電力計・中央監視装置は、教材の物語として置いた機器で、実験には登場しません。'
+  CAPTURED_BY +
+  '図のアドレスも、この実験に合わせてあります。実験に登場するのは、送信側（192.168.222.128 = 図の「持ち込まれた PC」）と BACnet 機器（192.168.222.130 = 図の「空調コントローラ」）の 2 台だけです。照明コントローラ・電力計・中央監視装置は、教材の物語として置いた機器で、実験には登場しません。'
+
+const SC_PROVENANCE_BASE =
+  CAPTURED_BY +
+  'SC の実験では、192.168.222.130 で SC ハブを動かし（図の「SC ハブ」）、192.168.222.128 からハブへ接続しました。空調コントローラ・照明コントローラ・電力計・中央監視装置は、教材の物語として置いた機器で、実験には登場しません。'
 
 /** BACnet/IP：何をしているかが平文で全部読める（ステップ4の答え合わせ） */
 export const ipCapture: CaptureEvidence = {
@@ -73,15 +81,21 @@ export const ipCapture: CaptureEvidence = {
   alt: '実験で取得した BACnet/IP の通信を Wireshark で bacnet フィルタ表示した一覧',
 }
 
-/** BACnet/SC：証明書ありで接続成功、24 秒間使われて正常終了（SC 編の Before/After で使う） */
+/**
+ * BACnet/SC：証明書を持たせて SC ハブに繋いだ記録（ステップ6で使う）。
+ *
+ * 約 6 秒おきに接続した側から短い暗号化データが出ているが、ハブは TCP の
+ * ACK しか返していない。応答を伴う BACnet/SC の Heartbeat や WebSocket の
+ * ping とは形が合わず、中身は特定できない。「心拍」とは書かない。
+ */
 export const scCapture: CaptureEvidence = {
   id: 'sc-encrypted',
-  title: '証明書ありで接続成功',
+  title: '実験で取った BACnet/SC の通信（証明書あり）',
   caption:
-    'TCP の 3way ハンドシェイク（225-227）のあと、TLS のハンドシェイク（231-235）を経て、やり取りはすべて Application Data になります。約 6 秒おきの短い通信（632, 634, 638, 640）は、接続を維持するための「生きています」の合図です。最後は Kali 側から正常に接続を閉じています（641 FIN → 645 Application Data → 646/648 RST）。ハンドシェイク以降、何をしているかは一切読めません。',
+    'TCP の 3way ハンドシェイク（225-227）と TLS のハンドシェイク（231-235）のあとは、ハブとのやり取りがすべて Application Data になります。約 6 秒おきに短いデータも出ていますが（632, 634, 638）、何を送っているのかは制作者にも外からは分かりません。接続は、繋いだ側が閉じる（641 FIN）まで続きました。',
   filter: 'tcp.port==47900',
-  provenance: PROVENANCE_BASE,
-  durationLabel: '接続時間 24.0 秒（正常に使われて終了）',
+  provenance: SC_PROVENANCE_BASE,
+  durationLabel: '24.0 秒 繋がり続けた（繋いだ側が閉じるまで）',
   durationTone: 'neutral',
   rows: [
     {
@@ -139,6 +153,7 @@ export const scCapture: CaptureEvidence = {
       destination: '192.168.222.130',
       protocol: 'TLSv1.3',
       info: 'Change Cipher Spec, Application Data',
+      value: 'Length: 1157',
     },
     {
       no: 236,
@@ -285,27 +300,26 @@ export const scCapture: CaptureEvidence = {
 }
 
 /**
- * BACnet/SC：証明書のないノードが接続を試み、直後に切断された記録。
+ * BACnet/SC：証明書を送らずに SC ハブへ繋ごうとした記録（ステップ6で使う）。
  *
- * TLS 1.3 はハンドシェイク完了後の全レコード（本物の Application Data も、
- * 拒否を示す Alert も）を同じ見た目で暗号化するため、復号鍵なしの
- * Wireshark には「Alert」というラベルは出ない。ここで確立事実として言える
- * のは、TCP・TLS のハンドシェイク自体は完了したが、直後にごく少量の
- * やり取りをしただけで接続が閉じた（生存時間 0.05 秒）という一点。
- * 「証明書を理由に拒否された」という解釈は、正常系（24 秒間使われた）との
- * 対比から導いた制作者の理解であり、ハブ側のログで裏を取れ次第、
- * この注記を確定事実に差し替える。
+ * TLS 1.3 では暗号化後のレコードは外から見ると全部 Application Data なので、
+ * 拒否の通知（Alert）そのものは読めない。読めるのは大きさだけ
+ * （TLS_AES_256_GCM_SHA384、認証タグ 16 バイト）:
+ * - 278 の 77 バイト = 空の Certificate 8 + Finished 52 + 種別 1 + タグ 16
+ *   （証明書ありの 235 は 1157 バイト）
+ * - 279 の 19 バイト = 中身 2 + 種別 1 + タグ 16。2 バイトは Alert の大きさ
+ * どの Alert かは復号鍵かハブ側のログがないと分からない（要検証のまま）。
  */
 export const scRejectedCapture: CaptureEvidence = {
   id: 'sc-rejected',
-  title: '証明書なしで接続を試みる',
+  title: '実験で取った BACnet/SC の通信（証明書なし）',
   caption:
-    'TCP（265-267）・TLS（271-276）のハンドシェイクは形の上では完了します。ですがその直後、わずかなやり取り（278-280）をしただけで、持ち込まれた PC 側から接続を閉じています（281 FIN → 282 RST,ACK）。正常な接続が 24 秒間使われ続けたのに対し、この接続はハンドシェイクの直後に切られました。',
+    'TCP（265-267）と TLS の始まり（271, 276）までは、証明書ありのときと同じです。違いは 278：証明書ありでは 1157 バイトあった暗号化データが、77 バイトしかありません。証明書が入っていない大きさです。ハブが返したのは 19 バイトだけ（279）で、接続はそのまま終わりました（281, 282）。',
   filter: 'tcp.port==47900',
   provenance:
-    PROVENANCE_BASE +
-    '証明書を持たないノードから、SC ハブへの接続を試みたものです。',
-  durationLabel: '接続時間 0.05 秒（ハンドシェイク直後に切断）',
+    SC_PROVENANCE_BASE +
+    'この記録では、192.168.222.128 に証明書を持たせずに接続しています。',
+  durationLabel: '0.05 秒で終了（ハブの短い返事の直後）',
   durationTone: 'alert',
   rows: [
     {
@@ -363,6 +377,7 @@ export const scRejectedCapture: CaptureEvidence = {
       destination: '192.168.222.130',
       protocol: 'TLSv1.3',
       info: 'Change Cipher Spec, Application Data',
+      value: 'Length: 77',
     },
     {
       no: 279,
@@ -370,6 +385,7 @@ export const scRejectedCapture: CaptureEvidence = {
       destination: '192.168.222.128',
       protocol: 'TLSv1.3',
       info: 'Application Data',
+      value: 'Length: 19',
     },
     {
       no: 280,
@@ -395,3 +411,20 @@ export const scRejectedCapture: CaptureEvidence = {
   ],
   alt: '実験で取得した、証明書なしで SC ハブへの接続を試みた通信を Wireshark で tcp.port==47900 フィルタ表示した一覧',
 }
+
+/**
+ * ステップ6 の答え合わせ。IP 編で見た 2 つの危険（割り込み・盗み見）に
+ * 1 つずつ答える順に並べる。先頭は、帯で再生する会話と結びつく記録。
+ */
+export const scDefenseEvidence: EvidenceSection[] = [
+  {
+    id: 'intrusion',
+    heading: '割り込めるか ── 証明書なしで繋いでみた',
+    captures: [scRejectedCapture],
+  },
+  {
+    id: 'eavesdrop',
+    heading: '盗み見できるか ── IP と SC を並べる',
+    captures: [ipCapture, scCapture],
+  },
+]

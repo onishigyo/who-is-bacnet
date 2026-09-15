@@ -1,5 +1,10 @@
 import type { DiagramEdgeSpec, DiagramNodeSpec, NodeId } from '../domain/types'
-import { AHU_ID, ATTACKER_ID, SUPERVISOR_ID } from './diagram'
+import {
+  AHU_DEVICE_INSTANCE,
+  AHU_ID,
+  ATTACKER_ID,
+  SUPERVISOR_ID,
+} from './diagram'
 
 /**
  * SC 編の中央。専用のハブを 1 つ置く（分かりやすさ優先）。
@@ -22,7 +27,7 @@ export const scDiagramNodes: DiagramNodeSpec[] = [
     kind: 'controller',
     label: '空調コントローラ',
     sublabel: 'メーカーA 製',
-    deviceInstance: 3056526,
+    deviceInstance: AHU_DEVICE_INSTANCE,
     hasCertificate: true,
     appearsAt: 5,
     position: { x: 0, y: 0 },

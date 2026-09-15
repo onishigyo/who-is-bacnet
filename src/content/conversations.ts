@@ -1,5 +1,6 @@
 import type { Conversation } from '../domain/types'
 import { BROADCAST } from '../domain/types'
+import { ipCapture } from './captures'
 import { AHU_ID, ATTACKER_ID, SUPERVISOR_ID } from './diagram'
 
 export const NORMAL_CONVERSATION_ID = 'normal-operation'
@@ -130,6 +131,7 @@ export const conversations: Conversation[] = [
   {
     id: ATTACK_CONVERSATION_ID,
     title: '持ち込まれた PC から、機器を操作する',
+    captureId: ipCapture.id,
     messages: [
       {
         id: 'a1',

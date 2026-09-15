@@ -6,7 +6,7 @@ import { NetworkCanvas } from './components/NetworkCanvas'
 import { StepNav } from './components/StepNav'
 import { StepNotes } from './components/StepNotes'
 import { StepPanel } from './components/StepPanel'
-import { ipCapture, scCapture, scRejectedCapture } from './content/captures'
+import { ipCapture, scDefenseEvidence } from './content/captures'
 import {
   ATTACK_CONVERSATION_ID,
   conversations,
@@ -31,6 +31,7 @@ import { deviceFrom } from './logic/device'
 import {
   conversationById,
   flyingMessages,
+  highlightedFrames,
   IDLE_PLAYBACK,
   landGroup,
   messageGroups,
@@ -207,24 +208,36 @@ export default function App() {
             <StepNotes notes={step.notes} />
           )}
 
-          {/* IP 編ステップ4：攻撃を始めた時点から、飛んでいる行を光らせる */}
+          {/* IP 編ステップ4：攻撃を始めた時点から、選んでいる行を光らせる */}
           {order === 4 && activeConversation && (
             <CaptureEvidenceCard
               capture={ipCapture}
-              highlight={current.flatMap((message) =>
-                message.frame === undefined ? [] : [message.frame],
+              highlight={highlightedFrames(
+                activeConversation,
+                current,
+                ipCapture.id,
               )}
             />
           )}
 
-          {/* SC 編ステップ6：IP（読める）と SC（読めない・拒否）を並べる Before/After */}
-          {order === 6 && (
-            <div className="beforeafter">
-              <CaptureEvidenceCard capture={ipCapture} />
-              <CaptureEvidenceCard capture={scCapture} />
-              <CaptureEvidenceCard capture={scRejectedCapture} />
-            </div>
-          )}
+          {/* SC 編ステップ6：割り込み（拒否の記録）と盗み見（IP と SC の対比）に 1 つずつ答える */}
+          {order === 6 &&
+            scDefenseEvidence.map((section) => (
+              <section key={section.id} className="evidence">
+                <h3 className="evidence__heading">{section.heading}</h3>
+                {section.captures.map((capture) => (
+                  <CaptureEvidenceCard
+                    key={capture.id}
+                    capture={capture}
+                    highlight={highlightedFrames(
+                      activeConversation,
+                      current,
+                      capture.id,
+                    )}
+                  />
+                ))}
+              </section>
+            ))}
 
           {order !== 1 && order !== 2 && order !== 5 && (
             <StepNotes notes={step.notes} />

@@ -144,6 +144,8 @@ export interface Conversation {
   id: string
   title: string
   messages: ConversationMessage[]
+  /** messages の frame が指す答え合わせキャプチャの id */
+  captureId?: string
 }
 
 export type PlaybackPhase = 'flying' | 'landed'
@@ -197,4 +199,11 @@ export interface CaptureEvidence {
   durationLabel?: string
   /** durationLabel の調子（正常なら neutral、異常の強調なら alert） */
   durationTone?: 'neutral' | 'alert'
+}
+
+/** 1 つの問いに答える、答え合わせのまとまり */
+export interface EvidenceSection {
+  id: string
+  heading: string
+  captures: CaptureEvidence[]
 }

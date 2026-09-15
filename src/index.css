@@ -1052,10 +1052,19 @@ button:disabled {
 
 /* ---------- Wireshark 答え合わせ ---------- */
 
-.beforeafter {
+/* ステップ6：1 つの問いに答える答え合わせのまとまり */
+.evidence {
   display: flex;
   flex-direction: column;
   gap: 14px;
+}
+
+.evidence__heading {
+  padding-left: 10px;
+  border-left: 3px solid var(--accent);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text-strong);
 }
 
 .capture {

@@ -88,6 +88,18 @@ export function flyingMessages(
   return state.phase === 'flying' ? selectedMessages(conversation, state) : []
 }
 
+/** いま選んでいるメッセージのうち、そのキャプチャの行を指す番号（答え合わせで光らせる） */
+export function highlightedFrames(
+  conversation: Conversation | null,
+  current: ConversationMessage[],
+  captureId: string,
+): number[] {
+  if (conversation?.captureId !== captureId) return []
+  return current.flatMap((message) =>
+    message.frame === undefined ? [] : [message.frame],
+  )
+}
+
 /** そのまとまりを再生する状態へ進める */
 export function playGroup(state: PlaybackState, index: number): PlaybackState {
   return { selected: index, phase: 'flying', nonce: state.nonce + 1 }

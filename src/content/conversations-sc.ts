@@ -1,4 +1,5 @@
 import type { Conversation } from '../domain/types'
+import { scRejectedCapture } from './captures'
 import { AHU_ID, ATTACKER_ID, SUPERVISOR_ID } from './diagram'
 import { SC_HUB_ID } from './diagram-sc'
 
@@ -15,8 +16,8 @@ export const SC_ATTACK_CONVERSATION_ID = 'sc-attack'
  * rejected: true は、証明書のないノードがハブに門前払いされたことを表し、
  * そこで会話が止まる。
  *
- * ステップ6の門前払いは、実験キャプチャ（追加取得中）と結びつける frame を
- * 素材が揃い次第このデータに足す。いまはプレースホルダ。
+ * ステップ6の門前払いは実験キャプチャ（scRejectedCapture）と frame で結びつき、
+ * protocol は Wireshark の Info 欄と同じ表記で書く（logic/sc.test.ts で照合）。
  */
 export const scConversations: Conversation[] = [
   {
@@ -43,7 +44,7 @@ export const scConversations: Conversation[] = [
         kind: 'response',
         plain: '証明書を確認しました。参加を認めます',
         protocol: 'TLS 1.3 ハンドシェイク完了（暗号化トンネル確立）',
-        transport: 'TCP → 空調コントローラ:47900',
+        transport: 'TCP（ハブ:47900 → 空調コントローラ）',
         action: '参加を認める',
         explain:
           'ハブが証明書を確かめ、正しかったので参加を認めます。ここから先、この機器のやり取りはすべて暗号化されたトンネルの中を通ります。照明・電力計・中央監視も、同じように証明書を見せてハブに参加しています。',
@@ -108,6 +109,7 @@ export const scConversations: Conversation[] = [
   {
     id: SC_ATTACK_CONVERSATION_ID,
     title: '持ち込まれた PC が、SC ハブに繋ごうとする',
+    captureId: scRejectedCapture.id,
     messages: [
       {
         id: 'sa1',
@@ -115,27 +117,60 @@ export const scConversations: Conversation[] = [
         to: SC_HUB_ID,
         kind: 'request',
         plain: 'ハブに参加させてください',
-        protocol: 'wss 接続を開始（TCP 3way → TLS 1.3 ハンドシェイク）',
-        transport: 'TCP → ハブ:47900',
+        protocol: 'Client Hello',
+        frame: 271,
+        transport: 'TCP → ハブ:47900（TLS 1.3 を開始）',
         action: 'ハブに接続を試みる',
         explain:
-          'IP 編と同じ「持ち込まれた PC」が、今度はハブに繋ごうとします。TCP の 3way までは通ります ── そこは誰でも叩けるからです。問題はその次、TLS のハンドシェイクで証明書を求められたときです。',
-        annotation: 'IP 編では、この先で会話に割り込めた',
+          'IP 編と同じ「持ち込まれた PC」が、今度はハブに繋ごうとします。TCP の 3way ハンドシェイク（265-267）は通ります ── ここまでは誰でも叩けるからです。続けて TLS 1.3 のハンドシェイクを始めます。',
+        annotation: 'IP 編では、ここから先で会話に割り込めた',
       },
       {
         id: 'sa2',
         from: SC_HUB_ID,
         to: ATTACKER_ID,
         kind: 'response',
-        plain: '証明書がありません。参加は認められません',
-        protocol: 'TLS ハンドシェイク失敗 ── 接続拒否',
-        transport: 'TCP → 持ち込まれた PC:47900',
-        action: '証明書がなく、拒否する',
+        plain: '証明書を見せてください',
+        protocol: 'Server Hello, Change Cipher Spec, Application Data',
+        frame: 276,
+        transport: 'TCP（ハブ:47900 → 持ち込まれた PC）',
+        action: '証明書を求める',
+        encrypted: true,
+        explain:
+          'ハブは自分の証明書を示し、相手にも証明書を求めます。BACnet/SC では、ハブと機器が互いに証明書を確かめ合うことになっているからです。ただしこの求めは暗号化の内側にあり、Wireshark には Application Data としか映りません。',
+      },
+      {
+        id: 'sa3',
+        from: ATTACKER_ID,
+        to: SC_HUB_ID,
+        kind: 'request',
+        plain: '（証明書はありません）',
+        protocol: 'Change Cipher Spec, Application Data',
+        value: 'Length: 77',
+        frame: 278,
+        transport: 'TCP → ハブ:47900',
+        action: '証明書を出せない',
+        encrypted: true,
+        explain:
+          '持ち込まれた PC は証明書を持っていません。返した暗号化データは 77 バイト。証明書ありで繋いだときは 1157 バイトありました。この差は、証明書の中身が入っていないことを示しています（中身は読めないので、大きさからの読み取りです）。',
+      },
+      {
+        id: 'sa4',
+        from: SC_HUB_ID,
+        to: ATTACKER_ID,
+        kind: 'response',
+        plain: '参加は認めません',
+        protocol: 'Application Data',
+        value: 'Length: 19',
+        frame: 279,
+        transport: 'TCP（ハブ:47900 → 持ち込まれた PC）',
+        action: '参加を断る',
+        encrypted: true,
         rejected: true,
         explain:
-          'ハブは接続してきた相手に証明書を求めます。持ち込まれた PC はそれを出せません。TLS のハンドシェイクは完了せず、暗号化トンネルは張られません。Who-Is も ReadProperty も、そもそも送れない ── 会話の入り口で止められます。',
+          'ハブが返したのは 19 バイトだけ。暗号化のための付け足し（17 バイト）を除くと中身は 2 バイトで、TLS のエラー通知（Alert）とちょうど同じ大きさです。接続はこのまま終わり（281, 282）、Who-Is も ReadProperty も送れませんでした。会話の入り口で止まったのです。',
         annotation:
-          'IP 編との決定的な違い。ネットワークに到達できても、証明書がなければ会話に入れない',
+          'IP 編との決定的な違い。ネットワークに届いても、証明書がなければ会話に入れない',
         annotationTone: 'alert',
       },
     ],
