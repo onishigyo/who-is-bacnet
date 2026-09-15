@@ -200,6 +200,7 @@ export default function App() {
                 activeConversation ? messageGroups(activeConversation) : []
               }
               nodes={worldNodes}
+              attackerId={ATTACKER_ID}
               activeIndex={playback.selected}
               nextIndex={
                 activeConversation

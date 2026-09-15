@@ -4,11 +4,14 @@ import type {
   DiagramNodeSpec,
   NodeId,
 } from '../domain/types'
+import { involvesAttacker } from '../logic/conversation'
 
 interface Props {
   /** 同時に飛ぶまとまり単位のやり取り。まとめて飛んだものは 1 チップ */
   groups: ConversationMessage[][]
   nodes: DiagramNodeSpec[]
+  /** 攻撃者のノード。これが関わる場面では、チップの強調も赤にそろえる */
+  attackerId: NodeId
   /** いま再生しているまとまりの index（なければ null） */
   activeIndex: number | null
   /** 次に押してほしいまとまりの index（なければ null）。光らせて誘導する */
@@ -29,6 +32,7 @@ function nameOf(nodes: DiagramNodeSpec[], id: NodeId): string {
 export function ConversationTrack({
   groups,
   nodes,
+  attackerId,
   activeIndex,
   nextIndex,
   onSelect,
@@ -61,6 +65,7 @@ export function ConversationTrack({
           const first = group[0]
           const selected = index === activeIndex
           const upNext = index === nextIndex
+          const danger = group.some((m) => involvesAttacker(m, attackerId))
           const together = group.length > 1
           return (
             <li key={first.id}>
@@ -69,7 +74,7 @@ export function ConversationTrack({
                 ref={selected ? active : upNext ? next : null}
                 className={`track__item ${
                   selected ? 'is-active' : ''
-                } ${upNext ? 'is-next' : ''}`}
+                } ${upNext ? 'is-next' : ''} ${danger ? 'is-danger' : ''}`}
                 onClick={() => onSelect(index)}
                 aria-current={selected ? 'true' : undefined}
               >
