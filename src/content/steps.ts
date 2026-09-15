@@ -159,11 +159,9 @@ export const steps: StepContent[] = [
           'ANSI/ASHRAE Standard 135-2020 Annex AB / ASHRAE BACnet/SC ホワイトペーパー',
       },
       {
-        id: 'sc-std-hub-function',
-        confidence: 'standard',
-        text: 'この図では専用のハブを置いていますが、ハブは役割（ハブ機能）で、中央監視装置などの機器が兼ねることもできます。',
-        source:
-          'ANSI/ASHRAE Standard 135-2020 Annex AB / ASHRAE BACnet/SC ホワイトペーパー',
+        id: 'sc-interp-hub-function',
+        confidence: 'interpretation',
+        text: 'この図では専用のハブを 1 台置いていますが、ハブは専用の機器とは限らず、中央監視装置などが兼ねることもある、と制作者は理解しています。規格の原文では確かめていません。',
       },
       {
         id: 'sc-std-no-broadcast',
@@ -223,7 +221,7 @@ export const steps: StepContent[] = [
     title: 'SC の限界 ── これだけで安全とは限らない',
     lead: '証明書で入り口は固くなる。それでも残る課題がある。',
     paragraphs: [
-      'まず、既存の機器。SC に対応していない機器は、ハブに参加できません。SC と BACnet/IP が混ざる建物では、その境目が弱点になるかもしれません。',
+      'まず、既存の機器。SC に対応していない機器は、ハブに参加できません。SC と BACnet/IP が混ざる建物では、両者をつなぐルータが弱点になるかもしれません。',
       '次に、運用。証明書は持っているだけでは守れません。正しく発行し、期限を管理して、はじめて役に立ちます。',
       'この教材は、実務者が学んだ内容をまとめたものです。最後は、規格（ANSI/ASHRAE 135）と実機の仕様で確かめてください。',
     ],
@@ -231,14 +229,13 @@ export const steps: StepContent[] = [
       {
         id: 'sc-std-backward',
         confidence: 'standard',
-        text: 'BACnet/SC は、BACnet/IP と同じく BACnet の運び方の一つです。BACnet ルータを介して、BACnet/IP など従来のネットワークとつなげられます。',
-        source:
-          'ANSI/ASHRAE Standard 135-2020 Annex AB / ASHRAE BACnet/SC ホワイトペーパー',
+        text: 'SC と BACnet/IP が混ざる建物では、BACnet ルータで両者をつなぎます。ルータの先の旧来の側は、SC では守られません。',
+        source: 'ASHRAE BACnet/SC ホワイトペーパー（Scenario #3）',
       },
       {
         id: 'sc-interp-legacy',
         confidence: 'interpretation',
-        text: '既存機器の多くが SC に対応できないこと、混在の境目が弱点になりうることは、制作者の理解です。個々の製品の対応は、その製品の仕様で確かめてください。',
+        text: 'そのため、旧来の側に入った PC の要求が、ルータ経由で SC 側の機器に届きうる、と制作者は理解しています。ルータで通信を絞れるかなど、実際の危なさは構成しだいです。既存機器がどれだけ SC に対応できるかも、製品ごとに確かめが必要です。',
       },
       {
         id: 'sc-interp-operation',

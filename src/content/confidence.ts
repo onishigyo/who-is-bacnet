@@ -5,7 +5,7 @@ import type { Confidence } from '../domain/types'
  * 読み手が区別できることが目的なので、言い回しはここだけで変えられるようにする。
  */
 export const confidenceLabels: Record<Confidence, string> = {
-  standard: '規格に書いてある',
+  standard: '規格・公式資料に書いてある',
   interpretation: '制作者の理解（要検証）',
 }
 
