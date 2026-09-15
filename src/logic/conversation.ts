@@ -1,11 +1,13 @@
 import type {
   Conversation,
   ConversationMessage,
+  DiagramEdgeSpec,
   MessageTarget,
   NodeId,
   PlaybackState,
 } from '../domain/types'
 import { BROADCAST } from '../domain/types'
+import { reachableFrom } from './layout'
 
 export const IDLE_PLAYBACK: PlaybackState = {
   selected: null,
@@ -149,16 +151,20 @@ export function flightPath(
 
 /**
  * ブロードキャストが、ネットワークから先どこへ広がるか。
- * 送信元とネットワーク自身を除いた、図に出ているすべてのノード。
+ * 配線をたどってネットワーク（スター型の中継点）から到達できるノードだけに
+ * 届く。送信元とネットワーク自身は除く。サブネットが分かれた図（BBMD 番外編）
+ * では、繋がっていない先には届かない。
  */
 export function broadcastTargets(
   nodes: { id: NodeId }[],
+  edges: DiagramEdgeSpec[],
   from: NodeId,
   networkId: NodeId,
 ): NodeId[] {
+  const reachable = reachableFrom(edges, networkId)
   return nodes
     .map((node) => node.id)
-    .filter((id) => id !== from && id !== networkId)
+    .filter((id) => id !== from && id !== networkId && reachable.has(id))
 }
 
 /** そのステップの会話に登場する話し手（図の強調に使う） */

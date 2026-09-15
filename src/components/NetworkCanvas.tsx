@@ -113,7 +113,12 @@ export function NetworkCanvas({
       inFlight.map((message) => {
         const path = flightPath(message, networkNodeId)
         const fanOut = isBroadcast(message.to)
-          ? broadcastTargets(diagram.nodes, message.from, networkNodeId)
+          ? broadcastTargets(
+              diagram.nodes,
+              diagram.edges,
+              message.from,
+              networkNodeId,
+            )
           : []
         const broadcasting = fanOut.length > 0
         return {

@@ -5,7 +5,12 @@ import {
   NORMAL_CONVERSATION_ID,
 } from '../content/conversations'
 import { ipCapture, scRejectedCapture } from '../content/captures'
-import { ATTACKER_ID, diagramNodes, NETWORK_NODE_ID } from '../content/diagram'
+import {
+  ATTACKER_ID,
+  diagramEdges,
+  diagramNodes,
+  NETWORK_NODE_ID,
+} from '../content/diagram'
 import type { ConversationMessage } from '../domain/types'
 import { BROADCAST } from '../domain/types'
 import {
@@ -184,16 +189,31 @@ describe('図の上の飛び方', () => {
 })
 
 describe('ブロードキャストの広がり', () => {
-  it('ネットワークから、送信元以外のすべての機器へ広がる', () => {
+  it('ネットワークから、送信元以外のすべての機器へ広がる（スター型なので全機器に届く）', () => {
     expect(
-      broadcastTargets(diagramNodes, 'supervisor', NETWORK_NODE_ID),
+      broadcastTargets(diagramNodes, diagramEdges, 'supervisor', NETWORK_NODE_ID),
     ).toEqual(['ahu', 'lighting', 'meter', 'attacker'])
   })
 
   it('送信元とネットワーク自身は含まない', () => {
-    const targets = broadcastTargets(diagramNodes, 'attacker', NETWORK_NODE_ID)
+    const targets = broadcastTargets(
+      diagramNodes,
+      diagramEdges,
+      'attacker',
+      NETWORK_NODE_ID,
+    )
     expect(targets).not.toContain('attacker')
     expect(targets).not.toContain(NETWORK_NODE_ID)
+  })
+
+  it('配線がたどれない（別サブネットの）ノードには広がらない', () => {
+    const nodes = [{ id: 'a' }, { id: 'net' }, { id: 'b' }, { id: 'island' }]
+    const edges = [
+      { id: 'e1', source: 'a', target: 'net', appearsAt: 1 as const },
+      { id: 'e2', source: 'net', target: 'b', appearsAt: 1 as const },
+      // 'island' は配線がなく、どこからも到達できない
+    ]
+    expect(broadcastTargets(nodes, edges, 'a', 'net')).toEqual(['b'])
   })
 })
 
