@@ -19,6 +19,7 @@ import type {
 import {
   broadcastTargets,
   flightPath,
+  involvesAttacker,
   isBroadcast,
 } from '../logic/conversation'
 import { activeEdgeIds, flightWaypoints, type Point } from '../logic/layout'
@@ -71,6 +72,8 @@ interface Props {
   inFlight: ConversationMessage[]
   /** ブロードキャストやハブ経由の中継点（IP=スイッチ / SC=ハブ） */
   networkNodeId: NodeId
+  /** 攻撃者のノード。これが関わる通信は危険として赤で見せる */
+  attackerId: NodeId
   /** アニメーションをやり直すためのキー */
   flightKey: string
   durationMs: number
@@ -92,6 +95,7 @@ export function NetworkCanvas({
   deviceReadouts,
   inFlight,
   networkNodeId,
+  attackerId,
   flightKey,
   durationMs,
 }: Props) {
@@ -109,6 +113,7 @@ export function NetworkCanvas({
         return {
           message,
           broadcasting,
+          danger: involvesAttacker(message, attackerId),
           main: withMidpoint(
             flightWaypoints(diagram.nodes, path.from, path.to, networkNodeId),
           ),
@@ -143,12 +148,21 @@ export function NetworkCanvas({
           ),
         }
       }),
-    [inFlight, diagram, networkNodeId],
+    [inFlight, diagram, networkNodeId, attackerId],
   )
 
   const speaking = useMemo(
     () => new Set(inFlight.map((message) => message.from)),
     [inFlight],
+  )
+  const dangerSpeakers = useMemo(
+    () =>
+      new Set(
+        inFlight
+          .filter((message) => involvesAttacker(message, attackerId))
+          .map((message) => message.from),
+      ),
+    [inFlight, attackerId],
   )
 
   const nodes: BacnetFlowNode[] = useMemo(
@@ -162,14 +176,20 @@ export function NetworkCanvas({
           spec,
           showIp: diagram.showIp,
           speaking: speaking.has(spec.id),
+          speakingDanger: dangerSpeakers.has(spec.id),
           device: deviceReadouts[spec.id] ?? null,
         },
       })),
-    [diagram, deviceReadouts, speaking],
+    [diagram, deviceReadouts, speaking, dangerSpeakers],
   )
 
   const litEdges = useMemo(
     () => new Set(flights.flatMap((flight) => flight.legs)),
+    [flights],
+  )
+  const dangerEdges = useMemo(
+    () =>
+      new Set(flights.filter((flight) => flight.danger).flatMap((f) => f.legs)),
     [flights],
   )
 
@@ -181,9 +201,11 @@ export function NetworkCanvas({
         target: edge.target,
         type: 'straight',
         animated: litEdges.has(edge.id),
-        className: litEdges.has(edge.id) ? 'link is-active' : 'link',
+        className: litEdges.has(edge.id)
+          ? `link is-active ${dangerEdges.has(edge.id) ? 'is-danger' : ''}`
+          : 'link',
       })),
-    [diagram.edges, litEdges],
+    [diagram.edges, litEdges, dangerEdges],
   )
 
   /** まとめて飛ぶときは、少しずつずらして出す（重なって読めなくなるため） */
@@ -240,7 +262,9 @@ export function NetworkCanvas({
                 <div
                   className={`packet packet--${flight.message.kind} ${
                     flight.broadcasting ? 'packet--parked' : ''
-                  } ${compact ? 'packet--compact' : ''}`}
+                  } ${compact ? 'packet--compact' : ''} ${
+                    flight.danger ? 'packet--danger' : ''
+                  }`}
                   style={
                     {
                       '--x0': `${flight.main[0].x}px`,
@@ -270,7 +294,9 @@ export function NetworkCanvas({
               {flight.fans.map((points, fanIndex) => (
                 <div
                   key={`fan-${fanIndex}`}
-                  className="packet packet--fan"
+                  className={`packet packet--fan ${
+                    flight.danger ? 'packet--danger' : ''
+                  }`}
                   style={
                     {
                       '--x0': `${points[0].x}px`,

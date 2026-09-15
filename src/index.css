@@ -1,3 +1,11 @@
+/*
+ * 色のルール（意味は 1 色に 1 つ）
+ *   青 --accent : 操作と注目（押せる・選んでいる・次に押す・今のステップ・いま動いている通常の通信）
+ *   赤 --alert  : 危険（攻撃者・書き換えられた値・注意書き・攻撃者が関わる通信）
+ *   緑 --ok     : 正規・確か（中央監視など正規の側、「規格・公式資料」のバッジ）
+ *   黄 --warn   : 要検証
+ *   灰          : 意味を持たせない。要求と返事は色でなく線の形（実線・点線）で見分ける
+ */
 :root {
   /* 設備図面の比喩でそろえる。紙・方眼・製図線・書き込み */
   --bg: #f4f6f8;
@@ -296,6 +304,10 @@ button:disabled {
   stroke-width: 3;
 }
 
+.react-flow__edge.link.is-active.is-danger .react-flow__edge-path {
+  stroke: var(--alert);
+}
+
 .node {
   position: relative;
   width: 224px;
@@ -356,11 +368,6 @@ button:disabled {
   color: var(--text);
 }
 
-.node__ip {
-  background: var(--accent-soft);
-  color: var(--accent);
-}
-
 .node__readout {
   position: absolute;
   top: calc(100% + 6px);
@@ -409,6 +416,12 @@ button:disabled {
 .node.is-speaking {
   border-color: var(--accent);
   box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+/* 攻撃者が関わる通信を喋っている（攻撃者に返事をしている機器も含む） */
+.node.is-speaking.is-danger {
+  border-color: var(--alert);
+  box-shadow: 0 0 0 3px var(--alert-soft);
 }
 
 .node--attacker.is-speaking {
@@ -489,12 +502,10 @@ button:disabled {
 .packet__bubble--fan {
   width: auto;
   padding: 4px 10px;
-  border-style: dashed;
 }
 
 .packet__bubble {
   transform: translate(-50%, -50%);
-  background: #f0f6ff;
   width: 260px;
   padding: 8px 12px;
   border-radius: 12px;
@@ -506,47 +517,14 @@ button:disabled {
   box-shadow: 0 8px 22px rgba(20, 32, 43, 0.16);
 }
 
-.packet--response .packet--fan {
-  z-index: 9;
-  opacity: 0;
-  animation-name: packet-fan;
-}
-
-/* 広がった先では、機器のラベルを隠さないよう着いたところで消える */
-@keyframes packet-fan {
-  0% {
-    transform: translate(var(--x0), var(--y0));
-    opacity: 0;
-  }
-  8% {
-    opacity: 1;
-  }
-  50% {
-    transform: translate(var(--x1), var(--y1));
-  }
-  80% {
-    opacity: 1;
-  }
-  100% {
-    transform: translate(var(--x2), var(--y2));
-    opacity: 0;
-  }
-}
-
-/* ブロードキャストの本体はネットワークに留まるので、ノードの上に重ねない */
-.packet--parked .packet__bubble {
-  transform: translate(-50%, -165%);
-}
-
-.packet__bubble--fan {
-  width: auto;
-  padding: 4px 10px;
+/* 返事は点線の枠で見分ける（要求と返事を色では分けない） */
+.packet--response .packet__bubble {
   border-style: dashed;
 }
 
-.packet__bubble {
-  border-color: var(--ok);
-  background: var(--bg-raise);
+/* 攻撃者が関わる通信は、要求も返事も赤 */
+.packet--danger .packet__bubble {
+  border-color: var(--alert);
 }
 
 .packet__plain {
@@ -605,7 +583,7 @@ button:disabled {
   font-size: 15px;
   color: var(--text-strong);
   padding-left: 12px;
-  border-left: 3px solid var(--accent);
+  border-left: 3px solid var(--line-strong);
 }
 
 .steppanel__body {
@@ -734,7 +712,11 @@ button:disabled {
 }
 
 .stagebar__message--response {
-  border-left-color: var(--ok);
+  border-left-style: dashed;
+}
+
+.stagebar__message--danger {
+  border-left-color: var(--alert);
 }
 
 .stagebar__head {
@@ -753,21 +735,6 @@ button:disabled {
 .stagebar__meta {
   font-size: 11px;
   color: var(--muted);
-}
-
-.stagebar__count {
-  font-family: var(--mono);
-  font-size: 11px;
-  padding: 1px 7px;
-  border-radius: 999px;
-  background: var(--bg-raise);
-  color: var(--text);
-  white-space: nowrap;
-}
-
-.stagebar__count.is-review {
-  background: var(--accent-soft);
-  color: var(--accent);
 }
 
 .stagebar__plain {
@@ -800,7 +767,19 @@ button:disabled {
   gap: 10px;
   align-items: baseline;
   padding: 2px 0 2px 8px;
-  border-left: 2px solid var(--ok);
+  border-left: 2px solid var(--accent);
+}
+
+.stagebar__message--response .stagebar__row {
+  border-left-style: dashed;
+}
+
+.stagebar__message--danger .stagebar__row {
+  border-left-color: var(--alert);
+}
+
+.stagebar__message--danger .stagebar__together {
+  color: var(--alert);
 }
 
 .stagebar__who {
@@ -823,22 +802,22 @@ button:disabled {
 
 .stagebar__value {
   font-size: 11px;
-  color: var(--accent);
+  color: var(--text-strong);
 }
 
 .stagebar__frame {
   margin-left: 8px;
   padding: 0 6px;
   border-radius: 4px;
-  background: #eef6ee;
-  color: #3d6b3d;
+  background: #eef2f6;
+  color: var(--text);
   font-family: var(--mono);
   font-size: 10px;
 }
 
 .stagebar__protocol {
   font-size: 12px;
-  color: var(--accent);
+  color: var(--text-strong);
 }
 
 .stagebar__transport {
@@ -878,29 +857,6 @@ button:disabled {
   flex-direction: column;
   justify-content: center;
   gap: 8px;
-}
-
-.stagebar__toggle,
-.stagebar__next {
-  width: 100%;
-  padding: 10px 12px;
-  border-radius: 10px;
-  border: 1px solid var(--accent);
-  background: var(--accent-soft);
-  color: var(--text-strong);
-  font-size: 13px;
-  font-weight: 600;
-  text-align: center;
-}
-
-.stagebar__next {
-  font-size: 12px;
-}
-
-.stagebar__next:disabled {
-  opacity: 0.45;
-  border-color: var(--line);
-  background: transparent;
 }
 
 .stagebar__preview {
@@ -999,12 +955,13 @@ button:disabled {
   border-color: var(--accent);
 }
 
+/* 要求と返事は色でなく線の形で見分ける（要求は実線、返事は点線） */
 .track__item--request {
-  border-left: 3px solid var(--accent);
+  border-left: 3px solid var(--line-strong);
 }
 
 .track__item--response {
-  border-left: 3px solid var(--ok);
+  border-left: 3px dashed var(--line-strong);
 }
 
 .track__item.is-alert {
@@ -1022,7 +979,7 @@ button:disabled {
 .track__item.is-next {
   opacity: 1;
   background: #e8f1fe;
-  animation: next-chip 1.4s ease-in-out infinite;
+  animation: next-chip 2.4s ease-in-out infinite;
 }
 
 .track__item.is-next .track__no {
@@ -1038,7 +995,7 @@ button:disabled {
   50% {
     box-shadow:
       0 0 0 2px var(--accent),
-      0 0 0 7px rgba(31, 111, 235, 0.28);
+      0 0 0 5px rgba(31, 111, 235, 0.18);
   }
 }
 
@@ -1133,7 +1090,7 @@ button:disabled {
 .capture__filter {
   padding: 6px 10px;
   border-bottom: 1px solid var(--line);
-  background: #eef6ee;
+  background: var(--bg-soft);
   font-size: 11px;
   color: var(--muted);
 }
@@ -1194,7 +1151,7 @@ button:disabled {
 
 .capture__value {
   padding-left: 40px;
-  color: var(--accent);
+  color: var(--text-strong);
 }
 
 .capture__pending {

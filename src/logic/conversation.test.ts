@@ -5,7 +5,7 @@ import {
   NORMAL_CONVERSATION_ID,
 } from '../content/conversations'
 import { ipCapture, scRejectedCapture } from '../content/captures'
-import { diagramNodes, NETWORK_NODE_ID } from '../content/diagram'
+import { ATTACKER_ID, diagramNodes, NETWORK_NODE_ID } from '../content/diagram'
 import type { ConversationMessage } from '../domain/types'
 import { BROADCAST } from '../domain/types'
 import {
@@ -17,6 +17,7 @@ import {
   groupIndexOfMessage,
   highlightedFrames,
   IDLE_PLAYBACK,
+  involvesAttacker,
   landGroup,
   messageGroups,
   messagesUpToGroup,
@@ -234,5 +235,19 @@ describe('次に押すチップ', () => {
   it('最後のまとまりまで来たら、どれも光らせない', () => {
     const end = landGroup(playGroup(IDLE_PLAYBACK, last))
     expect(nextGroupIndex(normal, end)).toBeNull()
+  })
+})
+
+describe('危険な通信（攻撃者が関わる通信）', () => {
+  it('ふだんの会話には、攻撃者が関わる通信が 1 通もない', () => {
+    expect(normal.messages.some((m) => involvesAttacker(m, ATTACKER_ID))).toBe(
+      false,
+    )
+  })
+
+  it('攻撃の会話は、攻撃者が送るか攻撃者に届く通信だけでできている', () => {
+    for (const m of attack.messages) {
+      expect(involvesAttacker(m, ATTACKER_ID), m.id).toBe(true)
+    }
   })
 })

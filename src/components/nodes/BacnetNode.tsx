@@ -6,6 +6,8 @@ export type BacnetNodeData = {
   showIp: boolean
   /** いま喋っている（パケットの送信元）か */
   speaking: boolean
+  /** 喋っている通信が、攻撃者の関わる危険な通信か */
+  speakingDanger: boolean
   /** 値を表示する機器なら、その状態 */
   device: DeviceState | null
 }
@@ -22,11 +24,12 @@ const kindLabel: Record<NodeKind, string> = {
 
 /** 描画だけを担当する。表示するかどうかの判断はロジック層が済ませている */
 export function BacnetNode({ data }: NodeProps<BacnetFlowNode>) {
-  const { spec, showIp, speaking, device } = data
+  const { spec, showIp, speaking, speakingDanger, device } = data
   const classes = [
     'node',
     `node--${spec.kind}`,
     speaking ? 'is-speaking' : '',
+    speaking && speakingDanger ? 'is-danger' : '',
     device?.compromised ? 'is-compromised' : '',
   ]
     .filter(Boolean)

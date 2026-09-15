@@ -101,6 +101,14 @@ export function highlightedFrames(
   ])
 }
 
+/** 攻撃者が送った、または攻撃者に届く通信か（危険として赤で見せる） */
+export function involvesAttacker(
+  message: ConversationMessage,
+  attackerId: NodeId,
+): boolean {
+  return message.from === attackerId || message.to === attackerId
+}
+
 /** 次に押してほしいまとまりの index。飛んでいる最中や、最後まで来たときは null */
 export function nextGroupIndex(
   conversation: Conversation,
