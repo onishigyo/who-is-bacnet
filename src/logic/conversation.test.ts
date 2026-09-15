@@ -20,6 +20,7 @@ import {
   landGroup,
   messageGroups,
   messagesUpToGroup,
+  nextGroupIndex,
   playGroup,
   selectedMessages,
   speakersOf,
@@ -209,5 +210,29 @@ describe('答え合わせで光らせる行', () => {
   it('番号を持たないメッセージや、会話が無いときは何も光らせない', () => {
     expect(highlightedFrames(normal, normal.messages, ipCapture.id)).toEqual([])
     expect(highlightedFrames(null, written, ipCapture.id)).toEqual([])
+  })
+})
+
+describe('次に押すチップ', () => {
+  const last = messageGroups(normal).length - 1
+
+  it('会話を始める前は、どれも光らせない', () => {
+    expect(nextGroupIndex(normal, IDLE_PLAYBACK)).toBeNull()
+  })
+
+  it('飛んでいる最中は光らせず、着いたら次のまとまりを指す', () => {
+    const flying = playGroup(IDLE_PLAYBACK, 0)
+    expect(nextGroupIndex(normal, flying)).toBeNull()
+    expect(nextGroupIndex(normal, landGroup(flying))).toBe(1)
+  })
+
+  it('前のチップを押し直したら、その次を指す', () => {
+    const replay = landGroup(playGroup(playGroup(IDLE_PLAYBACK, 3), 1))
+    expect(nextGroupIndex(normal, replay)).toBe(2)
+  })
+
+  it('最後のまとまりまで来たら、どれも光らせない', () => {
+    const end = landGroup(playGroup(IDLE_PLAYBACK, last))
+    expect(nextGroupIndex(normal, end)).toBeNull()
   })
 })
