@@ -260,7 +260,7 @@ export function NetworkCanvas({
             <div key={`${flightKey}-${flight.message.id}`}>
               {flight.main && (
                 <div
-                  className={`packet packet--${flight.message.kind} ${
+                  className={`packet ${
                     flight.broadcasting ? 'packet--parked' : ''
                   } ${compact ? 'packet--compact' : ''} ${
                     flight.danger ? 'packet--danger' : ''

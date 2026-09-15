@@ -94,7 +94,7 @@ export function ConversationBar({ current, nodes, attackerId, idle }: Props) {
   return (
     <section className="stagebar" aria-live="polite">
       <div
-        className={`stagebar__message stagebar__message--${first.kind} ${
+        className={`stagebar__message ${
           involvesAttacker(first, attackerId) ? 'stagebar__message--danger' : ''
         }`}
       >

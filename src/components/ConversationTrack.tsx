@@ -68,7 +68,7 @@ export function ConversationTrack({
               <button
                 type="button"
                 ref={selected ? active : upNext ? next : null}
-                className={`track__item track__item--${first.kind} ${
+                className={`track__item ${
                   selected ? 'is-active' : ''
                 } ${upNext ? 'is-next' : ''} ${alert ? 'is-alert' : ''}`}
                 onClick={() => onSelect(index)}

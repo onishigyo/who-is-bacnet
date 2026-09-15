@@ -4,7 +4,8 @@
  *   赤 --alert  : 危険（攻撃者・書き換えられた値・注意書き・攻撃者が関わる通信）
  *   緑 --ok     : 正規・確か（中央監視など正規の側、「規格・公式資料」のバッジ）
  *   黄 --warn   : 要検証
- *   灰          : 意味を持たせない。要求と返事は色でなく線の形（実線・点線）で見分ける
+ *   灰          : 意味を持たせない
+ * 要求と返事は色でも線の形でも分けない（文言と「誰 → 誰」で分かる）
  */
 :root {
   /* 設備図面の比喩でそろえる。紙・方眼・製図線・書き込み */
@@ -517,11 +518,6 @@ button:disabled {
   box-shadow: 0 8px 22px rgba(20, 32, 43, 0.16);
 }
 
-/* 返事は点線の枠で見分ける（要求と返事を色では分けない） */
-.packet--response .packet__bubble {
-  border-style: dashed;
-}
-
 /* 攻撃者が関わる通信は、要求も返事も赤 */
 .packet--danger .packet__bubble {
   border-color: var(--alert);
@@ -711,10 +707,6 @@ button:disabled {
   scrollbar-color: var(--line-strong) transparent;
 }
 
-.stagebar__message--response {
-  border-left-style: dashed;
-}
-
 .stagebar__message--danger {
   border-left-color: var(--alert);
 }
@@ -768,10 +760,6 @@ button:disabled {
   align-items: baseline;
   padding: 2px 0 2px 8px;
   border-left: 2px solid var(--accent);
-}
-
-.stagebar__message--response .stagebar__row {
-  border-left-style: dashed;
 }
 
 .stagebar__message--danger .stagebar__row {
@@ -942,6 +930,7 @@ button:disabled {
   padding: 6px 10px;
   border-radius: 8px;
   border: 1px solid var(--line);
+  border-left: 3px solid var(--line-strong);
   background: var(--bg-soft);
   text-align: left;
   transition:
@@ -953,15 +942,6 @@ button:disabled {
 .track__item:hover {
   opacity: 1;
   border-color: var(--accent);
-}
-
-/* 要求と返事は色でなく線の形で見分ける（要求は実線、返事は点線） */
-.track__item--request {
-  border-left: 3px solid var(--line-strong);
-}
-
-.track__item--response {
-  border-left: 3px dashed var(--line-strong);
 }
 
 .track__item.is-alert {
