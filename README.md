@@ -35,6 +35,7 @@ main にマージすると GitHub Actions で自動ビルドされ、GitHub Page
 pnpm install
 pnpm dev           # Vite dev サーバ
 pnpm build         # 型チェック → バンドル
+pnpm preview       # ビルド結果を確認（http://localhost:4173/who-is-bacnet/）
 pnpm lint          # ESLint
 pnpm format:check  # Prettier（CI と同じ）
 pnpm test          # Vitest
