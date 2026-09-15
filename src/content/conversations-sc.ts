@@ -37,7 +37,7 @@ export const scConversations: Conversation[] = [
         transport: 'TCP → ハブ:47900',
         action: 'ハブに接続する',
         explain:
-          '空調コントローラがハブに繋ぎます。TCP で繋いだあと、TLS 1.3 のハンドシェイクで証明書を見せ合います。',
+          '空調コントローラがハブに繋ぎます。TCP で通り道を作ったあと、TLS という暗号化の仕組みで証明書を見せ合います。',
       },
       {
         id: 's2',
@@ -123,7 +123,7 @@ export const scConversations: Conversation[] = [
         transport: 'TCP → ハブ:47900（TLS 1.3 を開始）',
         action: 'ハブに接続を試みる',
         explain:
-          'IP 編と同じ PC が、ハブに繋ごうとします。TCP の 3way（265-267）までは誰でも通れます。',
+          'IP 編と同じ PC が、ハブに繋ごうとします。最初の通り道づくり（TCP、265-267）までは誰でも通れます。',
         annotation: 'IP 編では、この先で割り込めた',
       },
       {

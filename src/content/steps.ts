@@ -93,7 +93,7 @@ export const steps: StepContent[] = [
       {
         id: 'std-iam-broadcast',
         confidence: 'standard',
-        text: 'I-Am は以前はブロードキャストで返す決まりでしたが、Addendum 135-2008q でユニキャストでもよくなりました。この図も制作者の実験も、尋ねた相手へユニキャストで返しています。',
+        text: 'I-Am は以前は全員に向けて（ブロードキャストで）返す決まりでしたが、Addendum 135-2008q で、尋ねた相手だけに返してもよくなりました。この図も制作者の実験も、尋ねた相手だけに返しています。',
         source: 'ANSI/ASHRAE Addendum q to Standard 135-2008',
       },
     ],
@@ -104,7 +104,7 @@ export const steps: StepContent[] = [
     chapter: 'IP 編',
     world: 'ip',
     navLabel: '危険性',
-    title: '危険性 ── 話し手が変わるだけ',
+    title: '危険性 ── 誰が送っても通ってしまう',
     lead: '同じ LAN に現れた誰かが、中央監視とまったく同じ言葉で割り込める。',
     paragraphs: [
       '持ち込まれた PC が 1 台つながりました。やることはステップ3と同じ ── 探して、読んで、書く。違うのは話し手だけです。それでも機器は同じように応じます。',
@@ -146,15 +146,15 @@ export const steps: StepContent[] = [
     title: 'BACnet/SC ── 参加に証明書が要る',
     lead: '同じ LAN にいるだけでは、もう入れない。証明書を持つ機器だけが、ハブを通して会話する。',
     paragraphs: [
-      'IP 編の「無認証・丸見え」に、規格が出した答えが BACnet/SC（Secure Connect）です。真ん中にハブがあり、証明書を持つ機器が ── 中央監視も含めて ── それぞれハブに繋ぎます。',
-      '繋ぎ方は Web と同じ仕組みです。機器は TLS で暗号化した WebSocket（wss）でハブに繋ぎ、証明書を見せ合います。そのあとのやり取りは、すべて暗号化されます。',
+      'IP 編で見た「同じ LAN にいれば誰でも操作できて、中身も丸見え」という問題に、規格が出した答えが BACnet/SC（Secure Connect）です。真ん中にハブがあり、証明書を持つ機器が ── 中央監視も含めて ── それぞれハブに繋ぎます。',
+      '暗号化には、Web サイトの https と同じ TLS という仕組みを使います。機器はハブに繋ぐときに証明書を見せ合い、そのあとのやり取りはすべて暗号化されます。',
       '図の下の「会話を始める」を押すと、機器がハブに参加し、中央監視が設定温度を読み書きする流れが並びます。',
     ],
     notes: [
       {
         id: 'sc-std-topology',
         confidence: 'standard',
-        text: 'BACnet/SC では、各機器がハブに wss で繋ぎ、基本はハブが機器どうしのメッセージを中継します。通信は TLS 1.3 で暗号化され、機器とハブは X.509 証明書で互いを確かめます。',
+        text: 'BACnet/SC では、各機器がハブに暗号化した接続（wss）で繋ぎ、基本はハブが機器どうしのメッセージを中継します。通信は TLS 1.3 で暗号化され、機器とハブは X.509 証明書で互いを確かめます。',
         source:
           'ANSI/ASHRAE Standard 135-2020 Annex AB / ASHRAE BACnet/SC ホワイトペーパー',
       },
@@ -175,7 +175,7 @@ export const steps: StepContent[] = [
       {
         id: 'sc-std-handshake',
         confidence: 'standard',
-        text: 'ハブへの接続は 3 段階です。TCP の 3way ハンドシェイク → TLS のハンドシェイク（証明書の確認と暗号化）→ WebSocket への切り替え。3way は TCP の言葉で、TLS のハンドシェイクとは別物です。',
+        text: 'ハブへの接続は 3 段階です。① TCP で通り道を作る（3way ハンドシェイク）② TLS で証明書を確かめて暗号化する ③ WebSocket に切り替えて BACnet を流す。①の 3way は TCP の言葉で、②の TLS のあいさつとは別物です。',
         source: 'RFC 9293（TCP）/ RFC 8446（TLS 1.3）/ RFC 6455（WebSocket）',
       },
     ],
@@ -204,7 +204,7 @@ export const steps: StepContent[] = [
       {
         id: 'sc-std-tls13',
         confidence: 'standard',
-        text: 'TLS 1.3 で証明書を求められた側が証明書を持っていなければ、空の証明書を返します。求めた側は、certificate_required の Alert を送って打ち切れます。暗号化されたレコードは、中身が Alert でも外からは Application Data に見えます。',
+        text: 'TLS 1.3 で証明書を求められた側が証明書を持っていなければ、空の証明書を返します。求めた側は、certificate_required の Alert を送って打ち切れます。暗号化されたデータは、中身が Alert でも外からは Application Data に見えます。',
         source: 'RFC 8446（TLS 1.3）4.4.2 / 4.4.2.4 / 5.2',
       },
       {
@@ -220,18 +220,18 @@ export const steps: StepContent[] = [
     chapter: 'SC 編',
     world: 'sc',
     navLabel: 'SC の限界',
-    title: 'SC の限界 ── 銀の弾丸ではない',
-    lead: '証明書は入り口を固める。でも、それだけで建物すべてを守れるわけではない。',
+    title: 'SC の限界 ── これだけで安全とは限らない',
+    lead: '証明書で入り口は固くなる。それでも残る課題がある。',
     paragraphs: [
-      'SC は IP 編の問題に正面から答えますが、万能ではありません。たとえば、証明書を扱えない既存の機器は SC に参加できません。SC と BACnet/IP が混ざる建物では、その境目が弱点になるかもしれません。',
-      '証明書も、持っているだけでは守れません。正しく発行し、期限を管理して、はじめて役に立ちます。',
+      'まず、既存の機器。SC に対応していない機器は、ハブに参加できません。SC と BACnet/IP が混ざる建物では、その境目が弱点になるかもしれません。',
+      '次に、運用。証明書は持っているだけでは守れません。正しく発行し、期限を管理して、はじめて役に立ちます。',
       'この教材は、実務者が学んだ内容をまとめたものです。最後は、規格（ANSI/ASHRAE 135）と実機の仕様で確かめてください。',
     ],
     notes: [
       {
         id: 'sc-std-backward',
         confidence: 'standard',
-        text: 'BACnet/SC は BACnet の通信方式（データリンク）の一つです。BACnet ルータを介して、BACnet/IP や MS/TP のネットワークとつなげられます。',
+        text: 'BACnet/SC は、BACnet/IP と同じく BACnet の運び方の一つです。BACnet ルータを介して、BACnet/IP など従来のネットワークとつなげられます。',
         source:
           'ANSI/ASHRAE Standard 135-2020 Annex AB / ASHRAE BACnet/SC ホワイトペーパー',
       },

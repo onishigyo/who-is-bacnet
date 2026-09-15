@@ -66,7 +66,7 @@ export const scDiagramNodes: DiagramNodeSpec[] = [
     id: SC_HUB_ID,
     kind: 'hub',
     label: 'SC ハブ',
-    sublabel: '証明書を確かめて参加を通す（wss / TLS 1.3）',
+    sublabel: '証明書を確かめて参加を通す',
     appearsAt: 5,
     position: { x: 375, y: 200 },
   },
