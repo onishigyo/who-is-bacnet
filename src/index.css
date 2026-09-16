@@ -1175,7 +1175,8 @@ button:disabled {
   align-items: center;
   gap: 8px;
   max-width: 230px;
-  padding: 6px 10px;
+  /* 上を広めに（「次はこれ」の札が文字にかからないように） */
+  padding: 9px 10px 6px;
   border-radius: 8px;
   border: 1px solid var(--line);
   border-left: 3px solid var(--line-strong);
@@ -1221,10 +1222,14 @@ button:disabled {
   font-weight: 700;
 }
 
+/*
+ * 右上に置く（バッジの定位置）。札の下端がチップの文字にかからないよう、
+ * 上へ持ち上げ、チップ側も上の余白を広めにとっている
+ */
 .track__next-tag {
   position: absolute;
-  top: -9px;
-  left: 8px;
+  top: -11px;
+  right: 8px;
   padding: 0 6px;
   border-radius: 999px;
   background: var(--accent);
