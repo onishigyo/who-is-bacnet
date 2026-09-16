@@ -1,23 +1,24 @@
 import type { DiagramEdgeSpec, DiagramNodeSpec, NodeId } from '../domain/types'
 import { AHU_DEVICE_INSTANCE, AHU_ID, SUPERVISOR_ID } from './diagram'
-import { LIGHTING_ID, METER_ID, SWITCH_A_ID, SWITCH_B_ID } from './diagram-bbmd'
+import { LIGHTING_ID, METER_ID } from './diagram-bbmd'
 
 /**
- * BBMD の読み物の 3 枚目。建物もサブネットの分かれ方も diagram-bbmd.ts と
- * まったく同じで、真ん中にいるものだけが違う。
+ * BBMD の読み物の 3 枚目。建物もサブネットの分かれ方も、2 枚目とまったく
+ * 同じ（機器の IP を見れば 192.168.10.x と 192.168.20.x に分かれている）。
+ * 違うのは、図から何が消えるか。
  *
- *   [中央監視][照明] ── L2SW ─┐         ┌─ L2SW ── [空調][電力計]
- *                            └─ SC ハブ ─┘
+ *   [中央監視][照明]            [空調][電力計]
+ *          \\      \\          /      /
+ *              \\    [SC ハブ]    /
  *
- * BBMD が 2 台と BDT の設定だったところが、ハブ 1 つになる。各機器は
- * サブネットに関係なくハブへ繋ぎにいくので、ブロードキャストを転送する
- * 仕掛けそのものが要らなくなる ── それを、BBMD ありの図と同じ位置・
- * 同じ機器で見比べられるようにしている。
+ * この教材では、どの図にも「その世界で通信の届き方を決めるもの」だけを
+ * 描いている。BACnet/IP では届き方を L2 スイッチとルータが決めるので
+ * 描く（diagram.ts / diagram-bbmd.ts）。BACnet/SC ではハブとの接続が
+ * 決めるので、ハブだけを描く（diagram-sc.ts と同じ）。
  *
- * BBMD の図にいた IP ルータは、ここでは描かない。ハブへの接続は
- * ふつうの TCP 接続で、ルータがあってもそのまま通る ── BACnet の側で
- * ルータを気にしなくてよくなること自体が、この図で見せたいことなので、
- * その旨を線の札に書いている。
+ * だから 2 枚目にあった L2 スイッチ 2 台・IP ルータ・BBMD 2 台が、ここでは
+ * まるごと消える。配線が無くなったのではなく、BACnet の側で気にしなくて
+ * よくなった ── それが絵の差としてそのまま出るようにしている。
  */
 export const BBMD_SC_HUB_ID: NodeId = 'bbmd-sc-hub'
 
@@ -48,14 +49,6 @@ export const bbmdScDiagramNodes: DiagramNodeSpec[] = [
     position: { x: 250, y: 0 },
   },
   {
-    id: SWITCH_A_ID,
-    kind: 'switch',
-    label: 'L2 スイッチ',
-    sublabel: 'サブネット A',
-    appearsAt: BBMD_SC,
-    position: { x: 125, y: 180 },
-  },
-  {
     id: AHU_ID,
     kind: 'controller',
     label: '空調コントローラ',
@@ -78,60 +71,39 @@ export const bbmdScDiagramNodes: DiagramNodeSpec[] = [
     position: { x: 900, y: 0 },
   },
   {
-    id: SWITCH_B_ID,
-    kind: 'switch',
-    label: 'L2 スイッチ',
-    sublabel: 'サブネット B',
-    appearsAt: BBMD_SC,
-    position: { x: 775, y: 180 },
-  },
-  {
     id: BBMD_SC_HUB_ID,
     kind: 'hub',
     label: 'SC ハブ',
     sublabel: 'サブネットに関係なく、ここへ繋ぐ',
     appearsAt: BBMD_SC,
-    position: { x: 450, y: 360 },
+    position: { x: 450, y: 240 },
   },
 ]
 
 export const bbmdScDiagramEdges: DiagramEdgeSpec[] = [
   {
-    id: 'bsc-supervisor-sw',
+    id: 'bsc-supervisor-hub',
     source: SUPERVISOR_ID,
-    target: SWITCH_A_ID,
+    target: BBMD_SC_HUB_ID,
     appearsAt: BBMD_SC,
   },
   {
-    id: 'bsc-lighting-sw',
+    id: 'bsc-lighting-hub',
     source: LIGHTING_ID,
-    target: SWITCH_A_ID,
+    target: BBMD_SC_HUB_ID,
     appearsAt: BBMD_SC,
   },
   {
-    id: 'bsc-ahu-sw',
+    id: 'bsc-ahu-hub',
     source: AHU_ID,
-    target: SWITCH_B_ID,
+    target: BBMD_SC_HUB_ID,
     appearsAt: BBMD_SC,
+    label: 'サブネットが違っても、同じように繋ぐ',
   },
   {
-    id: 'bsc-meter-sw',
+    id: 'bsc-meter-hub',
     source: METER_ID,
-    target: SWITCH_B_ID,
-    appearsAt: BBMD_SC,
-  },
-  {
-    id: 'bsc-sw-a-hub',
-    source: SWITCH_A_ID,
     target: BBMD_SC_HUB_ID,
     appearsAt: BBMD_SC,
-    label: 'ルータ越しでも、そのままハブへ',
-  },
-  {
-    id: 'bsc-sw-b-hub',
-    source: SWITCH_B_ID,
-    target: BBMD_SC_HUB_ID,
-    appearsAt: BBMD_SC,
-    label: 'ルータ越しでも、そのままハブへ',
   },
 ]

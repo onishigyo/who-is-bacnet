@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest'
+import { conversations } from '../content/conversations'
 import { bbmdConversations } from '../content/conversations-bbmd'
+import { scConversations } from '../content/conversations-sc'
+import { BROADCAST } from '../domain/types'
 import { extras } from '../content/extras'
 import { worlds } from '../content/worlds'
 import { conversationById } from './conversation'
@@ -67,5 +70,41 @@ describe('読み物の場面', () => {
     // SC なら BBMD は消え、代わりにハブが真ん中に来る
     expect(kindsAt(2).has('bbmd')).toBe(false)
     expect(kindsAt(2).has('hub')).toBe(true)
+  })
+})
+
+/**
+ * I-Am の返し方は、教材の中で 1 つに揃っていなければならない。
+ * ステップ3 の注記どおり「尋ねた相手だけに返す」（Addendum 135-2008q、
+ * 実験キャプチャ 551 行も 1 対 1）。読み物だけ別の返し方にしてしまうと、
+ * 読んだ人が「どっちが正しいの」となる。
+ */
+describe('I-Am の返し方が、どの画面でも同じ', () => {
+  const everyConversation = [
+    ...conversations,
+    ...scConversations,
+    ...bbmdConversations,
+  ]
+
+  it('I-Am は必ず、尋ねた相手 1 台へのユニキャストで返す', () => {
+    const iAm = everyConversation
+      .flatMap((conversation) => conversation.messages)
+      .filter((message) => message.protocol.toLowerCase().includes('i-am'))
+
+    expect(iAm.length).toBeGreaterThan(0)
+    for (const message of iAm) {
+      expect(message.to).not.toBe(BROADCAST)
+    }
+  })
+
+  it('Who-Is は逆に、必ずブロードキャストで出す', () => {
+    const whoIs = everyConversation
+      .flatMap((conversation) => conversation.messages)
+      .filter((message) => message.protocol.toLowerCase().includes('who-is'))
+
+    expect(whoIs.length).toBeGreaterThan(0)
+    for (const message of whoIs) {
+      expect(message.to).toBe(BROADCAST)
+    }
   })
 })

@@ -16,8 +16,12 @@ export const BBMD_SC_CONVERSATION_ID = 'bbmd-sc'
  *   ② それを受け取った BBMD が、BDT に載っている相手 BBMD へ
  *      ユニキャスト（Forwarded-NPDU）で転送する
  *   ③ 受け取った側の BBMD が、自分のサブネットにブロードキャストし直す
- * 行きの Who-Is も、帰りの I-Am も、同じ 3 手を踏む。1 本の矢印で
- * 「境界を越えて届いた」と単純化しないことが、この番外編の要点。
+ * 1 本の矢印で「境界を越えて届いた」と単純化しないことが要点。
+ *
+ * 帰りの I-Am はこの 3 手を踏まない。尋ねた相手だけに返すユニキャスト
+ * なので（ステップ 3 の注記・実験キャプチャと同じ）、ルータをそのまま
+ * 通って戻る。行きだけが BBMD を必要とする、という非対称がそのまま図に
+ * 出るようにしている。ここを本編と食い違わせない。
  */
 export const bbmdConversations: Conversation[] = [
   {
@@ -96,39 +100,15 @@ export const bbmdConversations: Conversation[] = [
       {
         id: 'ba4',
         from: AHU_ID,
-        to: BROADCAST,
+        to: SUPERVISOR_ID,
         kind: 'response',
         plain: 'はい、空調コントローラです',
         protocol: 'Unconfirmed-REQ i-Am',
-        transport: '192.168.20.255（サブネット B のブロードキャスト）',
+        transport: '192.168.20.31 → 192.168.10.10（ユニキャスト）',
         action: '名乗って返す',
         explain:
-          '空調コントローラが名乗ります。I-Am もブロードキャストなので、これはサブネット B の中に広がります。ここでも BBMD B が受け取ります。',
-      },
-      {
-        id: 'ba5',
-        from: BBMD_B_ID,
-        to: BBMD_A_ID,
-        kind: 'response',
-        plain: '（この返事を、そちらに転送します）',
-        protocol: 'BVLC Forwarded-NPDU',
-        transport: '192.168.20.9 → 192.168.10.9（ユニキャスト）',
-        action: '相手の BBMD へ転送する',
-        explain:
-          '帰りもまったく同じ仕組みです。BBMD B が BDT に従って、BBMD A へユニキャストで転送します。経路も行きと同じで、ルータを通って戻ります。',
-      },
-      {
-        id: 'ba6',
-        from: BBMD_A_ID,
-        to: BROADCAST,
-        kind: 'response',
-        plain: '（預かった返事を、こちらで配ります）',
-        protocol: 'Unconfirmed-REQ i-Am',
-        transport: '192.168.10.255（サブネット A のブロードキャスト）',
-        action: '自分のサブネットに配り直す',
-        explain:
-          'BBMD A がサブネット A に配り直し、中央監視にようやく返事が届きます。BBMD を 2 台置いて互いを登録しておくだけで、サブネットが分かれていても、中央監視はいつもどおり機器を見つけられるようになりました。',
-        annotation: '中央監視も空調も、設定は何も変えていない',
+          '空調コントローラが名乗ります。返す相手は、呼びかけを送ってきた中央監視 1 台だけ（ステップ 3 と同じで、制作者の実験でもそうでした）。つまり帰りはユニキャストなので、BBMD を通る必要がありません。図のとおり、ルータをそのまま通って中央監視へ戻ります。',
+        annotation: 'BBMD が要るのは行きだけ。帰りはふつうに routed で戻る',
       },
     ],
   },
@@ -147,7 +127,7 @@ export const bbmdConversations: Conversation[] = [
         action: '全員に呼びかける',
         encrypted: true,
         explain:
-          '機器はサブネットに関係なく、それぞれハブへ繋いでいます。だから呼びかけはハブから全員に配られ、サブネット B の空調コントローラにもそのまま届きます。BBMD も、BDT の設定も出てきません。',
+          '機器はサブネットに関係なく、それぞれハブへ繋いでいます。だから呼びかけはハブから全員に配られ、サブネット B の空調コントローラと電力計にもそのまま届きます。BBMD も、BDT の設定も、それを置くためのルータの扱いも出てきません。',
         annotation: '転送する仕掛けを、置く必要がない',
       },
       {
@@ -161,7 +141,7 @@ export const bbmdConversations: Conversation[] = [
         action: '名乗って返す',
         encrypted: true,
         explain:
-          '返事もハブを通って戻ります。BBMD ありの図では、行きも帰りも「配る → ユニキャストで転送 → 配り直す」の 3 手を踏んでいました。ここでは、その転送と配り直しがまるごと無くなっています。',
+          '返事もハブを通って戻ります。BBMD ありの図では、行きの呼びかけだけが「配る → BBMD が転送 → 配り直す」の 3 手を踏んでいました。ここではその 3 手がまるごと無くなり、行きも帰りも 1 手です。サブネットが分かれていること自体を、BACnet の側で気にしなくてよくなりました。',
       },
     ],
   },
