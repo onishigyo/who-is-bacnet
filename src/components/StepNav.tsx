@@ -19,8 +19,11 @@ interface Props {
 /**
  * ステップの pill を 1 行に並べる。数が多いので横スクロールで逃がす。
  * 進む／戻るボタンは置かない（pill を直接押して移動する）。
- * 末尾に番外編のドロップダウンを置く。本編の pill はそのまま常時押せる
- * ので、番外編にいてもいつでも戻れる。
+ *
+ * 番外編のドロップダウンは、横スクロールする pill 列の「外」に置く。
+ * 列の中に入れると、幅が足りない画面では最初から見えず、入り口の存在に
+ * 気づけないため。本編の pill はそのまま常時押せるので、番外編にいても
+ * いつでも戻れる。
  */
 export function StepNav({
   steps,
@@ -58,33 +61,33 @@ export function StepNav({
             </li>
           )
         })}
-
-        {extras.length > 0 && (
-          <li className="stepnav__item">
-            <span className="stepnav__chapter">番外編</span>
-            <select
-              className={`stepnav__extra ${
-                activeExtra !== null ? 'is-active' : ''
-              }`}
-              aria-label="番外編を選ぶ"
-              value={activeExtra ?? ''}
-              onChange={(event) => {
-                const id = event.target.value as ExtraId | ''
-                if (id) onSelectExtra(id)
-              }}
-            >
-              <option value="" disabled>
-                番外編を選ぶ
-              </option>
-              {extras.map((extra) => (
-                <option key={extra.id} value={extra.id}>
-                  {extra.navLabel}
-                </option>
-              ))}
-            </select>
-          </li>
-        )}
       </ol>
+
+      {extras.length > 0 && (
+        <div className="stepnav__aside">
+          <span className="stepnav__chapter">番外編</span>
+          <select
+            className={`stepnav__extra ${
+              activeExtra !== null ? 'is-active' : ''
+            }`}
+            aria-label="番外編を選ぶ"
+            value={activeExtra ?? ''}
+            onChange={(event) => {
+              const id = event.target.value as ExtraId | ''
+              if (id) onSelectExtra(id)
+            }}
+          >
+            <option value="" disabled>
+              選ぶ
+            </option>
+            {extras.map((extra) => (
+              <option key={extra.id} value={extra.id}>
+                {extra.navLabel}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
     </nav>
   )
 }
