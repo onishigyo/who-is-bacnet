@@ -112,7 +112,12 @@ export function NetworkCanvas({
   const flights = useMemo(
     () =>
       inFlight.map((message) => {
-        const relayNode = relayNodeFor(message, diagram.nodes, networkNodeId)
+        const relayNode = relayNodeFor(
+          message,
+          diagram.nodes,
+          diagram.edges,
+          networkNodeId,
+        )
         const path = flightPath(message, relayNode)
         const fanOut = isBroadcast(message.to)
           ? broadcastTargets(

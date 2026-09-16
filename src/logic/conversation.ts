@@ -5,16 +5,23 @@ import type {
   DiagramNodeSpec,
   MessageTarget,
   NodeId,
+  NodeKind,
   PlaybackState,
 } from '../domain/types'
 import { BROADCAST } from '../domain/types'
 
-/** ブロードキャストを中継するだけで、話し相手にはならない種類のノード */
-const RELAY_KINDS = new Set<DiagramNodeSpec['kind']>([
-  'switch',
-  'hub',
-  'router',
-])
+/**
+ * ブロードキャストをそのまま広げる中継。ここを通った先も同じ区画
+ * （ブロードキャストドメイン）で、呼びかけは届く
+ */
+const SPREADING_KINDS = new Set<NodeKind>(['switch', 'hub'])
+
+/**
+ * ブロードキャストがそこで止まる境界。受け取りはするが、その先へは
+ * 流さない。越えさせたければ、別のメッセージとして描く
+ * （BBMD のユニキャスト転送がまさにそれ）
+ */
+const BOUNDARY_KINDS = new Set<NodeKind>(['router', 'bbmd'])
 
 export const IDLE_PLAYBACK: PlaybackState = {
   selected: null,
@@ -142,21 +149,41 @@ export function isBroadcast(target: MessageTarget): boolean {
   return target === BROADCAST
 }
 
+/** 配線（エッジ）から、双方向の隣接リストを作る */
+function neighborsOf(edges: DiagramEdgeSpec[]): Map<NodeId, NodeId[]> {
+  const neighbors = new Map<NodeId, NodeId[]>()
+  const link = (a: NodeId, b: NodeId) => {
+    neighbors.set(a, [...(neighbors.get(a) ?? []), b])
+  }
+  for (const edge of edges) {
+    link(edge.source, edge.target)
+    link(edge.target, edge.source)
+  }
+  return neighbors
+}
+
 /**
- * そのメッセージにとっての、ブロードキャストの中継点。送信元がすでに
- * 中継点自身（switch/hub/router）なら、その送信元が中継点になる ── BBMD
- * 編で「転送を受け取った側の区画に配り直す」ときのように、中継点どうしが
- * 線でつながる図では、world 固定の中継点と実際の送り主が別になりうるため。
- * それ以外（送信元が機器）では、world 固定の networkNodeId を使う
- * （IP 編・SC 編のスター型と同じ動き）。
+ * そのメッセージにとっての、ブロードキャストの出発点になる中継。
+ * 送信元が中継そのもの（スイッチ・ハブ）ならそれ自身、そうでなければ
+ * 送信元の隣にいる中継を使う。BBMD のように機器が中継の先にぶら下がる
+ * 図では、world 固定の networkNodeId と実際の出発点が別になりうるため、
+ * 配線から求める。隣に中継がいなければ world 固定の中継点に落とす。
  */
 export function relayNodeFor(
   message: ConversationMessage,
   nodes: Pick<DiagramNodeSpec, 'id' | 'kind'>[],
+  edges: DiagramEdgeSpec[],
   networkNodeId: NodeId,
 ): NodeId {
-  const fromKind = nodes.find((node) => node.id === message.from)?.kind
-  return fromKind && RELAY_KINDS.has(fromKind) ? message.from : networkNodeId
+  const kindOf = new Map(nodes.map((node) => [node.id, node.kind]))
+  const spreads = (id: NodeId) => {
+    const kind = kindOf.get(id)
+    return kind !== undefined && SPREADING_KINDS.has(kind)
+  }
+
+  if (spreads(message.from)) return message.from
+  const adjacent = neighborsOf(edges).get(message.from) ?? []
+  return adjacent.find(spreads) ?? networkNodeId
 }
 
 /**
@@ -174,11 +201,11 @@ export function flightPath(
 }
 
 /**
- * ブロードキャストが、ネットワークから先どこへ広がるか。
- * その中継点（スイッチ/ハブ/ルータ）に直接つながる「機器」だけに届く。
- * 送信元と、ほかの中継点（BBMD 番外編のように中継点どうしが線でつながる
- * 図では、その先の中継点）は含まない ── ブロードキャストは 1 区画の中で
- * しか広がらず、区画をまたぐ中継は別のメッセージとして描くため。
+ * ブロードキャストが、その区画のどこまで広がるか。
+ * 中継点から配線をたどり、スイッチ・ハブは通り抜けて（同じ区画なので）、
+ * 機器と境界（ルータ・BBMD）に届いたらそこで止める。境界自身は「受け取る
+ * 相手」として返す ── BBMD がブロードキャストを受け取ることが、番外編で
+ * 見せたい当のことだから。境界の先へは広げない。
  */
 export function broadcastTargets(
   nodes: Pick<DiagramNodeSpec, 'id' | 'kind'>[],
@@ -187,13 +214,34 @@ export function broadcastTargets(
   networkId: NodeId,
 ): NodeId[] {
   const kindOf = new Map(nodes.map((node) => [node.id, node.kind]))
-  const directNeighbors = edges
-    .filter((edge) => edge.source === networkId || edge.target === networkId)
-    .map((edge) => (edge.source === networkId ? edge.target : edge.source))
+  const neighbors = neighborsOf(edges)
 
-  return directNeighbors.filter(
-    (id) => id !== from && !RELAY_KINDS.has(kindOf.get(id)!),
-  )
+  const targets: NodeId[] = []
+  const seen = new Set<NodeId>([networkId])
+  let frontier: NodeId[] = [networkId]
+  while (frontier.length > 0) {
+    const next: NodeId[] = []
+    for (const node of frontier) {
+      for (const neighbor of neighbors.get(node) ?? []) {
+        if (seen.has(neighbor)) continue
+        seen.add(neighbor)
+        const kind = kindOf.get(neighbor)
+        // スイッチ・ハブの先も同じ区画。通り抜けて先を見る
+        if (kind !== undefined && SPREADING_KINDS.has(kind)) {
+          next.push(neighbor)
+          continue
+        }
+        if (neighbor !== from) targets.push(neighbor)
+      }
+    }
+    frontier = next
+  }
+  return targets
+}
+
+/** ブロードキャストをそこで止める境界のノードか（説明・テスト用） */
+export function isBroadcastBoundary(kind: NodeKind): boolean {
+  return BOUNDARY_KINDS.has(kind)
 }
 
 /** そのステップの会話に登場する話し手（図の強調に使う） */

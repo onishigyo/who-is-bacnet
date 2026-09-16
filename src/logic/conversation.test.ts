@@ -194,18 +194,41 @@ describe('実効的な中継点（relayNodeFor）', () => {
     ...over,
   })
 
-  it('送信元が機器なら、world 固定の中継点を使う（IP 編・SC 編のスター型）', () => {
+  it('送信元が機器なら、その隣のスイッチが中継点になる（IP 編・SC 編のスター型）', () => {
     expect(
-      relayNodeFor(msg({ from: 'supervisor' }), diagramNodes, NETWORK_NODE_ID),
+      relayNodeFor(
+        msg({ from: 'supervisor' }),
+        diagramNodes,
+        diagramEdges,
+        NETWORK_NODE_ID,
+      ),
     ).toBe(NETWORK_NODE_ID)
   })
 
-  it('送信元がすでに中継点自身（switch/hub/router）なら、その送信元が中継点になる', () => {
+  it('送信元がスイッチ自身なら、その送信元が中継点になる', () => {
     const nodes = [
       { id: 'netA', kind: 'switch' as const },
       { id: 'netB', kind: 'switch' as const },
     ]
-    expect(relayNodeFor(msg({ from: 'netB' }), nodes, 'netA')).toBe('netB')
+    expect(relayNodeFor(msg({ from: 'netB' }), nodes, [], 'netA')).toBe('netB')
+  })
+
+  it('送信元が BBMD なら、その隣のスイッチが中継点になる（BBMD はスイッチの先にぶら下がる）', () => {
+    const nodes = [
+      { id: 'swA', kind: 'switch' as const },
+      { id: 'bbmdA', kind: 'bbmd' as const },
+      { id: 'swB', kind: 'switch' as const },
+      { id: 'bbmdB', kind: 'bbmd' as const },
+    ]
+    const edges = [
+      { id: 'e1', source: 'swA', target: 'bbmdA', appearsAt: 1 as const },
+      { id: 'e2', source: 'bbmdA', target: 'bbmdB', appearsAt: 1 as const },
+      { id: 'e3', source: 'bbmdB', target: 'swB', appearsAt: 1 as const },
+    ]
+    // 転送を受け取った BBMD B が配り直すときは、B 側のスイッチから広がる
+    expect(relayNodeFor(msg({ from: 'bbmdB' }), nodes, edges, 'swA')).toBe(
+      'swB',
+    )
   })
 
   it('話し手を重複なく取り出せる', () => {
@@ -241,7 +264,7 @@ describe('ブロードキャストの広がり', () => {
     expect(targets).not.toContain(NETWORK_NODE_ID)
   })
 
-  it('中継点に直接つながっていないノードには広がらない', () => {
+  it('配線がつながっていないノードには広がらない', () => {
     const nodes = [
       { id: 'a', kind: 'controller' as const },
       { id: 'net', kind: 'switch' as const },
@@ -256,22 +279,64 @@ describe('ブロードキャストの広がり', () => {
     expect(broadcastTargets(nodes, edges, 'a', 'net')).toEqual(['b'])
   })
 
-  it('中継点どうしが線でつながっていても、その先の中継点自体には広がらない（区画をまたがない）', () => {
-    // BBMD 番外編のような、2 つの中継点（サブネットの境）が線でつながる図
+  describe('サブネットが 2 つに分かれた図（BBMD 番外編）', () => {
+    // 機器 ─ L2SW-A ─ BBMD-A ─ BBMD-B ─ L2SW-B ─ 機器
     const nodes = [
       { id: 'supervisor', kind: 'supervisor' as const },
-      { id: 'netA', kind: 'switch' as const },
-      { id: 'netB', kind: 'switch' as const },
+      { id: 'lighting', kind: 'controller' as const },
+      { id: 'swA', kind: 'switch' as const },
+      { id: 'bbmdA', kind: 'bbmd' as const },
+      { id: 'bbmdB', kind: 'bbmd' as const },
+      { id: 'swB', kind: 'switch' as const },
       { id: 'ahu', kind: 'controller' as const },
+      { id: 'meter', kind: 'controller' as const },
     ]
-    const edges = [
-      { id: 'e1', source: 'supervisor', target: 'netA', appearsAt: 1 as const },
-      { id: 'e2', source: 'netA', target: 'netB', appearsAt: 1 as const },
-      { id: 'e3', source: 'netB', target: 'ahu', appearsAt: 1 as const },
+    const wire = (id: string, source: string, target: string) => ({
+      id,
+      source,
+      target,
+      appearsAt: 1 as const,
+    })
+    const subnets = [
+      wire('e1', 'supervisor', 'swA'),
+      wire('e2', 'lighting', 'swA'),
+      wire('e3', 'ahu', 'swB'),
+      wire('e4', 'meter', 'swB'),
     ]
-    // netA から見た送り先は、直接つながる supervisor 自身を除いた機器だけ。
-    // netB（中継点）は境をまたぐ先なので含まれない。ahu にも直接は届かない
-    expect(broadcastTargets(nodes, edges, 'supervisor', 'netA')).toEqual([])
+    const withBbmd = [
+      ...subnets,
+      wire('e5', 'swA', 'bbmdA'),
+      wire('e6', 'bbmdA', 'bbmdB'),
+      wire('e7', 'bbmdB', 'swB'),
+    ]
+
+    it('BBMD がなければ、呼びかけは自分のサブネットの中だけで止まる', () => {
+      expect(broadcastTargets(nodes, subnets, 'supervisor', 'swA')).toEqual([
+        'lighting',
+      ])
+    })
+
+    it('BBMD があれば、同じサブネットの機器に加えて BBMD も受け取る', () => {
+      expect(broadcastTargets(nodes, withBbmd, 'supervisor', 'swA')).toEqual([
+        'lighting',
+        'bbmdA',
+      ])
+    })
+
+    it('BBMD は境界なので、その先のサブネットへはブロードキャストのまま広がらない', () => {
+      const targets = broadcastTargets(nodes, withBbmd, 'supervisor', 'swA')
+      expect(targets).not.toContain('ahu')
+      expect(targets).not.toContain('meter')
+      expect(targets).not.toContain('bbmdB')
+    })
+
+    it('転送を受け取った BBMD が配り直すと、向こう側のサブネットにだけ広がる', () => {
+      // BBMD B 自身が送り主なので、送り先からは外れる
+      expect(broadcastTargets(nodes, withBbmd, 'bbmdB', 'swB')).toEqual([
+        'ahu',
+        'meter',
+      ])
+    })
   })
 })
 

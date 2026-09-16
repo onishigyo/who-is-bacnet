@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { CaptureEvidenceCard } from './components/CaptureEvidenceCard'
 import { ConversationBar } from './components/ConversationBar'
 import { ConversationTrack } from './components/ConversationTrack'
+import { ExtraNav } from './components/ExtraNav'
 import { NetworkCanvas } from './components/NetworkCanvas'
 import { StepNav } from './components/StepNav'
 import { StepNotes } from './components/StepNotes'
@@ -186,13 +187,21 @@ export default function App() {
           ブラウザ内だけで動く再現です。実際の BACnet 通信は発生しません。
           防御を学ぶための教材であり、許可のないシステムへの操作を推奨するものではありません。
         </p>
+
+        <ExtraNav
+          extras={extras}
+          activeExtra={activeExtra}
+          onSelectExtra={selectExtra}
+        />
       </header>
 
       <main className="app__main">
         <div className="app__stage">
           <div className="app__canvas">
             <NetworkCanvas
-              key={activeExtra ?? order}
+              key={
+                activeExtra ? `${activeExtra}-${bbmdStage}` : `step-${order}`
+              }
               diagram={diagram}
               deviceReadouts={deviceReadouts}
               inFlight={inFlight}
@@ -229,7 +238,7 @@ export default function App() {
                         startConversation(BBMD_AFTER_CONVERSATION_ID)
                       }}
                     >
-                      ② BBMD を設置してから探す
+                      ② BBMD を置いてから探す
                     </button>
                   </div>
                 ) : (
@@ -278,9 +287,7 @@ export default function App() {
             steps={steps}
             current={order}
             onChange={goToStep}
-            extras={extras}
             activeExtra={activeExtra}
-            onSelectExtra={selectExtra}
           />
         </div>
 

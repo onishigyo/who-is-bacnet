@@ -185,6 +185,52 @@ button:disabled {
   }
 }
 
+/* ---------- 番外編の入り口（ヘッダー） ---------- */
+
+/*
+ * 本編の流れとは別の読み物なので、下のステップナビには混ぜない。
+ * ヘッダーなら幅に関係なく必ず見える
+ */
+.extranav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 0 0 auto;
+}
+
+.extranav__label {
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--muted);
+  padding-left: 10px;
+  border-left: 2px solid var(--line);
+  white-space: nowrap;
+}
+
+.extranav__select {
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--bg-raise);
+  color: var(--muted);
+  font-size: 13px;
+  font-family: inherit;
+  cursor: pointer;
+  max-width: 220px;
+  text-overflow: ellipsis;
+}
+
+.extranav__select:hover {
+  border-color: var(--accent);
+  color: var(--text);
+}
+
+.extranav__select.is-active {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--text-strong);
+}
+
 /* ---------- ステップナビ ---------- */
 
 .stepnav {
@@ -266,43 +312,6 @@ button:disabled {
   font-family: var(--mono);
   font-size: 11px;
   opacity: 0.8;
-}
-
-/*
- * 番外編の入り口。pill 列の横スクロールの外側に固定し、
- * 幅が足りない画面でも必ず見えるようにする
- */
-.stepnav__aside {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  flex: 0 0 auto;
-}
-
-/* 番外編のドロップダウン。pill と同じ高さ・丸みに合わせる */
-.stepnav__extra {
-  padding: 6px 12px;
-  border-radius: 999px;
-  border: 1px solid var(--line);
-  background: var(--bg-raise);
-  color: var(--muted);
-  font-size: 13px;
-  font-family: inherit;
-  cursor: pointer;
-  /* 選択肢の文言で横幅が決まると pill 列を押し狭めるので、上限を切る */
-  max-width: 190px;
-  text-overflow: ellipsis;
-}
-
-.stepnav__extra:hover {
-  border-color: var(--accent);
-  color: var(--text);
-}
-
-.stepnav__extra.is-active {
-  border-color: var(--accent);
-  background: var(--accent-soft);
-  color: var(--text-strong);
 }
 
 .stepnav__arrow {
@@ -446,6 +455,11 @@ button:disabled {
 
 .node--switch {
   width: 224px;
+  border-style: dashed;
+}
+
+.node--bbmd {
+  border-color: var(--accent);
   border-style: dashed;
 }
 

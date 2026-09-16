@@ -1,20 +1,22 @@
 import type { Conversation } from '../domain/types'
 import { BROADCAST } from '../domain/types'
 import { AHU_ID, SUPERVISOR_ID } from './diagram'
-import { SUBNET_A_ID, SUBNET_B_ID } from './diagram-bbmd'
+import { BBMD_A_ID, BBMD_B_ID, LIGHTING_ID } from './diagram-bbmd'
 
 export const BBMD_BEFORE_CONVERSATION_ID = 'bbmd-before'
 export const BBMD_AFTER_CONVERSATION_ID = 'bbmd-after'
 
 /**
- * BBMD 番外編の会話。Before（線がまだない）と After（線がある）で、
- * 中身も図の状態も変わる。図の appearsAt（BBMD_BEFORE/BBMD_AFTER）と
- * セットで、App 側がどちらの会話・どちらの図を出すか決める。
+ * BBMD 番外編の会話。Before（BBMD なし）と After（BBMD あり）で、
+ * 図の状態（BBMD_BEFORE / BBMD_AFTER）ごと切り替える。
  *
- * After の中継（ba2/ba3）は、BBMD の実際の動きを 2 段階で描く。
- * ① 区画をまたぐユニキャスト転送（Forwarded-NPDU）
- * ② 転送を受け取った側が、自分の区画にもう一度ブロードキャストし直す
- * 1 本の矢印で「境界を越えて届いた」と単純化しない。
+ * After は、BBMD の動きを省略せずに 3 手で描く。
+ *   ① 送り主のサブネットに、ふつうにブロードキャストされる
+ *   ② それを受け取った BBMD が、BDT に載っている相手 BBMD へ
+ *      ユニキャスト（Forwarded-NPDU）で転送する
+ *   ③ 受け取った側の BBMD が、自分のサブネットにブロードキャストし直す
+ * 行きの Who-Is も、帰りの I-Am も、同じ 3 手を踏む。1 本の矢印で
+ * 「境界を越えて届いた」と単純化しないことが、この番外編の要点。
  */
 export const bbmdConversations: Conversation[] = [
   {
@@ -28,17 +30,30 @@ export const bbmdConversations: Conversation[] = [
         kind: 'request',
         plain: 'どなたかいますか？',
         protocol: 'Unconfirmed-REQ who-Is',
-        transport: 'UDP ブロードキャスト（サブネット A 内）',
+        transport: '192.168.10.255（サブネット A のブロードキャスト）',
         action: '全員に呼びかける',
         explain:
-          '中央監視がいつもどおり呼びかけます。ですが、この呼びかけはサブネット A の中にしか届きません。線でつながっていないサブネット B の空調コントローラには、届きようがありません。',
-        annotation: 'サブネットをまたいだ先には、返事が来ない',
+          '中央監視がいつもどおり呼びかけます。宛先はサブネット A のブロードキャストアドレスなので、L2 スイッチは同じサブネットにいる照明コントローラにだけ配ります。',
+      },
+      {
+        id: 'bb2',
+        from: LIGHTING_ID,
+        to: SUPERVISOR_ID,
+        kind: 'response',
+        plain: 'はい、照明コントローラです',
+        protocol: 'Unconfirmed-REQ i-Am',
+        transport: '同じサブネットの中',
+        action: '名乗って返す',
+        explain:
+          '返事をしたのは、呼びかけを聞こえた照明コントローラだけ。サブネット B の空調コントローラと電力計は、そもそも呼びかけを受け取っていないので黙ったままです。ブロードキャストはルータを越えないからです。',
+        annotation:
+          '中央監視から見ると、サブネット B の機器は「存在しない」のと同じ',
       },
     ],
   },
   {
     id: BBMD_AFTER_CONVERSATION_ID,
-    title: 'BBMD を設置してから探す',
+    title: 'BBMD を置いてから探す',
     messages: [
       {
         id: 'ba1',
@@ -47,46 +62,72 @@ export const bbmdConversations: Conversation[] = [
         kind: 'request',
         plain: 'どなたかいますか？',
         protocol: 'Unconfirmed-REQ who-Is',
-        transport: 'UDP ブロードキャスト（サブネット A 内）',
+        transport: '192.168.10.255（サブネット A のブロードキャスト）',
         action: '全員に呼びかける',
         explain:
-          'まずサブネット A の中にブロードキャストされます。ここまでは BBMD なしのときと同じです。',
+          '中央監視のやることは、さっきとまったく同じです。違うのは、この呼びかけをサブネット A に置いた BBMD A も受け取っている、という 1 点だけ。',
       },
       {
         id: 'ba2',
-        from: SUBNET_A_ID,
-        to: SUBNET_B_ID,
+        from: BBMD_A_ID,
+        to: BBMD_B_ID,
         kind: 'request',
-        plain: '（この呼びかけを転送します）',
+        plain: '（この呼びかけを、そちらに転送します）',
         protocol: 'BVLC Forwarded-NPDU',
-        transport: 'UDP ユニキャスト（サブネット A → サブネット B）',
-        action: '転送する',
+        transport: '192.168.10.9 → 192.168.20.9（ユニキャスト）',
+        action: '相手の BBMD へ転送する',
         explain:
-          'サブネット A の BBMD が、あらかじめ持っている配信先の一覧（Broadcast Distribution Table）に従って、サブネット B の BBMD へユニキャストで転送します。ブロードキャストそのものではなく、そのコピーが 1 対 1 の通信として境界を越えます。',
+          'BBMD A は、あらかじめ持っている配信先の一覧（BDT: Broadcast Distribution Table）を見て、そこに載っている BBMD B へ送ります。このとき使うのはブロードキャストではなく、宛先 IP を 1 つ指定したユニキャストです。ユニキャストならルータが転送してくれるので、サブネットの境界を越えられます。',
+        annotation: 'ここが BBMD の肝。ブロードキャストを、荷造りし直して運ぶ',
       },
       {
         id: 'ba3',
-        from: SUBNET_B_ID,
+        from: BBMD_B_ID,
         to: BROADCAST,
         kind: 'request',
-        plain: '（受け取った呼びかけを配り直します）',
+        plain: '（預かった呼びかけを、こちらで配ります）',
         protocol: 'Unconfirmed-REQ who-Is',
-        transport: 'UDP ブロードキャスト（サブネット B 内）',
-        action: '配り直す',
+        transport: '192.168.20.255（サブネット B のブロードキャスト）',
+        action: '自分のサブネットに配り直す',
         explain:
-          '転送を受け取ったサブネット B の BBMD が、今度はサブネット B の中にブロードキャストとして配り直します。空調コントローラにも、ようやく呼びかけが届きます。',
+          '受け取った BBMD B が、今度は自分のサブネットにブロードキャストとして配り直します。空調コントローラと電力計から見れば、すぐ隣で誰かが呼びかけたのと区別がつきません。機器の側は BBMD のことを何も知らなくてよい、というのがこの仕組みの良いところです。',
       },
       {
         id: 'ba4',
         from: AHU_ID,
-        to: SUPERVISOR_ID,
+        to: BROADCAST,
         kind: 'response',
         plain: 'はい、空調コントローラです',
         protocol: 'Unconfirmed-REQ i-Am',
-        transport: '同じ経路を逆にたどって届く',
+        transport: '192.168.20.255（サブネット B のブロードキャスト）',
         action: '名乗って返す',
         explain:
-          '返事の I-Am も、同じ経路（サブネット B の BBMD → サブネット A の BBMD → 中央監視）を逆向きにたどって戻ります。BBMD を設置しておけば、サブネットが分かれていても、いつもどおり相手を見つけられます。',
+          '空調コントローラが名乗ります。I-Am もブロードキャストなので、これはサブネット B の中に広がります。ここでも BBMD B が受け取ります。',
+      },
+      {
+        id: 'ba5',
+        from: BBMD_B_ID,
+        to: BBMD_A_ID,
+        kind: 'response',
+        plain: '（この返事を、そちらに転送します）',
+        protocol: 'BVLC Forwarded-NPDU',
+        transport: '192.168.20.9 → 192.168.10.9（ユニキャスト）',
+        action: '相手の BBMD へ転送する',
+        explain:
+          '帰りもまったく同じ仕組みです。BBMD B が BDT に従って、BBMD A へユニキャストで転送します。',
+      },
+      {
+        id: 'ba6',
+        from: BBMD_A_ID,
+        to: BROADCAST,
+        kind: 'response',
+        plain: '（預かった返事を、こちらで配ります）',
+        protocol: 'Unconfirmed-REQ i-Am',
+        transport: '192.168.10.255（サブネット A のブロードキャスト）',
+        action: '自分のサブネットに配り直す',
+        explain:
+          'BBMD A がサブネット A に配り直し、中央監視にようやく返事が届きます。BBMD を 2 台置いて互いを登録しておくだけで、サブネットが分かれていても、中央監視はいつもどおり機器を見つけられるようになりました。',
+        annotation: '中央監視も空調も、設定は何も変えていない',
       },
     ],
   },

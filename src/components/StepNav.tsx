@@ -1,38 +1,19 @@
-import type {
-  ExtraContent,
-  ExtraId,
-  StepContent,
-  StepOrder,
-} from '../domain/types'
+import type { ExtraId, StepContent, StepOrder } from '../domain/types'
 
 interface Props {
   steps: StepContent[]
   current: StepOrder
   onChange: (order: StepOrder) => void
-  /** 番外編（本編の 1〜7 には含まれない、別入り口から開く読み物） */
-  extras: ExtraContent[]
-  /** いま番外編を表示しているなら、その id */
+  /** 番外編を表示中なら、どの pill も「今ここ」にしない */
   activeExtra: ExtraId | null
-  onSelectExtra: (id: ExtraId) => void
 }
 
 /**
  * ステップの pill を 1 行に並べる。数が多いので横スクロールで逃がす。
  * 進む／戻るボタンは置かない（pill を直接押して移動する）。
- *
- * 番外編のドロップダウンは、横スクロールする pill 列の「外」に置く。
- * 列の中に入れると、幅が足りない画面では最初から見えず、入り口の存在に
- * 気づけないため。本編の pill はそのまま常時押せるので、番外編にいても
- * いつでも戻れる。
+ * 番外編への入り口はここには置かない（ヘッダーの ExtraNav が持つ）。
  */
-export function StepNav({
-  steps,
-  current,
-  onChange,
-  extras,
-  activeExtra,
-  onSelectExtra,
-}: Props) {
+export function StepNav({ steps, current, onChange, activeExtra }: Props) {
   return (
     <nav className="stepnav" aria-label="学習ステップ">
       <ol className="stepnav__list">
@@ -62,32 +43,6 @@ export function StepNav({
           )
         })}
       </ol>
-
-      {extras.length > 0 && (
-        <div className="stepnav__aside">
-          <span className="stepnav__chapter">番外編</span>
-          <select
-            className={`stepnav__extra ${
-              activeExtra !== null ? 'is-active' : ''
-            }`}
-            aria-label="番外編を選ぶ"
-            value={activeExtra ?? ''}
-            onChange={(event) => {
-              const id = event.target.value as ExtraId | ''
-              if (id) onSelectExtra(id)
-            }}
-          >
-            <option value="" disabled>
-              選ぶ
-            </option>
-            {extras.map((extra) => (
-              <option key={extra.id} value={extra.id}>
-                {extra.navLabel}
-              </option>
-            ))}
-          </select>
-        </div>
-      )}
     </nav>
   )
 }

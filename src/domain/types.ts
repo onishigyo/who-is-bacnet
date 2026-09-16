@@ -82,6 +82,8 @@ export type NodeKind =
   | 'hub'
   /** BACnet ルータ（BACnet のネットワーク同士をつなぐ。SC と BACnet/IP など） */
   | 'router'
+  /** BBMD（サブネットをまたいでブロードキャストを配り直す BACnet/IP 機器） */
+  | 'bbmd'
   /** 攻撃者（同じネットワークに持ち込まれた PC） */
   | 'attacker'
 
