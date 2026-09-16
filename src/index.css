@@ -1,7 +1,8 @@
 /*
  * 色のルール（意味は 1 色に 1 つ）
  *   青 --accent : 操作と注目（押せる・次に押す・今のステップ・いま動いている通常の通信）
- *                 選んでいるチップは濃い灰にして、「次に押す」の青と区別する
+ *                 塗りは「今いる場所」（ステップのタブもチップも同じ）。
+ *                 「次に押す」は塗らず、枠の点滅と「次はこれ」の札で言葉にする
  *   赤 --alert  : 危険（攻撃者・書き換えられた値・注意書き・攻撃者が関わる通信）
  *                 攻撃の場面では、チップの「次に押す」やホバーも赤にそろえる
  *   緑 --ok     : 正規・確か（中央監視など正規の側、「規格・公式資料」のバッジ）
@@ -1142,7 +1143,8 @@ button:disabled {
 .track {
   border-top: 1px solid var(--line);
   background: var(--bg);
-  height: 64px;
+  /* 「次はこれ」の札がチップの上にはみ出すぶん、少し高くとる */
+  height: 74px;
   flex: 0 0 auto;
   display: flex;
   align-items: center;
@@ -1158,7 +1160,7 @@ button:disabled {
 .track__list {
   list-style: none;
   margin: 0;
-  padding: 8px 14px;
+  padding: 14px 14px 6px;
   display: flex;
   gap: 8px;
   overflow-x: auto;
@@ -1168,6 +1170,7 @@ button:disabled {
 }
 
 .track__item {
+  position: relative;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -1189,18 +1192,27 @@ button:disabled {
   border-color: var(--accent);
 }
 
-/* 選んでいる（いま図で見ている）チップ。青は「次に押す」に取っておき、ここは濃い灰 */
-.track__item.is-active {
-  opacity: 1;
-  background: var(--bg-raise);
-  border-color: var(--text);
+/* まだ見ていない先のチップ。済みのチップより薄くする */
+.track__item.is-ahead {
+  opacity: 0.45;
 }
 
-/* 次に押してほしいチップ。飛び終わってから、薄い青で塗り、輪をゆっくり点滅させる。
-   再生中のチップ（白地・薄い輪）と見分けられるようにする */
+/* 選んでいる（いま図で見ている）チップ。下のステップのタブと同じく、塗り＝今いる場所 */
+.track__item.is-active {
+  opacity: 1;
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  border-left-color: var(--accent);
+}
+
+/*
+ * 次に押してほしいチップ。塗らない（塗り＝今いる場所と取り違えないため）。
+ * 枠をゆっくり点滅させ、上辺に「次はこれ」の札を重ねて言葉でも伝える
+ */
 .track__item.is-next {
   opacity: 1;
-  background: #e8f1fe;
+  background: var(--bg-raise);
+  border-color: var(--accent);
   animation: next-chip 2.4s ease-in-out infinite;
 }
 
@@ -1209,14 +1221,29 @@ button:disabled {
   font-weight: 700;
 }
 
+.track__next-tag {
+  position: absolute;
+  top: -9px;
+  left: 8px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 16px;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
 @keyframes next-chip {
   0%,
   100% {
-    box-shadow: 0 0 0 2px var(--accent);
+    box-shadow: 0 0 0 1px var(--accent);
   }
   50% {
     box-shadow:
-      0 0 0 2px var(--accent),
+      0 0 0 1px var(--accent),
       0 0 0 5px rgba(31, 111, 235, 0.18);
   }
 }
@@ -1225,8 +1252,8 @@ button:disabled {
   .track__item.is-next {
     animation: none;
     box-shadow:
-      0 0 0 2px var(--accent),
-      0 0 0 5px var(--accent-soft);
+      0 0 0 1px var(--accent),
+      0 0 0 4px var(--accent-soft);
   }
 }
 
@@ -1235,8 +1262,14 @@ button:disabled {
   border-color: var(--alert);
 }
 
+.track__item.is-active.is-danger {
+  background: var(--alert-soft);
+  border-color: var(--alert);
+  border-left-color: var(--alert);
+}
+
 .track__item.is-next.is-danger {
-  background: #fdecee;
+  border-color: var(--alert);
   animation-name: next-chip-danger;
 }
 
@@ -1244,14 +1277,18 @@ button:disabled {
   color: var(--alert);
 }
 
+.track__item.is-danger .track__next-tag {
+  background: var(--alert);
+}
+
 @keyframes next-chip-danger {
   0%,
   100% {
-    box-shadow: 0 0 0 2px var(--alert);
+    box-shadow: 0 0 0 1px var(--alert);
   }
   50% {
     box-shadow:
-      0 0 0 2px var(--alert),
+      0 0 0 1px var(--alert),
       0 0 0 5px rgba(209, 36, 47, 0.18);
   }
 }
@@ -1260,8 +1297,8 @@ button:disabled {
   .track__item.is-next.is-danger {
     animation: none;
     box-shadow:
-      0 0 0 2px var(--alert),
-      0 0 0 5px var(--alert-soft);
+      0 0 0 1px var(--alert),
+      0 0 0 4px var(--alert-soft);
   }
 }
 

@@ -65,6 +65,11 @@ export function ConversationTrack({
           const first = group[0]
           const selected = index === activeIndex
           const upNext = index === nextIndex
+          // まだ見ていない先のチップは薄くする（済み／これからの区別）
+          const ahead =
+            !selected &&
+            !upNext &&
+            (activeIndex === null || index > activeIndex)
           const danger = group.some((m) => involvesAttacker(m, attackerId))
           const together = group.length > 1
           return (
@@ -74,7 +79,9 @@ export function ConversationTrack({
                 ref={selected ? active : upNext ? next : null}
                 className={`track__item ${
                   selected ? 'is-active' : ''
-                } ${upNext ? 'is-next' : ''} ${danger ? 'is-danger' : ''}`}
+                } ${upNext ? 'is-next' : ''} ${ahead ? 'is-ahead' : ''} ${
+                  danger ? 'is-danger' : ''
+                }`}
                 onClick={() => onSelect(index)}
                 aria-current={selected ? 'true' : undefined}
               >
@@ -96,6 +103,12 @@ export function ConversationTrack({
                     </>
                   )}
                 </span>
+                {/* 「次」は色だけでなく言葉で言う。チップの上辺に重ねるので幅は変わらない */}
+                {upNext && (
+                  <span className="track__next-tag" aria-hidden="true">
+                    次はこれ
+                  </span>
+                )}
                 {upNext && <span className="sr-only">（次に押す）</span>}
               </button>
             </li>
