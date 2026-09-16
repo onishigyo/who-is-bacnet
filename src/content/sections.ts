@@ -3,6 +3,6 @@
  * BBMD 側の呼び名は content/extras.ts が持つ。
  */
 export const MAIN_SECTION = {
-  navLabel: '同じネットワークにいるだけで',
+  navLabel: '誰でも操作できてしまう問題',
   menuSummary: '便利さと、無認証と、BACnet/SC（ステップ 1〜7）',
 }

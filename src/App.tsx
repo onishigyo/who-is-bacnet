@@ -66,7 +66,7 @@ export default function App() {
   const extra = activeExtra ? extraContentById(extras, activeExtra) : null
   const stage = extra ? (extra.stages[stageIndex] ?? extra.stages[0]) : null
   const mainStep = stepByOrder(steps, order)
-  const step: PanelContent = extra ?? mainStep
+  const step: PanelContent = stage ?? mainStep
   // world ごとに、図と中継ノードを丸ごと切り替える。読み物では
   // 場面ごとに world そのものが変わる（BBMD あり → BACnet/SC）
   const {

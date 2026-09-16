@@ -10,25 +10,14 @@ import { BBMD_SC } from './diagram-bbmd-sc'
 /**
  * ステップ 1〜7 とは別の画面としてメニューから開く読み物。
  * 1〜7 はセキュリティの話が一本の流れになっているが、こちらは
- * 「サブネットが分かれた建物をどう扱うか」という別の軸なので、
- * 同じ帯には混ぜない。
+ * 「ネットワークが分かれた建物をどう扱うか」という別の軸。
+ * 同じ建物を条件を変えて見比べるので、説明も場面ごとに持つ。
  */
 export const extras: ExtraContent[] = [
   {
     id: 'bbmd',
-    navLabel: 'サブネットを跨ぐなら',
+    navLabel: 'ネットワークが分かれた建物',
     menuSummary: 'BBMD と、BACnet/SC ならどうなるか',
-    title: 'BBMD ── ブロードキャストを、ユニキャストで運ぶ',
-    lead: 'Who-Is はブロードキャスト。ブロードキャストはルータを越えない。では建物が複数のサブネットに分かれたら、機器はどうやって見つけるのか。',
-    paragraphs: [
-      'BACnet/IP の「探す」「名乗る」は、Who-Is も I-Am もブロードキャストです。そして IP のブロードキャストは、ルータが転送しません。建物が大きくなってネットワークがサブネットに分かれた瞬間、中央監視からは向こう側の機器が見えなくなります。',
-      'かといって、機器の設定を全部書き換えて回るのは現実的ではありません。そこで各サブネットに 1 台ずつ置くのが BBMD（BACnet Broadcast Management Device）です。BBMD は、自分のサブネットに流れたブロードキャストを受け取り、あらかじめ登録しておいた相手の BBMD へ、宛先 IP を 1 つ指定した「ユニキャスト」として送り直します（BVLC Forwarded-NPDU）。ルータはユニキャストなら素通しするので、これで境界を越えられます。',
-      '受け取った側の BBMD は、それを自分のサブネットにブロードキャストとして配り直します。だから機器の側は、BBMD の存在を何も知らなくてよい。「すぐ隣で誰かが呼びかけた」のと区別がつかないまま、いつもどおり返事をするだけです。',
-      'BBMD が要るのは、この行きの片道だけです。帰りの I-Am は、尋ねてきた相手 1 台に返すユニキャストなので（ステップ 3 の注記のとおり、制作者の実験でもそうでした）、ルータをそのまま通って戻ります。困るのは「宛先を指定しない呼びかけ」だけ、ということです。',
-      '相手の BBMD をどこに登録するかは BDT（Broadcast Distribution Table）という表で、これは自動では決まりません。BBMD を置く側が、手で設定してまわる必要があります。サブネットが増えれば、その数だけ増えていきます。',
-      'そして BACnet/SC では、この仕組みごと要らなくなります。SC では機器がサブネットに関係なくハブへ繋ぎにいくので、ブロードキャストをユニキャストに包み直して運ぶ、という段取り自体が出てきません。',
-      '下の 3 つを順に押して見比べてください。3 枚目で L2 スイッチもルータも BBMD も絵から消えるのは、配線が無くなったからではありません。この教材ではどの図にも「その世界で通信の届き方を決めるもの」だけを描いています。BACnet/IP では L2 スイッチとルータが届き方を決めるので描き、BACnet/SC ではハブとの接続が決めるのでハブだけを描く ── 気にしなくてよくなったものが絵から消える、という差です。',
-    ],
     stages: [
       {
         id: 'bbmd-none',
@@ -36,6 +25,21 @@ export const extras: ExtraContent[] = [
         world: 'bbmd',
         order: BBMD_BEFORE,
         conversationId: BBMD_BEFORE_CONVERSATION_ID,
+        title: 'ネットワークが分かれると、呼びかけが届かない',
+        lead: 'ルータで繋がっているのに、向こう側の機器が見つからない。',
+        paragraphs: [
+          '大きな建物では、ネットワークがいくつかの区画（サブネット）に分かれ、そのあいだをルータが繋ぎます。',
+          '機器を探す Who-Is は「全員への呼びかけ」（ブロードキャスト）です。ブロードキャストはルータを越えません。だから中央監視の呼びかけは、同じサブネット A の中にしか届かず、サブネット B の空調や電力計からは返事が来ません。',
+          '図の下の「会話を始める」を押して、呼びかけがルータで止まる様子を見てください。',
+        ],
+        notes: [
+          {
+            id: 'bbmd-std-no-cross',
+            confidence: 'standard',
+            text: 'BACnet/IP のブロードキャストは、IP の仕組み上サブネットを越えません。',
+            source: 'ANSI/ASHRAE Standard 135 Annex J',
+          },
+        ],
       },
       {
         id: 'bbmd-yes',
@@ -43,6 +47,44 @@ export const extras: ExtraContent[] = [
         world: 'bbmd',
         order: BBMD_AFTER,
         conversationId: BBMD_AFTER_CONVERSATION_ID,
+        title: 'BBMD ── 呼びかけを、1 対 1 の通信で運び直す',
+        lead: 'ルータが通さないのはブロードキャストだけ。1 対 1 の通信なら通る。',
+        paragraphs: [
+          '各サブネットに BBMD（BACnet Broadcast Management Device）を 1 台ずつ置きます。BBMD は呼びかけを受け取ると、登録してある相手の BBMD へ、宛先を 1 つに決めた通信（ユニキャスト）で送ります。これならルータを越えられます。',
+          '受け取った BBMD は、自分のサブネットに呼びかけを配り直します。機器の側は何も変えなくてよく、いつもどおり返事をするだけです。',
+          '返事の I-Am は、尋ねた相手 1 台へのユニキャストなので、BBMD を通らずルータをそのまま越えて戻ります。BBMD が要るのは、行きの呼びかけだけです。',
+          '相手の BBMD の登録先は BDT（Broadcast Distribution Table）という表で、自動では決まりません。設定する人が BBMD ごとに入れる必要があります。',
+        ],
+        notes: [
+          {
+            id: 'bbmd-std-forward',
+            confidence: 'standard',
+            text: 'BBMD は BDT に従って、受け取ったブロードキャストを Forwarded-NPDU としてほかの BBMD へ送り、受け取った側がそれを自分のサブネットのブロードキャストとして配り直します。',
+            source: 'ANSI/ASHRAE Standard 135 Annex J',
+          },
+          {
+            id: 'bbmd-std-iam',
+            confidence: 'standard',
+            text: 'I-Am は以前はブロードキャストで返す決まりでしたが、Addendum 135-2008q で、尋ねた相手だけに返してもよくなりました。この図はステップ 3 と同じく、尋ねた相手だけに返す形で描いています（制作者の実験でも 1 対 1 で返ってきました）。',
+            source: 'ANSI/ASHRAE Standard 135 / Addendum 135-2008q',
+          },
+          {
+            id: 'bbmd-interp-iam-broadcast',
+            confidence: 'interpretation',
+            text: 'I-Am をブロードキャストで返す機器なら、帰りも BBMD を通ることになる、と理解しています。そういう機器での実機確認はしていません。',
+          },
+          {
+            id: 'bbmd-std-fdr',
+            confidence: 'standard',
+            text: 'BBMD を置けないサブネットの機器には、Foreign Device 登録という別の仕組みもあります。',
+            source: 'ANSI/ASHRAE Standard 135 Annex J',
+          },
+          {
+            id: 'bbmd-interp-ops',
+            confidence: 'interpretation',
+            text: 'サブネットを増やすたびに、全 BBMD の BDT を更新して回る運用になると理解しています。製品でどこまで自動化されているかは確認できていません。',
+          },
+        ],
       },
       {
         id: 'bbmd-sc',
@@ -50,43 +92,22 @@ export const extras: ExtraContent[] = [
         world: 'bbmd-sc',
         order: BBMD_SC,
         conversationId: BBMD_SC_CONVERSATION_ID,
-      },
-    ],
-    notes: [
-      {
-        id: 'bbmd-std-forward',
-        confidence: 'standard',
-        text: 'BACnet/IP のブロードキャストは、IP の仕組み上サブネットを越えません。BBMD は BDT（Broadcast Distribution Table）に従って、受け取ったブロードキャストを Forwarded-NPDU としてほかの BBMD へ送り、受け取った側がそれを自分のサブネットのブロードキャストとして配り直します。',
-        source: 'ANSI/ASHRAE Standard 135 Annex J',
-      },
-      {
-        id: 'bbmd-std-fdr',
-        confidence: 'standard',
-        text: 'そのサブネットに BBMD を置けない場合（機器が 1 台だけ別のネットワークにいる、など）には、Foreign Device 登録という別の仕組みがあります。BBMD に「自分も配ってほしい」と登録しにいく形で、これも Annex J で定義されています。',
-        source: 'ANSI/ASHRAE Standard 135 Annex J',
-      },
-      {
-        id: 'bbmd-std-iam',
-        confidence: 'standard',
-        text: 'I-Am は以前は全員に向けて（ブロードキャストで）返す決まりでしたが、Addendum 135-2008q で、尋ねた相手だけに返してもよくなりました。この図はステップ 3 と同じく、尋ねた相手だけに返す形で描いています（制作者の実験でも、I-Am は呼びかけた相手への 1 対 1 で返ってきました）。',
-        source: 'ANSI/ASHRAE Standard 135 / Addendum 135-2008q',
-      },
-      {
-        id: 'bbmd-interp-iam-broadcast',
-        confidence: 'interpretation',
-        text: 'I-Am をブロードキャストで返す機器なら、帰りも行きと同じ 3 手（配る → BBMD が転送 → 配り直す）を踏むことになる、と理解しています。手元にそういう機器がないため、実機では確かめられていません。',
-      },
-      {
-        id: 'bbmd-std-sc-broadcast',
-        confidence: 'standard',
-        text: 'BACnet/SC でも Who-Is のような「全員あての呼びかけ」は使います。違うのは配られ方で、IP のブロードキャストとして流れるのではなく、ハブが繋がっている各機器へ配ります。だから IP のブロードキャストも BBMD も要らなくなります（ステップ 5 の注記と同じ内容です）。',
-        source:
-          'ANSI/ASHRAE Standard 135-2020 Annex AB / ASHRAE BACnet/SC ホワイトペーパー',
-      },
-      {
-        id: 'bbmd-interp-ops',
-        confidence: 'interpretation',
-        text: 'BDT の中身は機種ごとの設定画面で入れることになり、サブネットを増やすたびに全 BBMD の BDT を更新して回る、という運用になると理解しています。実際の製品でどこまで自動化されているかは、確認できていません。',
+        title: 'BACnet/SC なら、BBMD が要らない',
+        lead: '同じ建物・同じ配線のまま、運び直す仕掛けが消える。',
+        paragraphs: [
+          'BACnet/SC では、どの機器もサブネットに関係なくハブへ繋ぎます。ハブへの接続は 1 対 1 の通信なので、ルータをそのまま越えられます。',
+          '呼びかけはハブが繋がっている機器全員に配ります。BBMD も、BDT の設定も出てきません。',
+          'L2 スイッチとルータは BBMD ありの図と同じです。SC にしても建物の配線は変わらず、変わるのはその上での届け方だけです。',
+        ],
+        notes: [
+          {
+            id: 'bbmd-std-sc-broadcast',
+            confidence: 'standard',
+            text: 'BACnet/SC でも Who-Is のような全員あての呼びかけは使います。IP のブロードキャストとしては流れず、ハブが各機器へ配るので、BBMD は要りません（ステップ 5 の注記と同じ内容です）。',
+            source:
+              'ANSI/ASHRAE Standard 135-2020 Annex AB / ASHRAE BACnet/SC ホワイトペーパー',
+          },
+        ],
       },
     ],
   },

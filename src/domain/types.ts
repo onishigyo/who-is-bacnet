@@ -55,8 +55,8 @@ export type ExtraId = 'bbmd'
 
 /**
  * 読み物の中の 1 場面。ステップと違って順番に進む流れではなく、
- * 「同じ問題を、条件を変えて見比べる」ための並び（BBMD なし / あり /
- * BACnet/SC なら）。場面ごとに図の世界そのものが変わりうる。
+ * 「同じ建物を、条件を変えて見比べる」ための並び（BBMD なし / あり /
+ * BACnet/SC なら）。ステップと同じく、場面ごとに右の説明も図も変わる。
  */
 export interface ExtraStage {
   id: string
@@ -66,28 +66,28 @@ export interface ExtraStage {
   /** その世界の図を、どこまで出した状態にするか */
   order: StepOrder
   conversationId: string
-}
-
-/**
- * ステップ 1〜7 とは別に、メニューから開く読み物。
- * StepPanel・StepNotes は StepContent と区別せず描画できる。
- */
-export interface ExtraContent {
-  id: ExtraId
-  /** メニューに出す名前 */
-  navLabel: string
-  /** メニューで名前に添える一行 */
-  menuSummary: string
   title: string
   lead: string
   paragraphs: string[]
   notes: ContentNote[]
+}
+
+/**
+ * ステップ 1〜7 とは別に、メニューから開く読み物。中身の説明は
+ * 場面（stages）ごとに持つ。
+ */
+export interface ExtraContent {
+  id: ExtraId
+  /** メニューとヘッダーに出す画面名 */
+  navLabel: string
+  /** メニューで名前に添える一行 */
+  menuSummary: string
   /** 見比べる場面。下の帯にこの並びが出る */
   stages: ExtraStage[]
 }
 
 /** 読み物パネルに渡せる中身（本編・番外編どちらでもよい） */
-export type PanelContent = StepContent | ExtraContent
+export type PanelContent = StepContent | ExtraStage
 
 export type NodeId = string
 
