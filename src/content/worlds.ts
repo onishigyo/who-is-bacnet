@@ -5,6 +5,7 @@ import type {
   World,
 } from '../domain/types'
 import { bbmdDiagramEdges, bbmdDiagramNodes, SWITCH_A_ID } from './diagram-bbmd'
+import { bbmdScDiagramEdges, bbmdScDiagramNodes } from './diagram-bbmd-sc'
 import { diagramEdges, diagramNodes, NETWORK_NODE_ID } from './diagram'
 import { mixedDiagramEdges, mixedDiagramNodes } from './diagram-mixed'
 import { SC_HUB_ID, scDiagramEdges, scDiagramNodes } from './diagram-sc'
@@ -32,6 +33,11 @@ export const worlds: Record<
   bbmd: {
     nodes: bbmdDiagramNodes,
     edges: bbmdDiagramEdges,
+    networkNodeId: SWITCH_A_ID,
+  },
+  'bbmd-sc': {
+    nodes: bbmdScDiagramNodes,
+    edges: bbmdScDiagramEdges,
     networkNodeId: SWITCH_A_ID,
   },
 }

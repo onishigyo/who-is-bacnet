@@ -17,9 +17,10 @@ export type StepId =
 /**
  * ステップが属する「世界」。世界ごとに図が別セット。
  * mixed は SC と旧来の BACnet/IP がルータでつながる建物（SC の限界で使う）。
- * bbmd は番外編（本編の 1〜7 には含まれない、別入り口から開く読み物）
+ * bbmd / bbmd-sc は、サブネットが 2 つに分かれた建物を BACnet/IP で扱う図と、
+ * 同じ建物を BACnet/SC で扱う図（BBMD の読み物で見比べる）
  */
-export type World = 'ip' | 'sc' | 'mixed' | 'bbmd'
+export type World = 'ip' | 'sc' | 'mixed' | 'bbmd' | 'bbmd-sc'
 
 /** 記述の確からしさ。教材上、両者を視覚的に区別するために使う */
 export type Confidence =
@@ -49,21 +50,40 @@ export interface StepContent {
   notes: ContentNote[]
 }
 
-/** 番外編の id。本編の 1〜7 とは別の入り口（ドロップダウン）から開く */
+/** 読み物の id。ステップ 1〜7 とは別の画面としてメニューから開く */
 export type ExtraId = 'bbmd'
 
 /**
- * 番外編の読み物。StepContent と同じ形だが、本編の順序（order・chapter）を
- * 持たない。StepPanel・StepNotes は両者を区別せず描画できる。
+ * 読み物の中の 1 場面。ステップと違って順番に進む流れではなく、
+ * 「同じ問題を、条件を変えて見比べる」ための並び（BBMD なし / あり /
+ * BACnet/SC なら）。場面ごとに図の世界そのものが変わりうる。
+ */
+export interface ExtraStage {
+  id: string
+  /** 下の帯に出す短い名前 */
+  navLabel: string
+  world: World
+  /** その世界の図を、どこまで出した状態にするか */
+  order: StepOrder
+  conversationId: string
+}
+
+/**
+ * ステップ 1〜7 とは別に、メニューから開く読み物。
+ * StepPanel・StepNotes は StepContent と区別せず描画できる。
  */
 export interface ExtraContent {
   id: ExtraId
-  world: World
+  /** メニューに出す名前 */
   navLabel: string
+  /** メニューで名前に添える一行 */
+  menuSummary: string
   title: string
   lead: string
   paragraphs: string[]
   notes: ContentNote[]
+  /** 見比べる場面。下の帯にこの並びが出る */
+  stages: ExtraStage[]
 }
 
 /** 読み物パネルに渡せる中身（本編・番外編どちらでもよい） */

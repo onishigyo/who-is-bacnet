@@ -51,7 +51,7 @@ export function extraContentById(
   id: ExtraId,
 ): ExtraContent {
   const extra = extras.find((e) => e.id === id)
-  if (!extra) throw new Error(`番外編 ${id} の内容が見つかりません`)
+  if (!extra) throw new Error(`読み物 ${id} の内容が見つかりません`)
   return extra
 }
 

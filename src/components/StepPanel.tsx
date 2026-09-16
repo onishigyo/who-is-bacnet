@@ -5,7 +5,7 @@ export function StepPanel({ step }: { step: PanelContent }) {
   return (
     <section className="steppanel">
       <p className="steppanel__eyebrow">
-        {'order' in step ? `ステップ ${step.order}` : '番外編'}
+        {'order' in step ? `ステップ ${step.order}` : step.navLabel}
       </p>
       <h2 className="steppanel__title">{step.title}</h2>
       <p className="steppanel__lead">{step.lead}</p>

@@ -5,6 +5,7 @@ import { BBMD_A_ID, BBMD_B_ID, LIGHTING_ID } from './diagram-bbmd'
 
 export const BBMD_BEFORE_CONVERSATION_ID = 'bbmd-before'
 export const BBMD_AFTER_CONVERSATION_ID = 'bbmd-after'
+export const BBMD_SC_CONVERSATION_ID = 'bbmd-sc'
 
 /**
  * BBMD 番外編の会話。Before（BBMD なし）と After（BBMD あり）で、
@@ -128,6 +129,39 @@ export const bbmdConversations: Conversation[] = [
         explain:
           'BBMD A がサブネット A に配り直し、中央監視にようやく返事が届きます。BBMD を 2 台置いて互いを登録しておくだけで、サブネットが分かれていても、中央監視はいつもどおり機器を見つけられるようになりました。',
         annotation: '中央監視も空調も、設定は何も変えていない',
+      },
+    ],
+  },
+  {
+    id: BBMD_SC_CONVERSATION_ID,
+    title: 'BACnet/SC なら、どうなるか',
+    messages: [
+      {
+        id: 'bs1',
+        from: SUPERVISOR_ID,
+        to: BROADCAST,
+        kind: 'request',
+        plain: 'どなたかいますか？',
+        protocol: 'Who-Is（TLS で暗号化）',
+        transport: 'ハブ経由（wss / TLS 1.3）',
+        action: '全員に呼びかける',
+        encrypted: true,
+        explain:
+          '機器はサブネットに関係なく、それぞれハブへ繋いでいます。だから呼びかけはハブから全員に配られ、サブネット B の空調コントローラにもそのまま届きます。BBMD も、BDT の設定も出てきません。',
+        annotation: '転送する仕掛けを、置く必要がない',
+      },
+      {
+        id: 'bs2',
+        from: AHU_ID,
+        to: SUPERVISOR_ID,
+        kind: 'response',
+        plain: 'はい、空調コントローラです',
+        protocol: 'I-Am（TLS で暗号化）',
+        transport: 'ハブ経由（wss / TLS 1.3）',
+        action: '名乗って返す',
+        encrypted: true,
+        explain:
+          '返事もハブを通って戻ります。BBMD ありの図では、行きも帰りも「配る → ユニキャストで転送 → 配り直す」の 3 手を踏んでいました。ここでは、その転送と配り直しがまるごと無くなっています。',
       },
     ],
   },

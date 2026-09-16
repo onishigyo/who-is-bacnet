@@ -2,7 +2,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { CaptureEvidenceCard } from './components/CaptureEvidenceCard'
 import { ConversationBar } from './components/ConversationBar'
 import { ConversationTrack } from './components/ConversationTrack'
-import { ExtraNav } from './components/ExtraNav'
+import { SectionMenu } from './components/SectionMenu'
+import { StageNav } from './components/StageNav'
 import { NetworkCanvas } from './components/NetworkCanvas'
 import { StepNav } from './components/StepNav'
 import { StepNotes } from './components/StepNotes'
@@ -22,17 +23,18 @@ import {
   MIXED_ATTACK_CONVERSATION_ID,
   mixedConversations,
 } from './content/conversations-mixed'
-import {
-  BBMD_AFTER_CONVERSATION_ID,
-  BBMD_BEFORE_CONVERSATION_ID,
-  bbmdConversations,
-} from './content/conversations-bbmd'
+import { bbmdConversations } from './content/conversations-bbmd'
 import { AHU_ID, ATTACKER_ID } from './content/diagram'
-import { BBMD_AFTER, BBMD_BEFORE } from './content/diagram-bbmd'
 import { extras } from './content/extras'
 import { steps } from './content/steps'
 import { worlds } from './content/worlds'
-import type { DeviceState, ExtraId, NodeId, StepOrder } from './domain/types'
+import type {
+  DeviceState,
+  ExtraId,
+  NodeId,
+  PanelContent,
+  StepOrder,
+} from './domain/types'
 import { deviceFrom } from './logic/device'
 import {
   conversationById,
@@ -54,23 +56,25 @@ const FLIGHT_MS = 1800
 export default function App() {
   const [order, setOrder] = useState<StepOrder>(1)
   const [activeExtra, setActiveExtra] = useState<ExtraId | null>(null)
-  /** BBMD 番外編だけが持つ、Before/After の内部段階（線の有無を切り替える） */
-  const [bbmdStage, setBbmdStage] = useState<StepOrder>(BBMD_BEFORE)
+  /** 読み物を開いているとき、その中の何枚目を見ているか */
+  const [stageIndex, setStageIndex] = useState(0)
   const [activeConversationId, setActiveConversationId] = useState<
     string | null
   >(null)
   const [playback, setPlayback] = useState(IDLE_PLAYBACK)
   const panelRef = useRef<HTMLElement>(null)
 
-  const step = activeExtra
-    ? extraContentById(extras, activeExtra)
-    : stepByOrder(steps, order)
-  // world ごとに、図と中継ノードを丸ごと切り替える
+  const extra = activeExtra ? extraContentById(extras, activeExtra) : null
+  const stage = extra ? (extra.stages[stageIndex] ?? extra.stages[0]) : null
+  const mainStep = stepByOrder(steps, order)
+  const step: PanelContent = extra ?? mainStep
+  // world ごとに、図と中継ノードを丸ごと切り替える。読み物では
+  // 場面ごとに world そのものが変わる（BBMD あり → BACnet/SC）
   const {
     nodes: worldNodes,
     edges: worldEdges,
     networkNodeId,
-  } = worlds[step.world]
+  } = worlds[stage ? stage.world : mainStep.world]
   const allConversations = useMemo(
     () => [
       ...conversations,
@@ -81,8 +85,8 @@ export default function App() {
     [],
   )
 
-  // 番外編（BBMD）だけ、本編の order の代わりに内部の Before/After 段階を使う
-  const diagramOrder = activeExtra ? bbmdStage : order
+  // 読み物では、ステップの order の代わりに、その場面の段階を使う
+  const diagramOrder = stage ? stage.order : order
   const diagram = useMemo(
     () => buildDiagramState(worldNodes, worldEdges, diagramOrder),
     [worldNodes, worldEdges, diagramOrder],
@@ -113,13 +117,28 @@ export default function App() {
     panelRef.current?.scrollTo({ top: 0 })
   }, [])
 
-  /** 番外編を選ぶ。まだどちらの会話も始めていない状態から見せる */
+  /** 読み物を開く。まだどの会話も始めていない状態から見せる */
   const selectExtra = useCallback((id: ExtraId) => {
     setActiveExtra(id)
-    setBbmdStage(BBMD_BEFORE)
+    setStageIndex(0)
     setActiveConversationId(null)
     setPlayback(IDLE_PLAYBACK)
     panelRef.current?.scrollTo({ top: 0 })
+  }, [])
+
+  /** ステップ 1〜7 の側へ戻る（いま見ていたステップのまま） */
+  const selectMain = useCallback(() => {
+    setActiveExtra(null)
+    setActiveConversationId(null)
+    setPlayback(IDLE_PLAYBACK)
+    panelRef.current?.scrollTo({ top: 0 })
+  }, [])
+
+  /** 読み物の中で、見比べる場面を変える */
+  const selectStage = useCallback((index: number) => {
+    setStageIndex(index)
+    setActiveConversationId(null)
+    setPlayback(IDLE_PLAYBACK)
   }, [])
 
   /** その会話を開始し、先頭のまとまりを再生する */
@@ -136,8 +155,8 @@ export default function App() {
     ? selectedMessages(activeConversation, playback)
     : []
   const deviceReadouts = useMemo<Record<NodeId, DeviceState>>(() => {
-    // 会話のあるステップ（IP 編 3/4・SC 編 5/6）で、機器の設定温度を出す。
-    // 番外編（BBMD）は機器の状態を扱わないので、ここでは出さない
+    // 会話のあるステップ（3/4・5/6）で、機器の設定温度を出す。
+    // 読み物（BBMD）は機器の状態を扱わないので、ここでは出さない
     if (activeExtra || order < 3 || order > 6) return {}
     // いま選んでいるまとまりまでの、その時点の機器状態を出す
     const upto =
@@ -164,8 +183,8 @@ export default function App() {
         return null
     }
   }
-  // 番外編（BBMD）は Before/After の 2 つの会話を常に持つ
-  const hasConversation = activeExtra ? true : conversationIdFor(order) !== null
+  // 読み物の各場面は、必ず自分の会話を持つ
+  const hasConversation = stage ? true : conversationIdFor(order) !== null
 
   /** 攻撃の会話が指す実験キャプチャ（答え合わせに出す） */
   const activeCaptureId = activeConversation?.captureId
@@ -188,9 +207,10 @@ export default function App() {
           防御を学ぶための教材であり、許可のないシステムへの操作を推奨するものではありません。
         </p>
 
-        <ExtraNav
+        <SectionMenu
           extras={extras}
           activeExtra={activeExtra}
+          onSelectMain={selectMain}
           onSelectExtra={selectExtra}
         />
       </header>
@@ -199,9 +219,7 @@ export default function App() {
         <div className="app__stage">
           <div className="app__canvas">
             <NetworkCanvas
-              key={
-                activeExtra ? `${activeExtra}-${bbmdStage}` : `step-${order}`
-              }
+              key={stage ? `${activeExtra}-${stage.id}` : `step-${order}`}
               diagram={diagram}
               deviceReadouts={deviceReadouts}
               inFlight={inFlight}
@@ -218,43 +236,20 @@ export default function App() {
               nodes={worldNodes}
               attackerId={ATTACKER_ID}
               idle={
-                activeExtra ? (
-                  <div className="bbmd-choices">
-                    <button
-                      type="button"
-                      className="play"
-                      onClick={() => {
-                        setBbmdStage(BBMD_BEFORE)
-                        startConversation(BBMD_BEFORE_CONVERSATION_ID)
-                      }}
-                    >
-                      ① BBMD なしで探す
-                    </button>
-                    <button
-                      type="button"
-                      className="play"
-                      onClick={() => {
-                        setBbmdStage(BBMD_AFTER)
-                        startConversation(BBMD_AFTER_CONVERSATION_ID)
-                      }}
-                    >
-                      ② BBMD を置いてから探す
-                    </button>
-                  </div>
-                ) : (
-                  <button
-                    type="button"
-                    className="play"
-                    onClick={() => {
-                      const id = conversationIdFor(order)
-                      if (id) startConversation(id)
-                    }}
-                  >
-                    {order === 3 || order === 5
-                      ? '会話を始める'
-                      : '持ち込まれた PC を操作する'}
-                  </button>
-                )
+                <button
+                  type="button"
+                  className="play"
+                  onClick={() => {
+                    const id = stage
+                      ? stage.conversationId
+                      : conversationIdFor(order)
+                    if (id) startConversation(id)
+                  }}
+                >
+                  {stage || order === 3 || order === 5
+                    ? '会話を始める'
+                    : '持ち込まれた PC を操作する'}
+                </button>
               }
             />
           )}
@@ -274,8 +269,8 @@ export default function App() {
               }
               onSelect={play}
               emptyText={
-                activeExtra
-                  ? '上のボタンを押すと、やり取りがここに並びます。'
+                stage
+                  ? '「会話を始める」を押すと、やり取りがここに並びます。下の帯で条件を変えて見比べてください。'
                   : order === 3 || order === 5
                     ? '「会話を始める」を押すと、やり取りがここに並びます。チップを押すと図で再生されます。'
                     : '操作を始めると、やり取りがここに並びます。前のステップと見比べてください。'
@@ -283,12 +278,15 @@ export default function App() {
             />
           )}
 
-          <StepNav
-            steps={steps}
-            current={order}
-            onChange={goToStep}
-            activeExtra={activeExtra}
-          />
+          {extra ? (
+            <StageNav
+              stages={extra.stages}
+              current={stageIndex}
+              onChange={selectStage}
+            />
+          ) : (
+            <StepNav steps={steps} current={order} onChange={goToStep} />
+          )}
         </div>
 
         <aside className="app__panel" ref={panelRef}>

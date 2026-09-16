@@ -28,7 +28,7 @@ describe('ステップの移動', () => {
     expect(nextStep(7)).toBe(7)
     expect(nextStep(2)).toBe(3)
     expect(prevStep(3)).toBe(2)
-    // 章をまたいでも連続で動く（IP 編 4 → SC 編 5）
+    // 章をまたいでも連続で動く（ステップ 4 → 5）
     expect(nextStep(4)).toBe(5)
     expect(prevStep(5)).toBe(4)
   })
@@ -40,7 +40,7 @@ describe('ステップ内容', () => {
     expect([...orders].sort()).toEqual([1, 2, 3, 4, 5, 6, 7])
   })
 
-  it('各ステップは world と章を持つ（IP 編 1〜4 / SC 編 5〜7）', () => {
+  it('各ステップは world と章を持つ（IP 1〜4 / SC 5〜7）', () => {
     for (const step of steps) {
       expect(['ip', 'sc', 'mixed']).toContain(step.world)
       expect(step.chapter.length).toBeGreaterThan(0)

@@ -10,7 +10,7 @@ export const steps: StepContent[] = [
   {
     id: 'what-is-bacnet',
     order: 1,
-    chapter: 'IP 編',
+    chapter: 'IP',
     world: 'ip',
     navLabel: 'BACnet とは',
     title: 'BACnet とは何か',
@@ -38,7 +38,7 @@ export const steps: StepContent[] = [
   {
     id: 'bacnet-ip',
     order: 2,
-    chapter: 'IP 編',
+    chapter: 'IP',
     world: 'ip',
     navLabel: 'BACnet/IP とは',
     title: 'BACnet/IP とは何か',
@@ -66,7 +66,7 @@ export const steps: StepContent[] = [
   {
     id: 'interoperability',
     order: 3,
-    chapter: 'IP 編',
+    chapter: 'IP',
     world: 'ip',
     navLabel: '便利な側面',
     title: '便利な側面 ── 実際の会話を見る',
@@ -101,7 +101,7 @@ export const steps: StepContent[] = [
   {
     id: 'no-auth',
     order: 4,
-    chapter: 'IP 編',
+    chapter: 'IP',
     world: 'ip',
     navLabel: '危険性',
     title: '危険性 ── 誰が送っても通ってしまう',
@@ -132,7 +132,7 @@ export const steps: StepContent[] = [
       {
         id: 'std-sc-answer',
         confidence: 'standard',
-        text: 'この問題への規格の答えが BACnet/SC です（Addendum 135-2016bj として追加され、135-2020 に収録）。SC 編で扱います。',
+        text: 'この問題への規格の答えが BACnet/SC です（Addendum 135-2016bj として追加され、135-2020 に収録）。ステップ 5 以降で扱います。',
         source: 'ANSI/ASHRAE Standard 135-2020（Addendum 135-2016bj）',
       },
     ],
@@ -140,13 +140,13 @@ export const steps: StepContent[] = [
   {
     id: 'bacnet-sc',
     order: 5,
-    chapter: 'SC 編',
+    chapter: 'SC',
     world: 'sc',
     navLabel: 'BACnet/SC とは',
     title: 'BACnet/SC ── 参加に証明書が要る',
     lead: '同じ LAN にいるだけでは、もう入れない。証明書を持つ機器だけが、ハブを通して会話する。',
     paragraphs: [
-      'IP 編で見た「同じ LAN にいれば誰でも操作できて、中身も丸見え」という問題に、規格が出した答えが BACnet/SC（Secure Connect）です。真ん中にハブがあり、証明書を持つ機器が ── 中央監視も含めて ── それぞれハブに繋ぎます。',
+      'ここまでで見た「同じ LAN にいれば誰でも操作できて、中身も丸見え」という問題に、規格が出した答えが BACnet/SC（Secure Connect）です。真ん中にハブがあり、証明書を持つ機器が ── 中央監視も含めて ── それぞれハブに繋ぎます。',
       '暗号化には、Web サイトの https と同じ TLS という仕組みを使います。機器はハブに繋ぐときに証明書を見せ合い、そのあとのやり取りはすべて暗号化されます。',
       '図の下の「会話を始める」を押すと、機器がハブに参加し、中央監視が設定温度を読み書きする流れが並びます。',
     ],
@@ -181,11 +181,11 @@ export const steps: StepContent[] = [
   {
     id: 'sc-defense',
     order: 6,
-    chapter: 'SC 編',
+    chapter: 'SC',
     world: 'sc',
     navLabel: '危険性は防げるか',
     title: '危険性は防げるか ── 入り口で止める',
-    lead: 'IP 編では割り込めた PC が、SC では会話に入る前に断られる。',
+    lead: 'BACnet/IP では割り込めた PC が、SC では会話に入る前に断られる。',
     paragraphs: [
       '同じ「持ち込まれた PC」がハブに繋ごうとします。ハブは証明書を求めますが、PC は出せません。ハブは短い返事を 1 つ返し、接続はそこで終わります。Who-Is も ReadProperty も送れません。',
       '盗み見も防がれます。最初のあいさつ（Client Hello / Server Hello）より後は暗号化されていて、Wireshark には Application Data としか映りません。',
@@ -215,13 +215,13 @@ export const steps: StepContent[] = [
   {
     id: 'sc-limits',
     order: 7,
-    chapter: 'SC 編',
+    chapter: 'SC',
     world: 'mixed',
     navLabel: 'SC の限界',
     title: 'SC の限界 ── これだけで安全とは限らない',
     lead: '証明書で入り口は固くなる。それでも残る課題がある。',
     paragraphs: [
-      'まず、既存の機器（図の下半分）。SC に対応していない電力計はハブに参加できず、旧来の BACnet/IP の区画に残ります。そこに PC を持ち込まれれば、IP 編と同じく読み書きできてしまいます。',
+      'まず、既存の機器（図の下半分）。SC に対応していない電力計はハブに参加できず、旧来の BACnet/IP の区画に残ります。そこに PC を持ち込まれれば、BACnet/IP と同じく読み書きできてしまいます。',
       'しかも、その要求はルータを越えて SC 側にも届きえます。図の下の「持ち込まれた PC を操作する」を押すと、まず電力計を読み、続けて SC 側の空調コントローラへ書き込みが通る様子が並びます。ルータで通信を絞っていなければ、こうなります（実機では未確認・ASHRAE の手引きに基づくシナリオ）。',
       '次に、運用（図の右上）。証明書の期限が切れた照明コントローラは、ハブに繋がれません。証明書は持っているだけでは守れず、正しく発行し、期限を管理して、はじめて役に立ちます。',
       'この教材は、実務者が学んだ内容をまとめたものです。最後は、規格（ANSI/ASHRAE 135）と実機の仕様で確かめてください。',

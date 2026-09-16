@@ -185,7 +185,7 @@ describe('SC の限界の会話（ルータ越え・要検証）', () => {
     for (const m of attack.messages) expect(m.frame).toBeUndefined()
   })
 
-  it('まず、SC 非対応の電力計を同じ区画から読む（IP 編と同じ手口）', () => {
+  it('まず、SC 非対応の電力計を同じ区画から読む（BACnet/IP と同じ手口）', () => {
     const read = attack.messages.find((m) => m.to === 'meter')
     expect(read?.from).toBe(ATTACKER_ID)
     expect(/readProperty/i.test(read?.protocol ?? '')).toBe(true)

@@ -1,19 +1,17 @@
-import type { ExtraId, StepContent, StepOrder } from '../domain/types'
+import type { StepContent, StepOrder } from '../domain/types'
 
 interface Props {
   steps: StepContent[]
   current: StepOrder
   onChange: (order: StepOrder) => void
-  /** 番外編を表示中なら、どの pill も「今ここ」にしない */
-  activeExtra: ExtraId | null
 }
 
 /**
  * ステップの pill を 1 行に並べる。数が多いので横スクロールで逃がす。
  * 進む／戻るボタンは置かない（pill を直接押して移動する）。
- * 番外編への入り口はここには置かない（ヘッダーの ExtraNav が持つ）。
+ * 画面そのものの切り替えはここには置かない（ヘッダーの SectionMenu が持つ）。
  */
-export function StepNav({ steps, current, onChange, activeExtra }: Props) {
+export function StepNav({ steps, current, onChange }: Props) {
   return (
     <nav className="stepnav" aria-label="学習ステップ">
       <ol className="stepnav__list">
@@ -29,11 +27,7 @@ export function StepNav({ steps, current, onChange, activeExtra }: Props) {
               <button
                 type="button"
                 className="stepnav__pill"
-                aria-current={
-                  activeExtra === null && step.order === current
-                    ? 'step'
-                    : undefined
-                }
+                aria-current={step.order === current ? 'step' : undefined}
                 onClick={() => onChange(step.order)}
               >
                 <span className="stepnav__num">{step.order}</span>

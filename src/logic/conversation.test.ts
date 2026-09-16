@@ -194,7 +194,7 @@ describe('実効的な中継点（relayNodeFor）', () => {
     ...over,
   })
 
-  it('送信元が機器なら、その隣のスイッチが中継点になる（IP 編・SC 編のスター型）', () => {
+  it('送信元が機器なら、その隣のスイッチが中継点になる（スター型の図）', () => {
     expect(
       relayNodeFor(
         msg({ from: 'supervisor' }),
