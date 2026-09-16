@@ -16,7 +16,7 @@ import { activeEdgeIds, flightWaypoints, type Point } from './layout'
  * 中継するメッセージは目で追えないほど速くなる。距離ではなく「何回
  * 中継したか」が読み手にとっての手数なので、区間あたりを固定する。
  */
-export const MS_PER_HOP = 520
+export const MS_PER_HOP = 1040
 
 /** まとめて飛ぶメッセージを、少しずつずらして出す間隔 */
 const STAGGER_MS = 150
