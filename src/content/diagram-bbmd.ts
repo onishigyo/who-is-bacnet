@@ -5,22 +5,31 @@ import { AHU_DEVICE_INSTANCE, AHU_ID, SUPERVISOR_ID } from './diagram'
  * BBMD 番外編の図。建物が 2 つのサブネットに分かれている状態を、
  * 左右対称に描く。
  *
- *   [中央監視] [照明]                        [空調] [電力計]
- *         \\    /                                \\    /
- *        [L2 スイッチ A]                    [L2 スイッチ B]
+ *   [中央監視] [照明]                          [空調] [電力計]
+ *         \\    /                                  \\    /
+ *        [L2 スイッチ A] ── [IP ルータ] ── [L2 スイッチ B]
  *              |                                   |
- *          [BBMD A] ──── ユニキャスト転送 ──── [BBMD B]
+ *          [BBMD A]                            [BBMD B]
  *
- * L2 スイッチと BBMD は別物として描く。L2 スイッチは同じサブネットの
- * 中を配るだけ（IP アドレスも持たない）。BBMD はそのサブネットにいる
- * BACnet/IP 機器の 1 台で、受け取ったブロードキャストを相手の BBMD へ
- * ユニキャストで転送する。この役割の違いが番外編の肝。
+ * 3 種類の箱を、どれも別物として描く。
+ *   L2 スイッチ … 同じサブネットの中を配るだけ（IP アドレスを持たない）
+ *   IP ルータ   … サブネットどうしを繋ぐ。ユニキャストは通すが、
+ *                 ブロードキャストは通さない ── これが問題の張本人
+ *   BBMD        … そのサブネットにいる BACnet/IP 機器の 1 台。受け取った
+ *                 ブロードキャストを相手の BBMD へユニキャストで送り直す
  *
- * Before は BBMD をまだ置いていない状態。BBMD 2 台と、それに繋がる
- * 3 本の線だけが After で現れる。ノードの位置は動かさない。
+ * ルータを省いて 2 つの島にしてしまうと「線が無いから届かないだけ」に
+ * 見えてしまい、肝心の「繋がっているのにブロードキャストだけ越えない」
+ * が伝わらない。だから Before の時点からルータは描いておく。
+ *
+ * Before は BBMD をまだ置いていない状態。BBMD 2 台と、そこへ繋がる
+ * 2 本の線だけが After で現れる。ノードの位置は動かさない。
+ * BBMD どうしを直接つなぐ線は引かない ── 転送はルータを通る
+ * ふつうのユニキャストなので、経路もそのとおりに描く。
  */
 export const SWITCH_A_ID: NodeId = 'bbmd-switch-a'
 export const SWITCH_B_ID: NodeId = 'bbmd-switch-b'
+export const ROUTER_ID: NodeId = 'bbmd-router'
 export const BBMD_A_ID: NodeId = 'bbmd-a'
 export const BBMD_B_ID: NodeId = 'bbmd-b'
 export const LIGHTING_ID: NodeId = 'lighting'
@@ -72,6 +81,16 @@ export const bbmdDiagramNodes: DiagramNodeSpec[] = [
     ip: '192.168.10.9',
     appearsAt: BBMD_AFTER,
     position: { x: 125, y: 360 },
+  },
+
+  // ── サブネットどうしを繋ぐもの
+  {
+    id: ROUTER_ID,
+    kind: 'router',
+    label: 'IP ルータ',
+    sublabel: 'ユニキャストは通す／ブロードキャストは通さない',
+    appearsAt: BBMD_BEFORE,
+    position: { x: 450, y: 180 },
   },
 
   // ── サブネット B（192.168.20.0/24）
@@ -128,6 +147,18 @@ export const bbmdDiagramEdges: DiagramEdgeSpec[] = [
     appearsAt: BBMD_BEFORE,
   },
   {
+    id: 'bbmd-sw-a-router',
+    source: SWITCH_A_ID,
+    target: ROUTER_ID,
+    appearsAt: BBMD_BEFORE,
+  },
+  {
+    id: 'bbmd-router-sw-b',
+    source: ROUTER_ID,
+    target: SWITCH_B_ID,
+    appearsAt: BBMD_BEFORE,
+  },
+  {
     id: 'bbmd-ahu-sw',
     source: AHU_ID,
     target: SWITCH_B_ID,
@@ -152,12 +183,5 @@ export const bbmdDiagramEdges: DiagramEdgeSpec[] = [
     source: SWITCH_B_ID,
     target: BBMD_B_ID,
     appearsAt: BBMD_AFTER,
-  },
-  {
-    id: 'bbmd-a-b',
-    source: BBMD_A_ID,
-    target: BBMD_B_ID,
-    appearsAt: BBMD_AFTER,
-    label: '1 対 1 のユニキャスト（ルータを越えられる）',
   },
 ]

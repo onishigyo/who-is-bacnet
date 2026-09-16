@@ -13,6 +13,11 @@ import { LIGHTING_ID, METER_ID, SWITCH_A_ID, SWITCH_B_ID } from './diagram-bbmd'
  * サブネットに関係なくハブへ繋ぎにいくので、ブロードキャストを転送する
  * 仕掛けそのものが要らなくなる ── それを、BBMD ありの図と同じ位置・
  * 同じ機器で見比べられるようにしている。
+ *
+ * BBMD の図にいた IP ルータは、ここでは描かない。ハブへの接続は
+ * ふつうの TCP 接続で、ルータがあってもそのまま通る ── BACnet の側で
+ * ルータを気にしなくてよくなること自体が、この図で見せたいことなので、
+ * その旨を線の札に書いている。
  */
 export const BBMD_SC_HUB_ID: NodeId = 'bbmd-sc-hub'
 
@@ -120,13 +125,13 @@ export const bbmdScDiagramEdges: DiagramEdgeSpec[] = [
     source: SWITCH_A_ID,
     target: BBMD_SC_HUB_ID,
     appearsAt: BBMD_SC,
-    label: 'TLS でハブへ',
+    label: 'ルータ越しでも、そのままハブへ',
   },
   {
     id: 'bsc-sw-b-hub',
     source: SWITCH_B_ID,
     target: BBMD_SC_HUB_ID,
     appearsAt: BBMD_SC,
-    label: 'TLS でハブへ',
+    label: 'ルータ越しでも、そのままハブへ',
   },
 ]
