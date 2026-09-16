@@ -128,7 +128,7 @@ export const bbmdConversations: Conversation[] = [
         encrypted: true,
         explain:
           '機器はサブネットに関係なく、それぞれハブへ繋いでいます。だから呼びかけはハブから全員に配られ、サブネット B の空調コントローラと電力計にもそのまま届きます。BBMD も、BDT の設定も、それを置くためのルータの扱いも出てきません。',
-        annotation: '転送する仕掛けを、置く必要がない',
+        annotation: 'IP のブロードキャストとしては流れない。ハブが各機器へ配る',
       },
       {
         id: 'bs2',

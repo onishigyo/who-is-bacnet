@@ -11,9 +11,12 @@ interface Props {
 }
 
 /**
- * 画面そのものを切り替えるメニュー。ステップ 1〜7 と、別軸の読み物
- * （BBMD）は同居させる意味がないので、下の帯に混ぜず、ここで丸ごと
- * 入れ替える。いまどちらにいるかは、ボタンの横に出す名前で分かる。
+ * 画面そのものを切り替えるメニュー。左端のボタンを押すと、左から
+ * 引き出しが出て、その中で行き先を選ぶ。
+ *
+ * ステップ 1〜7 と、別軸の読み物（BBMD）は同居させる意味がないので、
+ * 下の帯には混ぜず、ここで丸ごと入れ替える。いまどこにいるかは
+ * ヘッダーの見出し（App の app__section）が常に出している。
  */
 export function SectionMenu({
   extras,
@@ -22,42 +25,54 @@ export function SectionMenu({
   onSelectExtra,
 }: Props) {
   const [open, setOpen] = useState(false)
-  const ref = useRef<HTMLDivElement>(null)
+  const buttonRef = useRef<HTMLButtonElement>(null)
 
-  // 外を押したとき・Esc で閉じる
+  // Esc で閉じる。閉じたらボタンへ戻す（キーボードで辿れるように）
   useEffect(() => {
     if (!open) return
-    const onPointerDown = (event: MouseEvent) => {
-      if (!ref.current?.contains(event.target as Node)) setOpen(false)
-    }
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') setOpen(false)
+      if (event.key === 'Escape') {
+        setOpen(false)
+        buttonRef.current?.focus()
+      }
     }
-    document.addEventListener('mousedown', onPointerDown)
     document.addEventListener('keydown', onKeyDown)
-    return () => {
-      document.removeEventListener('mousedown', onPointerDown)
-      document.removeEventListener('keydown', onKeyDown)
-    }
+    return () => document.removeEventListener('keydown', onKeyDown)
   }, [open])
-
-  const activeContent = extras.find((extra) => extra.id === activeExtra)
-  const currentName = activeContent
-    ? activeContent.navLabel
-    : MAIN_SECTION.navLabel
 
   const choose = (run: () => void) => {
     run()
     setOpen(false)
   }
 
-  return (
-    <div className="sectionmenu" ref={ref}>
+  const item = (
+    key: string,
+    name: string,
+    summary: string,
+    active: boolean,
+    run: () => void,
+  ) => (
+    <li key={key}>
       <button
         type="button"
+        className={`sectionmenu__item ${active ? 'is-active' : ''}`}
+        aria-current={active ? 'true' : undefined}
+        onClick={() => choose(run)}
+      >
+        <span className="sectionmenu__name">{name}</span>
+        <span className="sectionmenu__summary">{summary}</span>
+      </button>
+    </li>
+  )
+
+  return (
+    <>
+      <button
+        ref={buttonRef}
+        type="button"
         className="sectionmenu__button"
+        aria-label="画面を選ぶ"
         aria-expanded={open}
-        aria-haspopup="menu"
         onClick={() => setOpen((value) => !value)}
       >
         <span className="sectionmenu__icon" aria-hidden="true">
@@ -65,46 +80,37 @@ export function SectionMenu({
           <span />
           <span />
         </span>
-        <span className="sectionmenu__current">{currentName}</span>
       </button>
 
       {open && (
-        <ul className="sectionmenu__list" role="menu">
-          <li>
-            <button
-              type="button"
-              role="menuitem"
-              className={`sectionmenu__item ${
-                activeExtra === null ? 'is-active' : ''
-              }`}
-              onClick={() => choose(onSelectMain)}
-            >
-              <span className="sectionmenu__name">{MAIN_SECTION.navLabel}</span>
-              <span className="sectionmenu__summary">
-                {MAIN_SECTION.menuSummary}
-              </span>
-            </button>
-          </li>
-
-          {extras.map((extra) => (
-            <li key={extra.id}>
-              <button
-                type="button"
-                role="menuitem"
-                className={`sectionmenu__item ${
-                  activeExtra === extra.id ? 'is-active' : ''
-                }`}
-                onClick={() => choose(() => onSelectExtra(extra.id))}
-              >
-                <span className="sectionmenu__name">{extra.navLabel}</span>
-                <span className="sectionmenu__summary">
-                  {extra.menuSummary}
-                </span>
-              </button>
-            </li>
-          ))}
-        </ul>
+        <>
+          <div
+            className="sectionmenu__backdrop"
+            onClick={() => setOpen(false)}
+          />
+          <aside className="sectionmenu__drawer" aria-label="画面を選ぶ">
+            <p className="sectionmenu__heading">画面を選ぶ</p>
+            <ul className="sectionmenu__list">
+              {item(
+                'main',
+                MAIN_SECTION.navLabel,
+                MAIN_SECTION.menuSummary,
+                activeExtra === null,
+                onSelectMain,
+              )}
+              {extras.map((extra) =>
+                item(
+                  extra.id,
+                  extra.navLabel,
+                  extra.menuSummary,
+                  activeExtra === extra.id,
+                  () => onSelectExtra(extra.id),
+                ),
+              )}
+            </ul>
+          </aside>
+        </>
       )}
-    </div>
+    </>
   )
 }

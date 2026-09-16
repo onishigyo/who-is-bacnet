@@ -26,6 +26,7 @@ import {
 import { bbmdConversations } from './content/conversations-bbmd'
 import { AHU_ID, ATTACKER_ID } from './content/diagram'
 import { extras } from './content/extras'
+import { MAIN_SECTION } from './content/sections'
 import { steps } from './content/steps'
 import { worlds } from './content/worlds'
 import type {
@@ -48,10 +49,8 @@ import {
   playGroup,
   selectedMessages,
 } from './logic/conversation'
+import { planFlights, totalFlightMs } from './logic/flight'
 import { buildDiagramState, extraContentById, stepByOrder } from './logic/steps'
-
-/** パケットが図の上を飛ぶ時間。目で追える速さにしている */
-const FLIGHT_MS = 1800
 
 export default function App() {
   const [order, setOrder] = useState<StepOrder>(1)
@@ -96,13 +95,6 @@ export default function App() {
   const activeConversation = activeConversationId
     ? conversationById(allConversations, activeConversationId)
     : null
-
-  // 飛行中のまとまりは、一定時間で着地させる（アニメの終わり）
-  useEffect(() => {
-    if (playback.phase !== 'flying') return
-    const timer = setTimeout(() => setPlayback(landGroup), FLIGHT_MS)
-    return () => clearTimeout(timer)
-  }, [playback])
 
   /** そのまとまりを図で再生する */
   const play = useCallback((index: number) => {
@@ -149,12 +141,30 @@ export default function App() {
     setPlayback(playGroup(IDLE_PLAYBACK, 0))
   }, [])
 
-  const inFlight = activeConversation
-    ? flyingMessages(activeConversation, playback)
-    : []
+  const inFlight = useMemo(
+    () =>
+      activeConversation ? flyingMessages(activeConversation, playback) : [],
+    [activeConversation, playback],
+  )
+  /**
+   * いま飛んでいるまとまりが飛び終わるまでの時間。区間の数で決まるので、
+   * 1 区間だけの返事は短く、何度も中継する転送は長くなる
+   */
+  const flightMs = useMemo(
+    () =>
+      totalFlightMs(planFlights(diagram, inFlight, networkNodeId, ATTACKER_ID)),
+    [diagram, inFlight, networkNodeId],
+  )
   const current = activeConversation
     ? selectedMessages(activeConversation, playback)
     : []
+  // 飛行中のまとまりは、飛び終わったところで着地させる（アニメの終わり）
+  useEffect(() => {
+    if (playback.phase !== 'flying') return
+    const timer = setTimeout(() => setPlayback(landGroup), flightMs)
+    return () => clearTimeout(timer)
+  }, [playback, flightMs])
+
   const deviceReadouts = useMemo<Record<NodeId, DeviceState>>(() => {
     // 会話のあるステップ（3/4・5/6）で、機器の設定温度を出す。
     // 読み物（BBMD）は機器の状態を扱わないので、ここでは出さない
@@ -196,6 +206,13 @@ export default function App() {
   return (
     <div className="app">
       <header className="app__header">
+        <SectionMenu
+          extras={extras}
+          activeExtra={activeExtra}
+          onSelectMain={selectMain}
+          onSelectExtra={selectExtra}
+        />
+
         <div className="app__brand">
           <h1 className="app__title">Who-Is BACnet?</h1>
           <p className="app__subtitle">
@@ -203,17 +220,18 @@ export default function App() {
           </p>
         </div>
 
+        {/* いまどの画面にいるかを、常に同じ場所に出す */}
+        <div className="app__section">
+          <p className="app__section-caption">いま見ている画面</p>
+          <p className="app__section-name">
+            {extra ? extra.navLabel : MAIN_SECTION.navLabel}
+          </p>
+        </div>
+
         <p className="app__disclaimer">
           ブラウザ内だけで動く再現です。実際の BACnet 通信は発生しません。
           防御を学ぶための教材であり、許可のないシステムへの操作を推奨するものではありません。
         </p>
-
-        <SectionMenu
-          extras={extras}
-          activeExtra={activeExtra}
-          onSelectMain={selectMain}
-          onSelectExtra={selectExtra}
-        />
       </header>
 
       <main className="app__main">
@@ -227,7 +245,6 @@ export default function App() {
               networkNodeId={networkNodeId}
               attackerId={ATTACKER_ID}
               flightKey={`${activeConversationId ?? 'none'}-${playback.nonce}`}
-              durationMs={FLIGHT_MS}
             />
           </div>
 
@@ -291,7 +308,10 @@ export default function App() {
         </div>
 
         <aside className="app__panel" ref={panelRef}>
-          <StepPanel step={step} />
+          <StepPanel
+            step={step}
+            eyebrow={stage ? stage.navLabel : `ステップ ${order}`}
+          />
 
           {!activeExtra && (order === 1 || order === 2 || order === 5) && (
             <StepNotes notes={step.notes} />

@@ -16,15 +16,8 @@ import type {
   DiagramState,
   NodeId,
 } from '../domain/types'
-import {
-  broadcastTargets,
-  flightPath,
-  involvesAttacker,
-  isBroadcast,
-  relayHubFor,
-  relayNodeFor,
-} from '../logic/conversation'
-import { activeEdgeIds, flightWaypoints, toOffsetPath } from '../logic/layout'
+import { planFlights } from '../logic/flight'
+import { toOffsetPath } from '../logic/layout'
 import { BacnetNode, type BacnetFlowNode } from './nodes/BacnetNode'
 import { ZoneNode, type ZoneFlowNode } from './nodes/ZoneNode'
 
@@ -62,9 +55,6 @@ function FitViewOnResize() {
   return null
 }
 
-/** ブロードキャストで、ネットワークに着いてから広がり始めるまでの割合 */
-const FAN_SPLIT = 0.45
-
 /** 縦積みレイアウトになる幅。ここではページのスクロールを優先する */
 const NARROW = '(max-width: 1080px)'
 
@@ -96,7 +86,6 @@ interface Props {
   attackerId: NodeId
   /** アニメーションをやり直すためのキー */
   flightKey: string
-  durationMs: number
 }
 
 export function NetworkCanvas({
@@ -106,67 +95,13 @@ export function NetworkCanvas({
   networkNodeId,
   attackerId,
   flightKey,
-  durationMs,
 }: Props) {
   const narrow = useNarrowScreen()
 
-  /** 飛んでいる 1 通ごとの、経路と広がり先 */
+  /** 飛んでいる 1 通ごとの、経路と時間（判定はロジック層が済ませている） */
   const flights = useMemo(
-    () =>
-      inFlight.map((message) => {
-        const relayNode = relayNodeFor(
-          message,
-          diagram.nodes,
-          diagram.edges,
-          networkNodeId,
-        )
-        const path = flightPath(message, relayNode)
-        const fanOut = isBroadcast(message.to)
-          ? broadcastTargets(
-              diagram.nodes,
-              diagram.edges,
-              message.from,
-              relayNode,
-            )
-          : []
-        const broadcasting = fanOut.length > 0
-        // SC では機器どうしが直接話さず、必ずハブを通る
-        const viaHub = relayHubFor(diagram.nodes, path.from, path.to)
-        return {
-          message,
-          broadcasting,
-          danger: involvesAttacker(message, attackerId),
-          main: flightWaypoints(
-            diagram.nodes,
-            diagram.edges,
-            path.from,
-            path.to,
-            relayNode,
-            viaHub,
-          ),
-          fans: fanOut.map((target) =>
-            flightWaypoints(
-              diagram.nodes,
-              diagram.edges,
-              relayNode,
-              target,
-              relayNode,
-            ),
-          ),
-          legs: activeEdgeIds(
-            diagram.edges,
-            path.from,
-            path.to,
-            relayNode,
-            viaHub,
-          ).concat(
-            fanOut.flatMap((target) =>
-              activeEdgeIds(diagram.edges, relayNode, target, relayNode),
-            ),
-          ),
-        }
-      }),
-    [inFlight, diagram, networkNodeId, attackerId],
+    () => planFlights(diagram, inFlight, networkNodeId, attackerId),
+    [diagram, inFlight, networkNodeId, attackerId],
   )
 
   const speaking = useMemo(
@@ -176,11 +111,11 @@ export function NetworkCanvas({
   const dangerSpeakers = useMemo(
     () =>
       new Set(
-        inFlight
-          .filter((message) => involvesAttacker(message, attackerId))
-          .map((message) => message.from),
+        flights
+          .filter((flight) => flight.danger)
+          .map((flight) => flight.message.from),
       ),
-    [inFlight, attackerId],
+    [flights],
   )
 
   const nodes: (BacnetFlowNode | ZoneFlowNode)[] = useMemo(
@@ -242,11 +177,6 @@ export function NetworkCanvas({
     [diagram.edges, litEdges, dangerEdges],
   )
 
-  /** まとめて飛ぶときは、少しずつずらして出す（重なって読めなくなるため） */
-  const stagger =
-    flights.length > 1 ? Math.min(160, durationMs / (flights.length * 3)) : 0
-  const mainDuration = durationMs - stagger * Math.max(0, flights.length - 1)
-
   return (
     <ReactFlow
       nodes={nodes}
@@ -283,13 +213,8 @@ export function NetworkCanvas({
       <Controls showInteractive={false} />
 
       <ViewportPortal>
-        {flights.map((flight, index) => {
+        {flights.map((flight) => {
           const compact = flights.length > 1
-          const delay = stagger * index
-          const duration = flight.broadcasting
-            ? mainDuration * FAN_SPLIT
-            : mainDuration
-
           const mainPath = toOffsetPath(flight.main)
 
           return (
@@ -305,8 +230,8 @@ export function NetworkCanvas({
                     {
                       offsetPath: `path('${mainPath}')`,
                       offsetRotate: '0deg',
-                      animationDuration: `${duration}ms`,
-                      animationDelay: `${delay}ms`,
+                      animationDuration: `${flight.mainMs}ms`,
+                      animationDelay: `${flight.delayMs}ms`,
                     } as CSSProperties
                   }
                 >
@@ -336,8 +261,8 @@ export function NetworkCanvas({
                       {
                         offsetPath: `path('${fanPath}')`,
                         offsetRotate: '0deg',
-                        animationDuration: `${mainDuration * (1 - FAN_SPLIT)}ms`,
-                        animationDelay: `${delay + mainDuration * FAN_SPLIT}ms`,
+                        animationDuration: `${flight.fanMsEach[fanIndex]}ms`,
+                        animationDelay: `${flight.delayMs + flight.mainMs}ms`,
                       } as CSSProperties
                     }
                   >

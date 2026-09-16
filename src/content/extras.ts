@@ -77,9 +77,11 @@ export const extras: ExtraContent[] = [
         text: 'I-Am をブロードキャストで返す機器なら、帰りも行きと同じ 3 手（配る → BBMD が転送 → 配り直す）を踏むことになる、と理解しています。手元にそういう機器がないため、実機では確かめられていません。',
       },
       {
-        id: 'bbmd-interp-sc',
-        confidence: 'interpretation',
-        text: 'BACnet/SC でブロードキャストがハブからどう配られるかの細部は、Annex AB の原文で確認しきれていません。「BBMD と BDT の設定が要らなくなる」という結論は変わらないと理解していますが、配り方そのものの記述は要検証です。',
+        id: 'bbmd-std-sc-broadcast',
+        confidence: 'standard',
+        text: 'BACnet/SC でも Who-Is のような「全員あての呼びかけ」は使います。違うのは配られ方で、IP のブロードキャストとして流れるのではなく、ハブが繋がっている各機器へ配ります。だから IP のブロードキャストも BBMD も要らなくなります（ステップ 5 の注記と同じ内容です）。',
+        source:
+          'ANSI/ASHRAE Standard 135-2020 Annex AB / ASHRAE BACnet/SC ホワイトペーパー',
       },
       {
         id: 'bbmd-interp-ops',
