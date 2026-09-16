@@ -76,8 +76,29 @@ export function nodePath(
 }
 
 /**
+ * 配線をたどった from → to のノード列。via が指定されていれば、そこを
+ * 必ず経由する（BACnet/SC のように、配線の最短ではなく接続先で経路が
+ * 決まる場合に使う）。
+ */
+function pathVia(
+  edges: DiagramEdgeSpec[],
+  from: NodeId,
+  to: NodeId,
+  via: NodeId | undefined,
+): NodeId[] {
+  if (via === undefined || via === from || via === to) {
+    return nodePath(edges, from, to)
+  }
+  const head = nodePath(edges, from, via)
+  const tail = nodePath(edges, via, to)
+  if (head.length === 0 || tail.length === 0) return []
+  return [...head, ...tail.slice(1)]
+}
+
+/**
  * パケットが図の上を飛ぶ経路。配線をたどって、送信元 → …中継… → 宛先 の
  * 各ノードの中心を返す。端点が図に出ていない、または繋がっていなければ空配列。
+ * via を渡すと、その中継（SC ハブ）を必ず通る経路になる。
  */
 export function flightWaypoints(
   nodes: DiagramNodeSpec[],
@@ -85,10 +106,11 @@ export function flightWaypoints(
   from: NodeId,
   to: NodeId,
   networkId: NodeId,
+  via?: NodeId,
 ): Point[] {
   if (!centerOf(nodes, from) || !centerOf(nodes, to)) return []
 
-  const path = nodePath(edges, from, to)
+  const path = pathVia(edges, from, to, via)
   if (path.length === 0) {
     // 配線がたどれないときは、従来どおり中継点を挟む
     const start = centerOf(nodes, from)!
@@ -128,8 +150,9 @@ export function activeEdgeIds(
   from: NodeId,
   to: NodeId,
   networkId: NodeId,
+  via?: NodeId,
 ): string[] {
-  const path = nodePath(edges, from, to)
+  const path = pathVia(edges, from, to, via)
   const legs: [NodeId, NodeId][] =
     path.length >= 2
       ? path.slice(1).map((node, i) => [path[i], node])

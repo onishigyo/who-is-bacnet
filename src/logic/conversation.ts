@@ -163,11 +163,43 @@ function neighborsOf(edges: DiagramEdgeSpec[]): Map<NodeId, NodeId[]> {
 }
 
 /**
+ * 配線をたどって最初に見つかるハブ。ハブとの間はふつうの TCP 接続なので、
+ * L2 スイッチもルータも素通しして探す（IP のブロードキャストと違う）。
+ */
+function hubNear(
+  kindOf: Map<NodeId, NodeKind>,
+  neighbors: Map<NodeId, NodeId[]>,
+  from: NodeId,
+): NodeId | undefined {
+  const passable = (id: NodeId) => {
+    const kind = kindOf.get(id)
+    return kind === 'switch' || kind === 'router'
+  }
+
+  const seen = new Set<NodeId>([from])
+  let frontier: NodeId[] = [from]
+  while (frontier.length > 0) {
+    const next: NodeId[] = []
+    for (const node of frontier) {
+      for (const neighbor of neighbors.get(node) ?? []) {
+        if (seen.has(neighbor)) continue
+        seen.add(neighbor)
+        if (kindOf.get(neighbor) === 'hub') return neighbor
+        if (passable(neighbor)) next.push(neighbor)
+      }
+    }
+    frontier = next
+  }
+  return undefined
+}
+
+/**
  * そのメッセージにとっての、ブロードキャストの出発点になる中継。
- * 送信元が中継そのもの（スイッチ・ハブ）ならそれ自身、そうでなければ
- * 送信元の隣にいる中継を使う。BBMD のように機器が中継の先にぶら下がる
- * 図では、world 固定の networkNodeId と実際の出発点が別になりうるため、
- * 配線から求める。隣に中継がいなければ world 固定の中継点に落とす。
+ *
+ * BACnet/SC の世界（ハブがある図）では、配るのはハブ。機器はサブネットに
+ * 関係なくハブへ接続しているので、ハブまで届けてから配り直す。
+ * BACnet/IP の世界では、配るのは送信元のいる区画の L2 スイッチ。
+ * どちらでもなければ world 固定の中継点に落とす。
  */
 export function relayNodeFor(
   message: ConversationMessage,
@@ -176,14 +208,41 @@ export function relayNodeFor(
   networkNodeId: NodeId,
 ): NodeId {
   const kindOf = new Map(nodes.map((node) => [node.id, node.kind]))
+  const neighbors = neighborsOf(edges)
+
+  if (kindOf.get(message.from) === 'hub') return message.from
+  const hub = hubNear(kindOf, neighbors, message.from)
+  if (hub) return hub
+
   const spreads = (id: NodeId) => {
     const kind = kindOf.get(id)
     return kind !== undefined && SPREADING_KINDS.has(kind)
   }
-
   if (spreads(message.from)) return message.from
-  const adjacent = neighborsOf(edges).get(message.from) ?? []
-  return adjacent.find(spreads) ?? networkNodeId
+  return (neighbors.get(message.from) ?? []).find(spreads) ?? networkNodeId
+}
+
+/**
+ * その 1 対 1 の通信が、ハブを経由するか（経由するならハブの id）。
+ *
+ * BACnet/SC では、機器どうしが直接話すのではなく、それぞれがハブへ張った
+ * 接続を通る。図の配線をそのままたどると、同じ L2 スイッチにぶら下がる
+ * 機器どうしがハブを通らずに繋がって見えてしまうので、両端とも SC に
+ * 参加している（証明書を持つ）機器なら、ハブを経由地として明示する。
+ * 片方でも SC 非対応なら（旧来の区画の電力計や、持ち込まれた PC）、
+ * ハブは通らない ── そこが SC の限界の話そのものなので、隠さない。
+ */
+export function relayHubFor(
+  nodes: Pick<DiagramNodeSpec, 'id' | 'kind' | 'hasCertificate'>[],
+  from: NodeId,
+  to: NodeId,
+): NodeId | undefined {
+  const hub = nodes.find((node) => node.kind === 'hub')
+  if (!hub || from === hub.id || to === hub.id) return undefined
+
+  const joinsHub = (id: NodeId) =>
+    nodes.find((node) => node.id === id)?.hasCertificate === true
+  return joinsHub(from) && joinsHub(to) ? hub.id : undefined
 }
 
 /**
@@ -202,10 +261,13 @@ export function flightPath(
 
 /**
  * ブロードキャストが、その区画のどこまで広がるか。
- * 中継点から配線をたどり、スイッチ・ハブは通り抜けて（同じ区画なので）、
- * 機器と境界（ルータ・BBMD）に届いたらそこで止める。境界自身は「受け取る
- * 相手」として返す ── BBMD がブロードキャストを受け取ることが、読み物で
- * 見せたい当のことだから。境界の先へは広げない。
+ *
+ * 中継点から配線をたどる。通り抜けられるものは、中継点が何かで変わる。
+ *   L2 スイッチが配る（BACnet/IP）… スイッチだけ通り抜ける。ルータと
+ *     BBMD は境界なので、そこで止める。ただし境界自身は受け取るので、
+ *     送り先としては返す（BBMD が受け取ることが、読み物で見せたい当のこと）
+ *   ハブが配る（BACnet/SC）… スイッチもルータも通り抜ける。ハブとの間は
+ *     ふつうの TCP 接続で、ルータが素通しするため
  */
 export function broadcastTargets(
   nodes: Pick<DiagramNodeSpec, 'id' | 'kind'>[],
@@ -215,6 +277,13 @@ export function broadcastTargets(
 ): NodeId[] {
   const kindOf = new Map(nodes.map((node) => [node.id, node.kind]))
   const neighbors = neighborsOf(edges)
+  const fromHub = kindOf.get(networkId) === 'hub'
+
+  const passable = (kind: NodeKind | undefined) => {
+    if (kind === undefined) return false
+    if (SPREADING_KINDS.has(kind)) return true
+    return fromHub && kind === 'router'
+  }
 
   const targets: NodeId[] = []
   const seen = new Set<NodeId>([networkId])
@@ -226,8 +295,7 @@ export function broadcastTargets(
         if (seen.has(neighbor)) continue
         seen.add(neighbor)
         const kind = kindOf.get(neighbor)
-        // スイッチ・ハブの先も同じ区画。通り抜けて先を見る
-        if (kind !== undefined && SPREADING_KINDS.has(kind)) {
+        if (passable(kind)) {
           next.push(neighbor)
           continue
         }

@@ -21,12 +21,14 @@ import {
   flightPath,
   involvesAttacker,
   isBroadcast,
+  relayHubFor,
   relayNodeFor,
 } from '../logic/conversation'
 import { activeEdgeIds, flightWaypoints, toOffsetPath } from '../logic/layout'
 import { BacnetNode, type BacnetFlowNode } from './nodes/BacnetNode'
+import { ZoneNode, type ZoneFlowNode } from './nodes/ZoneNode'
 
-const nodeTypes: NodeTypes = { bacnet: BacnetNode }
+const nodeTypes: NodeTypes = { bacnet: BacnetNode, zone: ZoneNode }
 
 // 自動フィットでは拡大しすぎない（機器が 1 台だけのステップ1 で巨大になるため）。
 // 手動のホイール操作では maxZoom まで寄れる
@@ -128,6 +130,8 @@ export function NetworkCanvas({
             )
           : []
         const broadcasting = fanOut.length > 0
+        // SC では機器どうしが直接話さず、必ずハブを通る
+        const viaHub = relayHubFor(diagram.nodes, path.from, path.to)
         return {
           message,
           broadcasting,
@@ -138,6 +142,7 @@ export function NetworkCanvas({
             path.from,
             path.to,
             relayNode,
+            viaHub,
           ),
           fans: fanOut.map((target) =>
             flightWaypoints(
@@ -153,6 +158,7 @@ export function NetworkCanvas({
             path.from,
             path.to,
             relayNode,
+            viaHub,
           ).concat(
             fanOut.flatMap((target) =>
               activeEdgeIds(diagram.edges, relayNode, target, relayNode),
@@ -177,9 +183,20 @@ export function NetworkCanvas({
     [inFlight, attackerId],
   )
 
-  const nodes: BacnetFlowNode[] = useMemo(
-    () =>
-      diagram.nodes.map((spec) => ({
+  const nodes: (BacnetFlowNode | ZoneFlowNode)[] = useMemo(
+    () => [
+      // 囲いは機器の後ろに敷く（zIndex を下げ、当たり判定も持たせない）
+      ...diagram.zones.map((spec): ZoneFlowNode => ({
+        id: spec.id,
+        type: 'zone' as const,
+        position: { x: spec.rect.x, y: spec.rect.y },
+        draggable: false,
+        selectable: false,
+        focusable: false,
+        zIndex: -1,
+        data: { spec },
+      })),
+      ...diagram.nodes.map((spec): BacnetFlowNode => ({
         id: spec.id,
         type: 'bacnet' as const,
         position: spec.position,
@@ -192,6 +209,7 @@ export function NetworkCanvas({
           device: deviceReadouts[spec.id] ?? null,
         },
       })),
+    ],
     [diagram, deviceReadouts, speaking, dangerSpeakers],
   )
 

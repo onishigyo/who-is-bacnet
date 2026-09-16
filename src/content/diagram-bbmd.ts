@@ -1,4 +1,9 @@
-import type { DiagramEdgeSpec, DiagramNodeSpec, NodeId } from '../domain/types'
+import type {
+  DiagramEdgeSpec,
+  DiagramNodeSpec,
+  DiagramZoneSpec,
+  NodeId,
+} from '../domain/types'
 import { AHU_DEVICE_INSTANCE, AHU_ID, SUPERVISOR_ID } from './diagram'
 
 /**
@@ -90,7 +95,7 @@ export const bbmdDiagramNodes: DiagramNodeSpec[] = [
     label: 'IP ルータ',
     sublabel: 'ユニキャストは通す／ブロードキャストは通さない',
     appearsAt: BBMD_BEFORE,
-    position: { x: 450, y: 180 },
+    position: { x: 525, y: 180 },
   },
 
   // ── サブネット B（192.168.20.0/24）
@@ -102,7 +107,7 @@ export const bbmdDiagramNodes: DiagramNodeSpec[] = [
     deviceInstance: AHU_DEVICE_INSTANCE,
     ip: '192.168.20.31',
     appearsAt: BBMD_BEFORE,
-    position: { x: 650, y: 0 },
+    position: { x: 800, y: 0 },
   },
   {
     id: METER_ID,
@@ -112,7 +117,7 @@ export const bbmdDiagramNodes: DiagramNodeSpec[] = [
     deviceInstance: 100305,
     ip: '192.168.20.32',
     appearsAt: BBMD_BEFORE,
-    position: { x: 900, y: 0 },
+    position: { x: 1050, y: 0 },
   },
   {
     id: SWITCH_B_ID,
@@ -120,7 +125,7 @@ export const bbmdDiagramNodes: DiagramNodeSpec[] = [
     label: 'L2 スイッチ',
     sublabel: 'サブネット B の中を配るだけ',
     appearsAt: BBMD_BEFORE,
-    position: { x: 775, y: 180 },
+    position: { x: 925, y: 180 },
   },
   {
     id: BBMD_B_ID,
@@ -129,7 +134,7 @@ export const bbmdDiagramNodes: DiagramNodeSpec[] = [
     sublabel: 'サブネット B 側',
     ip: '192.168.20.9',
     appearsAt: BBMD_AFTER,
-    position: { x: 775, y: 360 },
+    position: { x: 925, y: 360 },
   },
 ]
 
@@ -183,5 +188,28 @@ export const bbmdDiagramEdges: DiagramEdgeSpec[] = [
     source: SWITCH_B_ID,
     target: BBMD_B_ID,
     appearsAt: BBMD_AFTER,
+  },
+]
+
+/**
+ * サブネットの囲い。IP アドレスを読めなくても、どこで建物が分かれて
+ * いるかが目で分かるようにする（この教材の読み手は、IT よりも建築設備に
+ * 明るい人を想定している）。ルータは、どちらの囲いにも入らない位置に置く
+ * ── 2 つのサブネットの「あいだ」にいるものだから。
+ */
+export const bbmdDiagramZones: DiagramZoneSpec[] = [
+  {
+    id: 'bbmd-zone-a',
+    label: 'サブネット A',
+    sublabel: '192.168.10.0/24',
+    appearsAt: BBMD_BEFORE,
+    rect: { x: -28, y: -56, width: 530, height: 540 },
+  },
+  {
+    id: 'bbmd-zone-b',
+    label: 'サブネット B',
+    sublabel: '192.168.20.0/24',
+    appearsAt: BBMD_BEFORE,
+    rect: { x: 772, y: -56, width: 530, height: 540 },
   },
 ]

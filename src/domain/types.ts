@@ -143,10 +143,26 @@ export interface DiagramEdgeSpec {
   label?: string
 }
 
+/**
+ * 図の中の「囲い」。サブネットのように、どの機器が同じまとまりに
+ * いるかを、線ではなく面で示すためのもの。IP アドレスを読めない人にも
+ * 分かれ目が見えるようにする。
+ */
+export interface DiagramZoneSpec {
+  id: string
+  label: string
+  /** 囲いの見出しに添える一行（ネットワークアドレスなど） */
+  sublabel?: string
+  appearsAt: StepOrder
+  /** 図の座標での矩形（ノードの position と同じ座標系） */
+  rect: { x: number; y: number; width: number; height: number }
+}
+
 /** 図の表示状態（純粋ロジックが組み立て、描画層はこれを描くだけ） */
 export interface DiagramState {
   nodes: DiagramNodeSpec[]
   edges: DiagramEdgeSpec[]
+  zones: DiagramZoneSpec[]
   /** IP アドレスの札を出すか（ステップ2以降） */
   showIp: boolean
 }

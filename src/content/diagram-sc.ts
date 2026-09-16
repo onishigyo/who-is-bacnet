@@ -14,13 +14,20 @@ import {
 export const SC_HUB_ID: NodeId = 'sc-hub'
 
 /**
- * SC 編の図。IP 編とはトポロジが違う（hub-and-spoke）。
- * 中央に専用の SC ハブを置き、証明書を持つ機器（中央監視も含む）が
- * そこへ TLS 接続する。攻撃者だけステップ6で現れ、証明書がなく弾かれる。
+ * SC の図。中央に専用の SC ハブを置き、証明書を持つ機器（中央監視も
+ * 含む）がそこへ TLS 接続する。攻撃者だけステップ6で現れ、証明書が
+ * なく弾かれる。
  *
- * appearsAt はステップ番号（5〜7）。IP 編と同じ横長比率を保つ。
- * 機器の id は IP 編と同じものを流用して「同じ機器が SC に移った」ことを示す。
+ * L2 スイッチは、BACnet/IP の図と同じように描く。SC にしても建物の
+ * 配線は 1 本も変わらない（機器は今までどおりスイッチに繋がっている）。
+ * 変わるのは、その上で誰と話せるかをハブと証明書が決めるようになる、
+ * という点だけ。スイッチを省くと「SC にするとスイッチが要らない」と
+ * 読めてしまうので、省かない。
+ *
+ * 機器の id は BACnet/IP の図と同じものを流用して「同じ機器が SC に
+ * 移った」ことを示す。
  */
+export const SC_SWITCH_ID: NodeId = 'sc-switch'
 export const scDiagramNodes: DiagramNodeSpec[] = [
   {
     id: AHU_ID,
@@ -63,12 +70,20 @@ export const scDiagramNodes: DiagramNodeSpec[] = [
     position: { x: 750, y: 0 },
   },
   {
+    id: SC_SWITCH_ID,
+    kind: 'switch',
+    label: 'L2 スイッチ',
+    sublabel: '配線はこれまでどおり',
+    appearsAt: 5,
+    position: { x: 375, y: 180 },
+  },
+  {
     id: SC_HUB_ID,
     kind: 'hub',
     label: 'SC ハブ',
     sublabel: '証明書を確かめて参加を通す',
     appearsAt: 5,
-    position: { x: 375, y: 200 },
+    position: { x: 375, y: 360 },
   },
   {
     id: ATTACKER_ID,
@@ -77,26 +92,41 @@ export const scDiagramNodes: DiagramNodeSpec[] = [
     sublabel: '証明書を持たない',
     hasCertificate: false,
     appearsAt: 6,
-    position: { x: 790, y: 200 },
+    position: { x: 750, y: 360 },
   },
 ]
 
 export const scDiagramEdges: DiagramEdgeSpec[] = [
-  { id: 'sc-ahu-hub', source: AHU_ID, target: SC_HUB_ID, appearsAt: 5 },
+  // 機器はこれまでどおりスイッチに繋がっている（配線は SC でも変わらない）
+  { id: 'sc-ahu-sw', source: AHU_ID, target: SC_SWITCH_ID, appearsAt: 5 },
   {
-    id: 'sc-lighting-hub',
+    id: 'sc-lighting-sw',
     source: 'lighting',
-    target: SC_HUB_ID,
+    target: SC_SWITCH_ID,
     appearsAt: 5,
   },
-  { id: 'sc-meter-hub', source: 'meter', target: SC_HUB_ID, appearsAt: 5 },
+  { id: 'sc-meter-sw', source: 'meter', target: SC_SWITCH_ID, appearsAt: 5 },
   {
-    id: 'sc-supervisor-hub',
+    id: 'sc-supervisor-sw',
     source: SUPERVISOR_ID,
-    target: SC_HUB_ID,
+    target: SC_SWITCH_ID,
     appearsAt: 5,
   },
-  // 攻撃者からハブへの線は「繋ごうとして拒否される」を表す。ステップ6で出す
+  {
+    id: 'sc-sw-hub',
+    source: SC_SWITCH_ID,
+    target: SC_HUB_ID,
+    appearsAt: 5,
+    label: 'この上でハブに繋ぐ（TLS）',
+  },
+  // 持ち込まれた PC も、配線の上では同じスイッチにいる。
+  // それでもハブへの参加は断られる ── そこが BACnet/IP との違い
+  {
+    id: 'sc-attacker-sw',
+    source: ATTACKER_ID,
+    target: SC_SWITCH_ID,
+    appearsAt: 6,
+  },
   {
     id: 'sc-attacker-hub',
     source: ATTACKER_ID,

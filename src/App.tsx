@@ -74,6 +74,7 @@ export default function App() {
     nodes: worldNodes,
     edges: worldEdges,
     networkNodeId,
+    zones: worldZones,
   } = worlds[stage ? stage.world : mainStep.world]
   const allConversations = useMemo(
     () => [
@@ -88,8 +89,8 @@ export default function App() {
   // 読み物では、ステップの order の代わりに、その場面の段階を使う
   const diagramOrder = stage ? stage.order : order
   const diagram = useMemo(
-    () => buildDiagramState(worldNodes, worldEdges, diagramOrder),
-    [worldNodes, worldEdges, diagramOrder],
+    () => buildDiagramState(worldNodes, worldEdges, diagramOrder, worldZones),
+    [worldNodes, worldEdges, diagramOrder, worldZones],
   )
 
   const activeConversation = activeConversationId

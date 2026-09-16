@@ -110,7 +110,9 @@ describe('配線をたどる経路（多ホップ）', () => {
     expect(ids).toContain('mx-attacker-switch')
     expect(ids).toContain('mx-router-switch')
     expect(ids).toContain('mx-hub-router')
-    expect(ids).toContain('mx-ahu-hub')
+    // ハブから先も、SC 区画のスイッチを通って機器に届く
+    expect(ids).toContain('mx-sw-hub')
+    expect(ids).toContain('mx-ahu-sw')
   })
 
   it('繋がっていなければ経路は空', () => {

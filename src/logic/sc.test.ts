@@ -18,17 +18,40 @@ import {
 } from '../content/diagram-mixed'
 import {
   SC_HUB_ID,
+  SC_SWITCH_ID,
   scDiagramEdges,
   scDiagramNodes,
 } from '../content/diagram-sc'
+import { nodePath } from './layout'
 
 describe('SC 図', () => {
-  it('中央に専用ハブがあり、機器はすべてハブに繋がる', () => {
+  it('中央に専用ハブがあり、どの機器からもハブへ辿り着ける', () => {
     const hub = scDiagramNodes.find((n) => n.id === SC_HUB_ID)
     expect(hub?.kind).toBe('hub')
-    for (const edge of scDiagramEdges) {
-      expect(edge.target).toBe(SC_HUB_ID)
+
+    for (const node of scDiagramNodes) {
+      if (node.id === SC_HUB_ID) continue
+      expect(
+        nodePath(scDiagramEdges, node.id, SC_HUB_ID).length,
+      ).toBeGreaterThan(0)
     }
+  })
+
+  it('配線は BACnet/IP と同じで、機器は L2 スイッチに繋がっている', () => {
+    // SC にしても建物の配線は変わらない。図でスイッチを省くと
+    // 「SC にするとスイッチが要らなくなる」と読めてしまう
+    const attachedToSwitch = scDiagramNodes
+      .filter(
+        (node) => node.kind === 'controller' || node.kind === 'supervisor',
+      )
+      .every((node) =>
+        scDiagramEdges.some(
+          (edge) =>
+            (edge.source === node.id && edge.target === SC_SWITCH_ID) ||
+            (edge.target === node.id && edge.source === SC_SWITCH_ID),
+        ),
+      )
+    expect(attachedToSwitch).toBe(true)
   })
 
   it('中央監視も証明書を持ち、ハブに繋がる 1 ノードとして描かれる', () => {
