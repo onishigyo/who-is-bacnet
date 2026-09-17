@@ -16,7 +16,7 @@ import { BBMD_SC } from './diagram-bbmd-sc'
 export const extras: ExtraContent[] = [
   {
     id: 'bbmd',
-    navLabel: 'ネットワークが分かれた建物',
+    navLabel: 'ルータの向こうの機器を探す方法',
     menuSummary: 'BBMD と、BACnet/SC ならどうなるか',
     stages: [
       {
