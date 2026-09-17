@@ -86,4 +86,4 @@ pnpm test          # Vitest
 - ライセンス: [MIT](LICENSE)
 - BACnet® は ASHRAE の登録商標です。本教材は ASHRAE とは関係のない、個人の制作物です。
 - 規格の一次情報: ANSI/ASHRAE Standard 135（BACnet）/ ISO 16484-5
-- 設計の詳細は [docs/DESIGN.md](docs/DESIGN.md)、開発方針は [CLAUDE.md](CLAUDE.md) を参照
+- 開発方針と設計の考え方は [CLAUDE.md](CLAUDE.md) を参照
