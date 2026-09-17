@@ -191,10 +191,15 @@ describe('SC の限界の図（SC と旧来の BACnet/IP が混ざる建物）',
     expect(edge(ATTACKER_ID, LEGACY_SWITCH_ID)?.tone).toBe('danger')
   })
 
-  it('証明書の期限切れの機器は、ハブと繋がれない線で描く', () => {
+  it('証明書の期限切れの機器は、ハブへの近道の線を持たず、入れないことを札で伝える', () => {
+    // 配線上はほかの機器と同じくスイッチに繋がっている。ハブへ直接伸びる
+    // 線を引くと、スイッチを通って繋ぐ描き方と食い違う
     const expired = mixedDiagramNodes.filter((n) => n.certificateExpired)
     expect(expired.length).toBeGreaterThan(0)
-    for (const n of expired) expect(edge(n.id, SC_HUB_ID)?.tone).toBe('broken')
+    for (const n of expired) {
+      expect(edge(n.id, SC_HUB_ID)).toBeUndefined()
+      expect(n.sublabel).toContain('ハブに入れない')
+    }
   })
 })
 

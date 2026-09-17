@@ -47,7 +47,9 @@ export const mixedDiagramNodes: DiagramNodeSpec[] = [
     id: 'lighting',
     kind: 'controller',
     label: '照明コントローラ',
-    sublabel: '証明書の期限切れ',
+    // ハブへの近道の線は引かず（配線上はスイッチに繋がっている）、
+    // 入れないことは箱の札で伝える
+    sublabel: '証明書が期限切れでハブに入れない',
     deviceInstance: 100201,
     hasCertificate: true,
     certificateExpired: true,
@@ -77,7 +79,7 @@ export const mixedDiagramNodes: DiagramNodeSpec[] = [
     label: 'L2 スイッチ',
     sublabel: 'SC の区画',
     appearsAt: 7,
-    position: { x: 130, y: 170 },
+    position: { x: 200, y: 170 },
   },
   {
     id: LEGACY_SWITCH_ID,
@@ -126,15 +128,6 @@ export const mixedDiagramEdges: DiagramEdgeSpec[] = [
     source: MIXED_SC_SWITCH_ID,
     target: SC_HUB_ID,
     appearsAt: 7,
-  },
-  // 配線は繋がっていても、証明書が切れていればハブには参加できない
-  {
-    id: 'mx-lighting-hub',
-    source: 'lighting',
-    target: SC_HUB_ID,
-    appearsAt: 7,
-    tone: 'broken',
-    label: '✕ 期限切れで繋がれない',
   },
   {
     id: 'mx-hub-router',

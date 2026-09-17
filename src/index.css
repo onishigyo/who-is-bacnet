@@ -649,15 +649,10 @@ button:disabled {
   border-color: var(--alert);
 }
 
-/* 線の意味（SC の限界の図）。赤＝攻撃者の要求が届く経路、灰の点線＝繋がれない */
+/* 線の意味（SC の限界の図）。赤＝攻撃者の要求が届く経路 */
 .react-flow__edge.link.tone-danger .react-flow__edge-path {
   stroke: var(--alert);
   stroke-width: 2.5;
-}
-
-.react-flow__edge.link.tone-broken .react-flow__edge-path {
-  stroke: var(--line-strong);
-  stroke-dasharray: 3 5;
 }
 
 .react-flow__edge.link .react-flow__edge-text {
@@ -667,10 +662,6 @@ button:disabled {
 
 .react-flow__edge.link.tone-danger .react-flow__edge-text {
   fill: var(--alert);
-}
-
-.react-flow__edge.link.tone-broken .react-flow__edge-text {
-  fill: var(--muted);
 }
 
 /* 証明書の期限切れで、ハブに繋がれない機器 */

@@ -129,9 +129,8 @@ export interface DiagramNodeSpec {
 /**
  * 線の意味。指定なしはふつうの接続。
  * danger = 攻撃者の要求が届く経路
- * broken = 繋がれない
  */
-export type EdgeTone = 'danger' | 'broken'
+export type EdgeTone = 'danger'
 
 export interface DiagramEdgeSpec {
   id: string
