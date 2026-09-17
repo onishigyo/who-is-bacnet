@@ -18,6 +18,15 @@ import { activeEdgeIds, flightWaypoints, type Point } from './layout'
  */
 export const MS_PER_HOP = 1400
 
+/**
+ * 動き出す前に、送り手の上で吹き出しを止めておく時間。
+ * いきなり動き出すと、読み始める前に文字が逃げていって追いにくい。
+ */
+export const READ_MS = 1200
+
+/** 宛先に着いてから、吹き出しを消すまで止めておく時間 */
+export const REST_MS = 1000
+
 /** まとめて飛ぶメッセージを、少しずつずらして出す間隔 */
 const STAGGER_MS = 150
 
@@ -41,7 +50,7 @@ export interface PlannedFlight {
   fans: Point[][]
   /** 光らせるエッジの id */
   legs: string[]
-  /** 飛び始めるまでの待ち */
+  /** 飛び始めるまでの待ち（送り手の上で読ませる時間を含む） */
   delayMs: number
   mainMs: number
   /** 広がりぶんの、いちばん長いものの長さ（0 なら広がらない） */
@@ -111,7 +120,7 @@ export function planFlights(
           activeEdgeIds(diagram.edges, relayNode, target, relayNode),
         ),
       ),
-      delayMs: index * STAGGER_MS,
+      delayMs: READ_MS + index * STAGGER_MS,
       mainMs: legDuration(main),
       fanMs: fanMsEach.length > 0 ? Math.max(...fanMsEach) : 0,
       fanMsEach,
@@ -119,10 +128,15 @@ export function planFlights(
   })
 }
 
-/** そのまとまり全体が飛び終わるまでの時間（着地のタイミング） */
+/**
+ * そのまとまり全体が終わるまでの時間（着地のタイミング）。
+ * 読む → 動く → 宛先で止まる、の全部を含む
+ */
 export function totalFlightMs(flights: PlannedFlight[]): number {
   if (flights.length === 0) return MIN_MS
   return Math.max(
-    ...flights.map((flight) => flight.delayMs + flight.mainMs + flight.fanMs),
+    ...flights.map(
+      (flight) => flight.delayMs + flight.mainMs + flight.fanMs + REST_MS,
+    ),
   )
 }
