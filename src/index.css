@@ -99,26 +99,6 @@ button:disabled {
   flex: 0 0 auto;
 }
 
-.app__section {
-  flex: 0 0 auto;
-  padding-left: 16px;
-  border-left: 2px solid var(--line);
-}
-
-.app__section-caption {
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  color: var(--muted);
-}
-
-.app__section-name {
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--text-strong);
-  white-space: nowrap;
-}
-
 .app__disclaimer {
   max-width: 520px;
   padding-left: 14px;
@@ -178,26 +158,6 @@ button:disabled {
     gap: 10px;
   }
 
-  .app__section {
-    flex: 0 0 auto;
-    padding-left: 16px;
-    border-left: 2px solid var(--line);
-  }
-
-  .app__section-caption {
-    font-size: 10px;
-    font-weight: 600;
-    letter-spacing: 0.04em;
-    color: var(--muted);
-  }
-
-  .app__section-name {
-    font-size: 15px;
-    font-weight: 600;
-    color: var(--text-strong);
-    white-space: nowrap;
-  }
-
   .app__disclaimer {
     max-width: none;
   }
@@ -223,15 +183,6 @@ button:disabled {
   .app__panel {
     padding: 20px 16px;
     overflow: visible;
-  }
-
-  .app__section {
-    padding-left: 0;
-    border-left: none;
-  }
-
-  .app__section-name {
-    white-space: normal;
   }
 }
 
@@ -272,115 +223,129 @@ button:disabled {
   color: var(--muted);
 }
 
-/* ---------- 画面の切り替えメニュー ---------- */
+/* ---------- 学ぶテーマの切り替え（ヘッダー） ---------- */
 
 /*
- * ボタンはヘッダーのいちばん左。押すと左から引き出しが出て、その中で
- * 行き先を選ぶ。いまどこにいるかはヘッダーの見出し（.app__section）が出す
+ * いま学んでいるテーマの名前そのものを、押せるボタンにする。ただの見出しに
+ * 見えると気づかれないので、枠・薄い青の背景・▼ でボタンだと分かる形にし、
+ * ヘッダーの中でいちばん目立たせる（青＝操作と注目）
  */
-.sectionmenu__button {
+.themepicker {
+  position: relative;
+  flex: 0 1 auto;
+  /* テーマを切り替えても幅が変わって位置がずれないよう、長いほうの名前に合わせる */
+  width: 350px;
+  max-width: 100%;
+}
+
+.themepicker__button {
   display: flex;
   align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  flex: 0 0 auto;
-  border-radius: 10px;
-  border: 1px solid var(--line);
-  background: var(--bg-raise);
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
+  padding: 8px 16px 8px 18px;
+  border-radius: 12px;
+  border: 1.5px solid var(--accent);
+  background: var(--accent-soft);
+  text-align: left;
+  box-shadow: 0 1px 2px rgba(31, 111, 235, 0.12);
+  transition:
+    background 0.15s,
+    box-shadow 0.15s;
 }
 
-.sectionmenu__button:hover,
-.sectionmenu__button[aria-expanded='true'] {
-  border-color: var(--accent);
+.themepicker__button:hover,
+.themepicker__button[aria-expanded='true'] {
+  background: rgba(31, 111, 235, 0.16);
+  box-shadow: 0 0 0 4px rgba(31, 111, 235, 0.12);
 }
 
-/* ハンバーガーの 3 本線 */
-.sectionmenu__icon {
+.themepicker__text {
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  width: 16px;
-  height: 12px;
+  min-width: 0;
 }
 
-.sectionmenu__icon span {
-  display: block;
-  height: 2px;
-  border-radius: 1px;
-  background: var(--line-strong);
+.themepicker__caption {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--accent);
 }
 
-.sectionmenu__button[aria-expanded='true'] .sectionmenu__icon span {
-  background: var(--accent);
+.themepicker__name {
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1.35;
+  color: var(--text-strong);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.sectionmenu__backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 30;
-  background: rgba(20, 32, 43, 0.28);
+/* ▼ */
+.themepicker__chevron {
+  flex: 0 0 auto;
+  width: 9px;
+  height: 9px;
+  margin-top: -5px;
+  border-right: 2.5px solid var(--accent);
+  border-bottom: 2.5px solid var(--accent);
+  transform: rotate(45deg);
+  transition: transform 0.15s;
 }
 
-.sectionmenu__drawer {
-  position: fixed;
-  top: 0;
+.themepicker__button[aria-expanded='true'] .themepicker__chevron {
+  margin-top: 5px;
+  transform: rotate(-135deg);
+}
+
+.themepicker__list {
+  position: absolute;
+  top: calc(100% + 8px);
   left: 0;
-  bottom: 0;
-  z-index: 31;
-  width: min(340px, 86vw);
-  padding: 20px 16px;
-  overflow-y: auto;
-  border-right: 1px solid var(--line);
+  z-index: 30;
+  width: max-content;
+  min-width: 100%;
+  max-width: min(420px, calc(100vw - 32px));
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  border: 1px solid var(--line);
+  border-radius: 12px;
   background: var(--bg-raise);
   box-shadow: var(--shadow);
 }
 
-.sectionmenu__heading {
-  margin: 0 0 12px 8px;
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  color: var(--muted);
-}
-
-.sectionmenu__list {
+.themepicker__item {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.sectionmenu__item {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
+  gap: 2px;
   width: 100%;
-  padding: 12px;
+  padding: 10px 12px;
   border: 1px solid transparent;
-  border-radius: 10px;
+  border-radius: 8px;
   background: none;
   text-align: left;
 }
 
-.sectionmenu__item:hover {
+.themepicker__item:hover {
   background: var(--bg-soft);
 }
 
-.sectionmenu__item.is-active {
+.themepicker__item.is-active {
   border-color: var(--accent);
   background: var(--accent-soft);
 }
 
-.sectionmenu__name {
-  font-size: 14px;
+.themepicker__item-name {
+  font-size: 15px;
   font-weight: 600;
   color: var(--text-strong);
 }
 
-.sectionmenu__summary {
+.themepicker__item-summary {
   font-size: 12px;
   line-height: 1.6;
   color: var(--muted);

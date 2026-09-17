@@ -2,8 +2,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { CaptureEvidenceCard } from './components/CaptureEvidenceCard'
 import { ConversationBar } from './components/ConversationBar'
 import { ConversationTrack } from './components/ConversationTrack'
-import { SectionMenu } from './components/SectionMenu'
 import { StageNav } from './components/StageNav'
+import { ThemePicker } from './components/ThemePicker'
 import { NetworkCanvas } from './components/NetworkCanvas'
 import { StepNav } from './components/StepNav'
 import { StepNotes } from './components/StepNotes'
@@ -26,7 +26,6 @@ import {
 import { bbmdConversations } from './content/conversations-bbmd'
 import { AHU_ID, ATTACKER_ID } from './content/diagram'
 import { extras } from './content/extras'
-import { MAIN_SECTION } from './content/sections'
 import { steps } from './content/steps'
 import { worlds } from './content/worlds'
 import type {
@@ -206,13 +205,6 @@ export default function App() {
   return (
     <div className="app">
       <header className="app__header">
-        <SectionMenu
-          extras={extras}
-          activeExtra={activeExtra}
-          onSelectMain={selectMain}
-          onSelectExtra={selectExtra}
-        />
-
         <div className="app__brand">
           <h1 className="app__title">Who-Is BACnet?</h1>
           <p className="app__subtitle">
@@ -220,13 +212,13 @@ export default function App() {
           </p>
         </div>
 
-        {/* いまどの画面にいるかを、常に同じ場所に出す */}
-        <div className="app__section">
-          <p className="app__section-caption">いま見ている画面</p>
-          <p className="app__section-name">
-            {extra ? extra.navLabel : MAIN_SECTION.navLabel}
-          </p>
-        </div>
+        {/* いま学んでいるテーマの表示と切り替えを、1 か所にまとめる */}
+        <ThemePicker
+          extras={extras}
+          activeExtra={activeExtra}
+          onSelectMain={selectMain}
+          onSelectExtra={selectExtra}
+        />
 
         <p className="app__disclaimer">
           ブラウザ内だけで動く再現です。実際の BACnet 通信は発生しません。
