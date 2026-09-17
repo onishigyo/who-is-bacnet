@@ -92,7 +92,9 @@ export const scDiagramNodes: DiagramNodeSpec[] = [
     sublabel: '証明書を持たない',
     hasCertificate: false,
     appearsAt: 6,
-    position: { x: 750, y: 360 },
+    // スイッチの真横に置く。差し込まれている線を水平にして、
+    // その札をスイッチ〜ハブ間の札と別の高さに出すため
+    position: { x: 860, y: 180 },
   },
 ]
 
@@ -126,6 +128,7 @@ export const scDiagramEdges: DiagramEdgeSpec[] = [
     source: ATTACKER_ID,
     target: SC_SWITCH_ID,
     appearsAt: 6,
+    label: '同じスイッチに差し込まれた',
   },
   {
     id: 'sc-attacker-hub',
