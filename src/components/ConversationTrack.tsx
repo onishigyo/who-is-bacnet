@@ -106,7 +106,7 @@ export function ConversationTrack({
                 {/* 「次」は色だけでなく言葉で言う。チップの上辺に重ねるので幅は変わらない */}
                 {upNext && (
                   <span className="track__next-tag" aria-hidden="true">
-                    次はこれ
+                    次
                   </span>
                 )}
                 {upNext && <span className="sr-only">（次に押す）</span>}

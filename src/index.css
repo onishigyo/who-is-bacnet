@@ -2,7 +2,7 @@
  * 色のルール（意味は 1 色に 1 つ）
  *   青 --accent : 操作と注目（押せる・次に押す・今のステップ・いま動いている通常の通信）
  *                 塗りは「今いる場所」（ステップのタブもチップも同じ）。
- *                 「次に押す」は塗らず、枠の点滅と「次はこれ」の札で言葉にする
+ *                 「次に押す」は塗らず、枠の点滅と「次」の札で言葉にする
  *   赤 --alert  : 危険（攻撃者・書き換えられた値・注意書き・攻撃者が関わる通信）
  *                 攻撃の場面では、チップの「次に押す」やホバーも赤にそろえる
  *   緑 --ok     : 正規・確か（中央監視など正規の側、「規格・公式資料」のバッジ）
@@ -1143,7 +1143,7 @@ button:disabled {
 .track {
   border-top: 1px solid var(--line);
   background: var(--bg);
-  /* 「次はこれ」の札がチップの上にはみ出すぶん、少し高くとる */
+  /* 「次」の札がチップの上にはみ出すぶん、少し高くとる */
   height: 74px;
   flex: 0 0 auto;
   display: flex;
@@ -1175,7 +1175,7 @@ button:disabled {
   align-items: center;
   gap: 8px;
   max-width: 230px;
-  /* 上を広めに（「次はこれ」の札が文字にかからないように） */
+  /* 上を広めに（「次」の札が文字にかからないように） */
   padding: 9px 10px 6px;
   border-radius: 8px;
   border: 1px solid var(--line);
@@ -1208,7 +1208,7 @@ button:disabled {
 
 /*
  * 次に押してほしいチップ。塗らない（塗り＝今いる場所と取り違えないため）。
- * 枠をゆっくり点滅させ、上辺に「次はこれ」の札を重ねて言葉でも伝える
+ * 枠をゆっくり点滅させ、上辺に「次」の札を重ねて言葉でも伝える
  */
 .track__item.is-next {
   opacity: 1;
@@ -1228,9 +1228,9 @@ button:disabled {
  */
 .track__next-tag {
   position: absolute;
-  top: -11px;
+  top: -8px;
   right: 8px;
-  padding: 0 6px;
+  padding: 0 7px;
   border-radius: 999px;
   background: var(--accent);
   color: #fff;
