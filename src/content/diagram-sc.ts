@@ -117,7 +117,7 @@ export const scDiagramEdges: DiagramEdgeSpec[] = [
     source: SC_SWITCH_ID,
     target: SC_HUB_ID,
     appearsAt: 5,
-    label: 'この上でハブに繋ぐ（TLS）',
+    label: '各機器はここを通ってハブへ繋ぐ',
   },
   // 持ち込まれた PC も、配線の上では同じスイッチにいる。
   // それでもハブへの参加は断られる ── そこが BACnet/IP との違い
