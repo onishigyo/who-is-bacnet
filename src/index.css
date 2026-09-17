@@ -786,23 +786,16 @@ button:disabled {
   word-break: break-all;
 }
 
-/* 動きを減らす設定なら、飛ばさずに宛先へ置く */
+/*
+ * 動きを減らす設定（OS の「アニメーション効果」オフ）でも、パケットの移動は
+ * 止めない。どこを通ってどこへ届くかがこの教材の中身そのもので、宛先に
+ * いきなり置くと肝心なことが伝わらないため。
+ *
+ * Windows では、利用者が意識しないうちにこの設定がオンになっていることが
+ * 多い（パフォーマンス優先の設定、リモートデスクトップなど）。
+ * 止めるのは飾りの動きだけ（光る線の流れ、「次」のチップの点滅）。
+ */
 @media (prefers-reduced-motion: reduce) {
-  .packet {
-    animation-name: packet-appear;
-  }
-
-  @keyframes packet-appear {
-    from {
-      offset-distance: 100%;
-      opacity: 0;
-    }
-    to {
-      offset-distance: 100%;
-      opacity: 1;
-    }
-  }
-
   .react-flow__edge.link.is-active .react-flow__edge-path {
     animation: none;
   }
