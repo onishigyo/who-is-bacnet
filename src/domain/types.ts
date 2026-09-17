@@ -16,9 +16,11 @@ export type StepId =
 
 /**
  * ステップが属する「世界」。世界ごとに図が別セット。
- * mixed は SC と旧来の BACnet/IP がルータでつながる建物（SC の限界で使う）
+ * mixed は SC と旧来の BACnet/IP がルータでつながる建物（SC の限界で使う）。
+ * bbmd / bbmd-sc は、サブネットが 2 つに分かれた建物を BACnet/IP で扱う図と、
+ * 同じ建物を BACnet/SC で扱う図（BBMD の読み物で見比べる）
  */
-export type World = 'ip' | 'sc' | 'mixed'
+export type World = 'ip' | 'sc' | 'mixed' | 'bbmd' | 'bbmd-sc'
 
 /** 記述の確からしさ。教材上、両者を視覚的に区別するために使う */
 export type Confidence =
@@ -48,6 +50,45 @@ export interface StepContent {
   notes: ContentNote[]
 }
 
+/** 読み物の id。ステップ 1〜7 とは別の画面としてメニューから開く */
+export type ExtraId = 'bbmd'
+
+/**
+ * 読み物の中の 1 場面。ステップと違って順番に進む流れではなく、
+ * 「同じ建物を、条件を変えて見比べる」ための並び（BBMD なし / あり /
+ * BACnet/SC なら）。ステップと同じく、場面ごとに右の説明も図も変わる。
+ */
+export interface ExtraStage {
+  id: string
+  /** 下の帯に出す短い名前 */
+  navLabel: string
+  world: World
+  /** その世界の図を、どこまで出した状態にするか */
+  order: StepOrder
+  conversationId: string
+  title: string
+  lead: string
+  paragraphs: string[]
+  notes: ContentNote[]
+}
+
+/**
+ * ステップ 1〜7 とは別に、メニューから開く読み物。中身の説明は
+ * 場面（stages）ごとに持つ。
+ */
+export interface ExtraContent {
+  id: ExtraId
+  /** メニューとヘッダーに出す画面名 */
+  navLabel: string
+  /** メニューで名前に添える一行 */
+  menuSummary: string
+  /** 見比べる場面。下の帯にこの並びが出る */
+  stages: ExtraStage[]
+}
+
+/** 読み物パネルに渡せる中身（本編・番外編どちらでもよい） */
+export type PanelContent = StepContent | ExtraStage
+
 export type NodeId = string
 
 export type NodeKind =
@@ -61,6 +102,8 @@ export type NodeKind =
   | 'hub'
   /** BACnet ルータ（BACnet のネットワーク同士をつなぐ。SC と BACnet/IP など） */
   | 'router'
+  /** BBMD（サブネットをまたいでブロードキャストを配り直す BACnet/IP 機器） */
+  | 'bbmd'
   /** 攻撃者（同じネットワークに持ち込まれた PC） */
   | 'attacker'
 
@@ -86,9 +129,8 @@ export interface DiagramNodeSpec {
 /**
  * 線の意味。指定なしはふつうの接続。
  * danger = 攻撃者の要求が届く経路
- * broken = 繋がれない
  */
-export type EdgeTone = 'danger' | 'broken'
+export type EdgeTone = 'danger'
 
 export interface DiagramEdgeSpec {
   id: string
@@ -100,10 +142,26 @@ export interface DiagramEdgeSpec {
   label?: string
 }
 
+/**
+ * 図の中の「囲い」。サブネットのように、どの機器が同じまとまりに
+ * いるかを、線ではなく面で示すためのもの。IP アドレスを読めない人にも
+ * 分かれ目が見えるようにする。
+ */
+export interface DiagramZoneSpec {
+  id: string
+  label: string
+  /** 囲いの見出しに添える一行（ネットワークアドレスなど） */
+  sublabel?: string
+  appearsAt: StepOrder
+  /** 図の座標での矩形（ノードの position と同じ座標系） */
+  rect: { x: number; y: number; width: number; height: number }
+}
+
 /** 図の表示状態（純粋ロジックが組み立て、描画層はこれを描くだけ） */
 export interface DiagramState {
   nodes: DiagramNodeSpec[]
   edges: DiagramEdgeSpec[]
+  zones: DiagramZoneSpec[]
   /** IP アドレスの札を出すか（ステップ2以降） */
   showIp: boolean
 }

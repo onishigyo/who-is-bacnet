@@ -2,6 +2,9 @@ import type {
   DiagramEdgeSpec,
   DiagramNodeSpec,
   DiagramState,
+  DiagramZoneSpec,
+  ExtraContent,
+  ExtraId,
   StepContent,
   StepOrder,
 } from '../domain/types'
@@ -44,6 +47,15 @@ export function stepByOrder(
   return step
 }
 
+export function extraContentById(
+  extras: ExtraContent[],
+  id: ExtraId,
+): ExtraContent {
+  const extra = extras.find((e) => e.id === id)
+  if (!extra) throw new Error(`読み物 ${id} の内容が見つかりません`)
+  return extra
+}
+
 export function showIp(order: StepOrder): boolean {
   return order >= IP_VISIBLE_FROM
 }
@@ -73,15 +85,25 @@ export function visibleEdges(
   )
 }
 
+/** そのステップで図に出ている囲い */
+export function visibleZones(
+  zoneSpecs: DiagramZoneSpec[],
+  order: StepOrder,
+): DiagramZoneSpec[] {
+  return zoneSpecs.filter((zone) => zone.appearsAt <= order)
+}
+
 /** そのステップで図に出ているものを、まとめて組み立てる */
 export function buildDiagramState(
   nodeSpecs: DiagramNodeSpec[],
   edgeSpecs: DiagramEdgeSpec[],
   order: StepOrder,
+  zoneSpecs: DiagramZoneSpec[] = [],
 ): DiagramState {
   return {
     nodes: visibleNodes(nodeSpecs, order),
     edges: visibleEdges(nodeSpecs, edgeSpecs, order),
+    zones: visibleZones(zoneSpecs, order),
     showIp: showIp(order),
   }
 }

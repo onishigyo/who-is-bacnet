@@ -9,6 +9,7 @@ import { SC_HUB_ID } from './diagram-sc'
 
 export const MIXED_ROUTER_ID: NodeId = 'bacnet-router'
 export const LEGACY_SWITCH_ID: NodeId = 'legacy-switch'
+export const MIXED_SC_SWITCH_ID: NodeId = 'mixed-sc-switch'
 
 /**
  * SC の限界（ステップ7）の図。SC の区画と、旧来の BACnet/IP の区画が
@@ -46,7 +47,9 @@ export const mixedDiagramNodes: DiagramNodeSpec[] = [
     id: 'lighting',
     kind: 'controller',
     label: '照明コントローラ',
-    sublabel: '証明書の期限切れ',
+    // ハブへの近道の線は引かず（配線上はスイッチに繋がっている）、
+    // 入れないことは箱の札で伝える
+    sublabel: '証明書が期限切れでハブに入れない',
     deviceInstance: 100201,
     hasCertificate: true,
     certificateExpired: true,
@@ -59,7 +62,7 @@ export const mixedDiagramNodes: DiagramNodeSpec[] = [
     label: 'SC ハブ',
     sublabel: '証明書を確かめて参加を通す',
     appearsAt: 7,
-    position: { x: 260, y: 190 },
+    position: { x: 200, y: 340 },
   },
   {
     id: MIXED_ROUTER_ID,
@@ -68,7 +71,15 @@ export const mixedDiagramNodes: DiagramNodeSpec[] = [
     sublabel: 'SC と BACnet/IP をつなぐ',
     hasCertificate: true,
     appearsAt: 7,
-    position: { x: 520, y: 190 },
+    position: { x: 560, y: 340 },
+  },
+  {
+    id: MIXED_SC_SWITCH_ID,
+    kind: 'switch',
+    label: 'L2 スイッチ',
+    sublabel: 'SC の区画',
+    appearsAt: 7,
+    position: { x: 200, y: 170 },
   },
   {
     id: LEGACY_SWITCH_ID,
@@ -76,7 +87,7 @@ export const mixedDiagramNodes: DiagramNodeSpec[] = [
     label: 'L2 スイッチ',
     sublabel: '旧来の BACnet/IP の区画',
     appearsAt: 7,
-    position: { x: 520, y: 380 },
+    position: { x: 560, y: 480 },
   },
   {
     id: 'meter',
@@ -85,7 +96,7 @@ export const mixedDiagramNodes: DiagramNodeSpec[] = [
     sublabel: 'SC 非対応（既存の機器）',
     deviceInstance: 100305,
     appearsAt: 7,
-    position: { x: 0, y: 380 },
+    position: { x: 0, y: 480 },
   },
   {
     id: ATTACKER_ID,
@@ -93,25 +104,30 @@ export const mixedDiagramNodes: DiagramNodeSpec[] = [
     label: '持ち込まれた PC',
     sublabel: '旧来の区画に繋がれた',
     appearsAt: 7,
-    position: { x: 800, y: 380 },
+    position: { x: 860, y: 480 },
   },
 ]
 
 export const mixedDiagramEdges: DiagramEdgeSpec[] = [
+  // SC の区画でも、機器はふつうに L2 スイッチに繋がっている
   {
-    id: 'mx-supervisor-hub',
+    id: 'mx-supervisor-sw',
     source: SUPERVISOR_ID,
-    target: SC_HUB_ID,
+    target: MIXED_SC_SWITCH_ID,
     appearsAt: 7,
   },
-  { id: 'mx-ahu-hub', source: AHU_ID, target: SC_HUB_ID, appearsAt: 7 },
+  { id: 'mx-ahu-sw', source: AHU_ID, target: MIXED_SC_SWITCH_ID, appearsAt: 7 },
   {
-    id: 'mx-lighting-hub',
+    id: 'mx-lighting-sw',
     source: 'lighting',
+    target: MIXED_SC_SWITCH_ID,
+    appearsAt: 7,
+  },
+  {
+    id: 'mx-sw-hub',
+    source: MIXED_SC_SWITCH_ID,
     target: SC_HUB_ID,
     appearsAt: 7,
-    tone: 'broken',
-    label: '✕ 期限切れで繋がれない',
   },
   {
     id: 'mx-hub-router',
@@ -131,7 +147,7 @@ export const mixedDiagramEdges: DiagramEdgeSpec[] = [
     target: LEGACY_SWITCH_ID,
     appearsAt: 7,
     tone: 'danger',
-    label: 'IP 編と同じく読み書きできる',
+    label: 'BACnet/IP と同じく読み書きできる',
   },
   {
     id: 'mx-attacker-switch',

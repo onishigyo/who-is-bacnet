@@ -20,6 +20,7 @@ const kindLabel: Record<NodeKind, string> = {
   switch: 'ネットワーク',
   hub: 'SC ハブ',
   router: 'ルータ',
+  bbmd: 'BBMD',
   attacker: '攻撃者',
 }
 

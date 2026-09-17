@@ -9,6 +9,7 @@ interface Props {
 /**
  * ステップの pill を 1 行に並べる。数が多いので横スクロールで逃がす。
  * 進む／戻るボタンは置かない（pill を直接押して移動する）。
+ * 画面そのものの切り替えはここには置かない（ヘッダーの SectionMenu が持つ）。
  */
 export function StepNav({ steps, current, onChange }: Props) {
   return (

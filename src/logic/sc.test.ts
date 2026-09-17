@@ -18,17 +18,40 @@ import {
 } from '../content/diagram-mixed'
 import {
   SC_HUB_ID,
+  SC_SWITCH_ID,
   scDiagramEdges,
   scDiagramNodes,
 } from '../content/diagram-sc'
+import { nodePath } from './layout'
 
 describe('SC 図', () => {
-  it('中央に専用ハブがあり、機器はすべてハブに繋がる', () => {
+  it('中央に専用ハブがあり、どの機器からもハブへ辿り着ける', () => {
     const hub = scDiagramNodes.find((n) => n.id === SC_HUB_ID)
     expect(hub?.kind).toBe('hub')
-    for (const edge of scDiagramEdges) {
-      expect(edge.target).toBe(SC_HUB_ID)
+
+    for (const node of scDiagramNodes) {
+      if (node.id === SC_HUB_ID) continue
+      expect(
+        nodePath(scDiagramEdges, node.id, SC_HUB_ID).length,
+      ).toBeGreaterThan(0)
     }
+  })
+
+  it('配線は BACnet/IP と同じで、機器は L2 スイッチに繋がっている', () => {
+    // SC にしても建物の配線は変わらない。図でスイッチを省くと
+    // 「SC にするとスイッチが要らなくなる」と読めてしまう
+    const attachedToSwitch = scDiagramNodes
+      .filter(
+        (node) => node.kind === 'controller' || node.kind === 'supervisor',
+      )
+      .every((node) =>
+        scDiagramEdges.some(
+          (edge) =>
+            (edge.source === node.id && edge.target === SC_SWITCH_ID) ||
+            (edge.target === node.id && edge.source === SC_SWITCH_ID),
+        ),
+      )
+    expect(attachedToSwitch).toBe(true)
   })
 
   it('中央監視も証明書を持ち、ハブに繋がる 1 ノードとして描かれる', () => {
@@ -168,10 +191,15 @@ describe('SC の限界の図（SC と旧来の BACnet/IP が混ざる建物）',
     expect(edge(ATTACKER_ID, LEGACY_SWITCH_ID)?.tone).toBe('danger')
   })
 
-  it('証明書の期限切れの機器は、ハブと繋がれない線で描く', () => {
+  it('証明書の期限切れの機器は、ハブへの近道の線を持たず、入れないことを札で伝える', () => {
+    // 配線上はほかの機器と同じくスイッチに繋がっている。ハブへ直接伸びる
+    // 線を引くと、スイッチを通って繋ぐ描き方と食い違う
     const expired = mixedDiagramNodes.filter((n) => n.certificateExpired)
     expect(expired.length).toBeGreaterThan(0)
-    for (const n of expired) expect(edge(n.id, SC_HUB_ID)?.tone).toBe('broken')
+    for (const n of expired) {
+      expect(edge(n.id, SC_HUB_ID)).toBeUndefined()
+      expect(n.sublabel).toContain('ハブに入れない')
+    }
   })
 })
 
@@ -185,7 +213,7 @@ describe('SC の限界の会話（ルータ越え・要検証）', () => {
     for (const m of attack.messages) expect(m.frame).toBeUndefined()
   })
 
-  it('まず、SC 非対応の電力計を同じ区画から読む（IP 編と同じ手口）', () => {
+  it('まず、SC 非対応の電力計を同じ区画から読む（BACnet/IP と同じ手口）', () => {
     const read = attack.messages.find((m) => m.to === 'meter')
     expect(read?.from).toBe(ATTACKER_ID)
     expect(/readProperty/i.test(read?.protocol ?? '')).toBe(true)

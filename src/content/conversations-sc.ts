@@ -63,7 +63,7 @@ export const scConversations: Conversation[] = [
         action: '設定温度を聞く',
         encrypted: true,
         explain:
-          '中央監視が設定温度を尋ねます。中身は IP 編と同じ ReadProperty ですが、ハブを通って暗号化されたまま届きます。',
+          '中央監視が設定温度を尋ねます。中身は BACnet/IP のときと同じ ReadProperty ですが、ハブを通って暗号化されたまま届きます。',
       },
       {
         id: 's4',
@@ -102,7 +102,8 @@ export const scConversations: Conversation[] = [
         transport: 'ハブ経由（wss / TLS 1.3）',
         action: '受け入れる',
         encrypted: true,
-        explain: '正規の機器どうしなら、IP 編と同じように設備を扱えます。',
+        explain:
+          '正規の機器どうしなら、BACnet/IP のときと同じように設備を扱えます。',
       },
     ],
   },
@@ -123,8 +124,8 @@ export const scConversations: Conversation[] = [
         transport: 'TCP → ハブ:47900（TLS 1.3 を開始）',
         action: 'ハブに接続を試みる',
         explain:
-          'IP 編と同じ PC が、ハブに繋ごうとします。最初の通り道づくり（TCP、265-267）までは誰でも通れます。',
-        annotation: 'IP 編では、この先で割り込めた',
+          'ステップ 4 と同じ PC が、ハブに繋ごうとします。最初の通り道づくり（TCP、265-267）までは誰でも通れます。',
+        annotation: 'BACnet/IP では、この先で割り込めた',
       },
       {
         id: 'sa2',

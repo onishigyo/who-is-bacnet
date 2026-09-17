@@ -16,16 +16,12 @@ import type {
   DiagramState,
   NodeId,
 } from '../domain/types'
-import {
-  broadcastTargets,
-  flightPath,
-  involvesAttacker,
-  isBroadcast,
-} from '../logic/conversation'
-import { activeEdgeIds, flightWaypoints, toOffsetPath } from '../logic/layout'
+import { planFlights } from '../logic/flight'
+import { toOffsetPath } from '../logic/layout'
 import { BacnetNode, type BacnetFlowNode } from './nodes/BacnetNode'
+import { ZoneNode, type ZoneFlowNode } from './nodes/ZoneNode'
 
-const nodeTypes: NodeTypes = { bacnet: BacnetNode }
+const nodeTypes: NodeTypes = { bacnet: BacnetNode, zone: ZoneNode }
 
 // 自動フィットでは拡大しすぎない（機器が 1 台だけのステップ1 で巨大になるため）。
 // 手動のホイール操作では maxZoom まで寄れる
@@ -59,9 +55,6 @@ function FitViewOnResize() {
   return null
 }
 
-/** ブロードキャストで、ネットワークに着いてから広がり始めるまでの割合 */
-const FAN_SPLIT = 0.45
-
 /** 縦積みレイアウトになる幅。ここではページのスクロールを優先する */
 const NARROW = '(max-width: 1080px)'
 
@@ -93,7 +86,6 @@ interface Props {
   attackerId: NodeId
   /** アニメーションをやり直すためのキー */
   flightKey: string
-  durationMs: number
 }
 
 export function NetworkCanvas({
@@ -103,57 +95,13 @@ export function NetworkCanvas({
   networkNodeId,
   attackerId,
   flightKey,
-  durationMs,
 }: Props) {
   const narrow = useNarrowScreen()
 
-  /** 飛んでいる 1 通ごとの、経路と広がり先 */
+  /** 飛んでいる 1 通ごとの、経路と時間（判定はロジック層が済ませている） */
   const flights = useMemo(
-    () =>
-      inFlight.map((message) => {
-        const path = flightPath(message, networkNodeId)
-        const fanOut = isBroadcast(message.to)
-          ? broadcastTargets(diagram.nodes, message.from, networkNodeId)
-          : []
-        const broadcasting = fanOut.length > 0
-        return {
-          message,
-          broadcasting,
-          danger: involvesAttacker(message, attackerId),
-          main: flightWaypoints(
-            diagram.nodes,
-            diagram.edges,
-            path.from,
-            path.to,
-            networkNodeId,
-          ),
-          fans: fanOut.map((target) =>
-            flightWaypoints(
-              diagram.nodes,
-              diagram.edges,
-              networkNodeId,
-              target,
-              networkNodeId,
-            ),
-          ),
-          legs: activeEdgeIds(
-            diagram.edges,
-            path.from,
-            path.to,
-            networkNodeId,
-          ).concat(
-            fanOut.flatMap((target) =>
-              activeEdgeIds(
-                diagram.edges,
-                networkNodeId,
-                target,
-                networkNodeId,
-              ),
-            ),
-          ),
-        }
-      }),
-    [inFlight, diagram, networkNodeId, attackerId],
+    () => planFlights(diagram, inFlight, networkNodeId, attackerId),
+    [diagram, inFlight, networkNodeId, attackerId],
   )
 
   const speaking = useMemo(
@@ -163,16 +111,27 @@ export function NetworkCanvas({
   const dangerSpeakers = useMemo(
     () =>
       new Set(
-        inFlight
-          .filter((message) => involvesAttacker(message, attackerId))
-          .map((message) => message.from),
+        flights
+          .filter((flight) => flight.danger)
+          .map((flight) => flight.message.from),
       ),
-    [inFlight, attackerId],
+    [flights],
   )
 
-  const nodes: BacnetFlowNode[] = useMemo(
-    () =>
-      diagram.nodes.map((spec) => ({
+  const nodes: (BacnetFlowNode | ZoneFlowNode)[] = useMemo(
+    () => [
+      // 囲いは機器の後ろに敷く（zIndex を下げ、当たり判定も持たせない）
+      ...diagram.zones.map((spec): ZoneFlowNode => ({
+        id: spec.id,
+        type: 'zone' as const,
+        position: { x: spec.rect.x, y: spec.rect.y },
+        draggable: false,
+        selectable: false,
+        focusable: false,
+        zIndex: -1,
+        data: { spec },
+      })),
+      ...diagram.nodes.map((spec): BacnetFlowNode => ({
         id: spec.id,
         type: 'bacnet' as const,
         position: spec.position,
@@ -185,6 +144,7 @@ export function NetworkCanvas({
           device: deviceReadouts[spec.id] ?? null,
         },
       })),
+    ],
     [diagram, deviceReadouts, speaking, dangerSpeakers],
   )
 
@@ -216,11 +176,6 @@ export function NetworkCanvas({
       })),
     [diagram.edges, litEdges, dangerEdges],
   )
-
-  /** まとめて飛ぶときは、少しずつずらして出す（重なって読めなくなるため） */
-  const stagger =
-    flights.length > 1 ? Math.min(160, durationMs / (flights.length * 3)) : 0
-  const mainDuration = durationMs - stagger * Math.max(0, flights.length - 1)
 
   return (
     <ReactFlow
@@ -258,13 +213,8 @@ export function NetworkCanvas({
       <Controls showInteractive={false} />
 
       <ViewportPortal>
-        {flights.map((flight, index) => {
+        {flights.map((flight) => {
           const compact = flights.length > 1
-          const delay = stagger * index
-          const duration = flight.broadcasting
-            ? mainDuration * FAN_SPLIT
-            : mainDuration
-
           const mainPath = toOffsetPath(flight.main)
 
           return (
@@ -280,11 +230,13 @@ export function NetworkCanvas({
                     {
                       offsetPath: `path('${mainPath}')`,
                       offsetRotate: '0deg',
-                      animationDuration: `${duration}ms`,
-                      animationDelay: `${delay}ms`,
+                      animationDuration: `${flight.mainMs}ms`,
+                      animationDelay: `${flight.delayMs}ms`,
                     } as CSSProperties
                   }
                 >
+                  {/* 線の上を正確に走る点。吹き出しはその上に浮かせる */}
+                  <span className="packet__dot" />
                   <div className="packet__bubble">
                     {!compact && (
                       <span className="packet__plain">
@@ -311,16 +263,13 @@ export function NetworkCanvas({
                       {
                         offsetPath: `path('${fanPath}')`,
                         offsetRotate: '0deg',
-                        animationDuration: `${mainDuration * (1 - FAN_SPLIT)}ms`,
-                        animationDelay: `${delay + mainDuration * FAN_SPLIT}ms`,
+                        animationDuration: `${flight.fanMsEach[fanIndex]}ms`,
+                        animationDelay: `${flight.delayMs + flight.mainMs}ms`,
                       } as CSSProperties
                     }
                   >
-                    <div className="packet__bubble packet__bubble--fan">
-                      <code className="packet__protocol">
-                        {flight.message.protocol}
-                      </code>
-                    </div>
+                    {/* 広がる先は点だけ。何の呼びかけかは、中継点の吹き出しが言っている */}
+                    <span className="packet__dot packet__dot--fan" />
                   </div>
                 )
               })}
