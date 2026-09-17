@@ -656,27 +656,36 @@ button:disabled {
   offset-anchor: left top;
   offset-rotate: 0deg;
   animation-name: packet-fly;
-  animation-timing-function: cubic-bezier(0.4, 0.05, 0.35, 1);
-  animation-fill-mode: forwards;
+  /* ゆっくり動き出し、ゆっくり止まる */
+  animation-timing-function: ease-in-out;
+  /* 動き出すまでの待ち（animation-delay）のあいだも、送り手の上に出しておく */
+  animation-fill-mode: both;
   will-change: offset-distance;
   pointer-events: none;
   z-index: 10;
 }
 
+/* 読む → 動く → 止まる。出てくるときのふわっとした表示は、吹き出し側（packet-pop）が持つ */
 @keyframes packet-fly {
-  0% {
+  from {
     offset-distance: 0%;
+  }
+  to {
+    offset-distance: 100%;
+  }
+}
+
+.packet:not(.packet--fan) .packet__bubble,
+.packet:not(.packet--fan) .packet__dot {
+  animation: packet-pop 0.25s ease-out both;
+}
+
+@keyframes packet-pop {
+  from {
     opacity: 0;
   }
-  6% {
+  to {
     opacity: 1;
-  }
-  88% {
-    opacity: 1;
-  }
-  100% {
-    offset-distance: 100%;
-    opacity: 0.85;
   }
 }
 
