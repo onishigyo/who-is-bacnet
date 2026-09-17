@@ -31,6 +31,10 @@
 - **BBMD あり** ── BBMD が呼びかけを 1 対 1 の通信で運び直し、向こう側に配り直す
 - **BACnet/SC なら** ── ハブが全員に配るので、BBMD が要らない
 
+## 作った経緯
+
+書籍『2025-2035 サイバー空間の地政学』の、攻撃される前提に立って守るという考え方をきっかけに、建築設備のネットワークの守りに問題意識を持ったのが出発点です。閉域の実験環境で BACnet/IP と BACnet/SC の通信を実際に発生させ、Wireshark で確かめた内容を教材にしました。
+
 ## 大事な前提
 
 - **実際の BACnet 通信は発生しません。** このアプリはブラウザ内で完結する再現です。バックエンドを持ちません。
@@ -86,4 +90,4 @@ pnpm test          # Vitest
 - ライセンス: [MIT](LICENSE)
 - BACnet® は ASHRAE の登録商標です。本教材は ASHRAE とは関係のない、個人の制作物です。
 - 規格の一次情報: ANSI/ASHRAE Standard 135（BACnet）/ ISO 16484-5
-- 設計の詳細は [docs/DESIGN.md](docs/DESIGN.md)、開発方針は [CLAUDE.md](CLAUDE.md) を参照
+- 開発方針と設計の考え方は [CLAUDE.md](CLAUDE.md) を参照
