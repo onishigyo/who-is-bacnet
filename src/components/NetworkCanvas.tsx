@@ -235,6 +235,8 @@ export function NetworkCanvas({
                     } as CSSProperties
                   }
                 >
+                  {/* 線の上を正確に走る点。吹き出しはその上に浮かせる */}
+                  <span className="packet__dot" />
                   <div className="packet__bubble">
                     {!compact && (
                       <span className="packet__plain">
@@ -266,11 +268,8 @@ export function NetworkCanvas({
                       } as CSSProperties
                     }
                   >
-                    <div className="packet__bubble packet__bubble--fan">
-                      <code className="packet__protocol">
-                        {flight.message.protocol}
-                      </code>
-                    </div>
+                    {/* 広がる先は点だけ。何の呼びかけかは、中継点の吹き出しが言っている */}
+                    <span className="packet__dot packet__dot--fan" />
                   </div>
                 )
               })}

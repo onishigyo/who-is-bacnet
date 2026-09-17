@@ -686,11 +686,18 @@ button:disabled {
  * offset-path（経路の折れ線）+ offset-distance のアニメーションで、
  * 何ホップの経路でも実際の配線をそのままなぞる。offset-path 自体は
  * NetworkCanvas 側で経路ごとに inline style として渡す。
+ *
+ * .packet は大きさ 0 の「点」にして、その左上（＝点そのもの）を経路に
+ * 合わせる。箱の中心を合わせると、吹き出しの大きさぶん経路からずれ、
+ * 線の向きによっては線から外れて見えてしまう。
  */
 .packet {
   position: absolute;
   left: 0;
   top: 0;
+  width: 0;
+  height: 0;
+  offset-anchor: left top;
   offset-rotate: 0deg;
   animation-name: packet-fly;
   animation-timing-function: cubic-bezier(0.4, 0.05, 0.35, 1);
@@ -741,42 +748,85 @@ button:disabled {
   }
 }
 
-/* ブロードキャストの本体はネットワークに留まるので、ノードの上に重ねない */
-.packet--parked .packet__bubble {
-  transform: translate(-50%, -165%);
-}
-
-.packet__bubble--fan {
-  width: auto;
-  padding: 4px 10px;
-}
-
-.packet__bubble {
+/* 線の上を走る点。これが実際の位置 */
+.packet__dot {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 0 3px var(--bg-raise);
   transform: translate(-50%, -50%);
+}
+
+.packet__dot--fan {
+  width: 10px;
+  height: 10px;
+}
+
+/*
+ * 吹き出しは点の真上に浮かせ、色で塗る。白い箱のノードと形で見分けられる
+ * ようにする（青＝いま動いている通常の通信、赤＝攻撃者が関わる通信）
+ */
+.packet__bubble {
+  position: absolute;
+  left: 0;
+  bottom: 14px;
+  transform: translateX(-50%);
   width: 260px;
-  padding: 8px 12px;
-  border-radius: 12px;
-  border: 1px solid var(--accent);
-  background: var(--bg-raise);
+  padding: 7px 12px;
+  border-radius: 10px;
+  background: var(--accent);
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  box-shadow: 0 8px 22px rgba(20, 32, 43, 0.16);
+  gap: 2px;
+  box-shadow: 0 6px 18px rgba(20, 32, 43, 0.22);
+}
+
+/* 点を指す小さな三角 */
+.packet__bubble::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -5px;
+  width: 10px;
+  height: 10px;
+  background: inherit;
+  transform: translateX(-50%) rotate(45deg);
+  border-radius: 2px;
+}
+
+.packet--compact .packet__bubble {
+  width: max-content;
+  max-width: 260px;
+}
+
+/* ブロードキャストの本体は中継点に留まるので、中継点の箱の上まで持ち上げる */
+.packet--parked .packet__bubble {
+  bottom: 58px;
+}
+
+.packet--parked .packet__bubble::after {
+  display: none;
 }
 
 /* 攻撃者が関わる通信は、要求も返事も赤 */
-.packet--danger .packet__bubble {
-  border-color: var(--alert);
+.packet--danger .packet__bubble,
+.packet--danger .packet__dot {
+  background: var(--alert);
 }
 
 .packet__plain {
   font-size: 13px;
-  color: var(--text-strong);
+  font-weight: 600;
+  color: #fff;
 }
 
 .packet__protocol {
   font-size: 11px;
-  color: var(--muted);
+  color: rgba(255, 255, 255, 0.85);
   word-break: break-all;
 }
 
