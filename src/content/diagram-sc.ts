@@ -121,19 +121,14 @@ export const scDiagramEdges: DiagramEdgeSpec[] = [
     appearsAt: 5,
     label: '各機器はここを通ってハブへ繋ぐ',
   },
-  // 持ち込まれた PC も、配線の上では同じスイッチにいる。
-  // それでもハブへの参加は断られる ── そこが BACnet/IP との違い
+  // 持ち込まれた PC も、配線の上では同じスイッチにいる。ハブへ繋ごうと
+  // するときも、正規の機器と同じくこのスイッチを通る（ハブへの近道の線は
+  // 引かない）。それでも参加は断られる ── そこが BACnet/IP との違い
   {
     id: 'sc-attacker-sw',
     source: ATTACKER_ID,
     target: SC_SWITCH_ID,
     appearsAt: 6,
     label: '同じスイッチに差し込まれた',
-  },
-  {
-    id: 'sc-attacker-hub',
-    source: ATTACKER_ID,
-    target: SC_HUB_ID,
-    appearsAt: 6,
   },
 ]
