@@ -58,8 +58,9 @@ export const steps: StepContent[] = [
       {
         id: 'std-bbmd',
         confidence: 'standard',
-        text: 'ブロードキャストはサブネットを越えません。越えて届けたいときは、BBMD や Foreign Device 登録という中継の仕組みを使います。',
-        source: 'ANSI/ASHRAE Standard 135 Annex J',
+        text: 'ブロードキャストはサブネットを越えません。越えて届けたいときは、BBMD や Foreign Device 登録という中継の仕組みを使います。規格は、2 つ以上のサブネットにまたがる BACnet/IP のネットワークでは、各サブネットに少なくとも 1 台の BBMD を置くことを求めています。',
+        source:
+          'ANSI/ASHRAE Standard 135 Annex J（J.4.3。Addendum 135-2012ai が引用している条文で確認）',
       },
     ],
   },
