@@ -230,6 +230,13 @@ export const steps: StepContent[] = [
         source: 'RFC 8446（TLS 1.3）4.4.2.4 / 5.2',
       },
       {
+        id: 'sc-std-dummy-ccs',
+        confidence: 'standard',
+        text: 'キャプチャの 276 と 278 に見える Change Cipher Spec は、古い中継機器を通りやすくするために TLS 1.3 が送る、形だけのメッセージです。受け取った側は無視する決まりで、暗号化とは関係ありません。中身のあるやり取りは、Server Hello より後はすべて暗号化されています。',
+        source:
+          'RFC 8446（TLS 1.3）Appendix D.4（Middlebox Compatibility Mode）',
+      },
+      {
         id: 'sc-interp-rejection',
         confidence: 'interpretation',
         text: '断りの中身は暗号化されて読めません。ハブの返事（279）が TLS のエラー通知（Alert）1 つ分の大きさ（19 バイト）だったことから、断られたと読んでいます。どの Alert かは、ハブのログで確かめるまで要検証です。',
