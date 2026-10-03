@@ -240,6 +240,12 @@ export const steps: StepContent[] = [
         source: 'ASHRAE Managed BACnet Guidance Vol.1（14.4）',
       },
       {
+        id: 'sc-std-snet-sadr',
+        confidence: 'standard',
+        text: 'BACnet ルータは要求を転送するとき、送り主のネットワーク番号とアドレス（SNET / SADR）を書き足します。受け取った機器は送り主を知ることはできますが、旧来の BACnet/IP の側から来た情報が本物かを確かめる仕組みはありません。',
+        source: 'ANSI/ASHRAE Standard 135（ネットワーク層 NPCI）',
+      },
+      {
         id: 'sc-interp-legacy',
         confidence: 'interpretation',
         text: '通信を絞る機能があるかは、ルータ製品によって違います（手引きの推奨で、規格の必須ではありません）。制作者は実機のルータでは確かめていません。既存機器がどれだけ SC に対応できるかも、製品ごとに確かめが必要です。',
