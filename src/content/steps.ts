@@ -93,8 +93,9 @@ export const steps: StepContent[] = [
       {
         id: 'std-iam-broadcast',
         confidence: 'standard',
-        text: 'I-Am は以前は全員に向けて（ブロードキャストで）返す決まりでしたが、Addendum 135-2008q で、尋ねた相手だけに返してもよくなりました。この図も制作者の実験も、尋ねた相手だけに返しています。',
-        source: 'ANSI/ASHRAE Addendum q to Standard 135-2008',
+        text: 'I-Am は以前は全員に向けて（ブロードキャストで）返す決まりでしたが、Addendum 135-2008q で「ブロードキャストでも、相手を 1 つ指定したユニキャストでもよい」に変わりました。ただし Who-Is への返事なら、尋ねた相手に届く形で送る決まりです。この図も制作者の実験も、尋ねた相手だけに返しています。',
+        source:
+          'ANSI/ASHRAE Addendum q to Standard 135-2008（135-2008q-1。Clause 16.10.4 の変更）',
       },
     ],
   },

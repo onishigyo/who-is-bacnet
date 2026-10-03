@@ -65,8 +65,9 @@ export const extras: ExtraContent[] = [
           {
             id: 'bbmd-std-iam',
             confidence: 'standard',
-            text: 'I-Am は以前はブロードキャストで返す決まりでしたが、Addendum 135-2008q で、尋ねた相手だけに返してもよくなりました。この図はステップ 3 と同じく、尋ねた相手だけに返す形で描いています（制作者の実験でも 1 対 1 で返ってきました）。',
-            source: 'ANSI/ASHRAE Standard 135 / Addendum 135-2008q',
+            text: 'I-Am は以前はブロードキャストで返す決まりでしたが、Addendum 135-2008q で、相手を 1 つ指定したユニキャストでもよくなりました。この図はステップ 3 と同じく、尋ねた相手だけに返す形で描いています（制作者の実験でも 1 対 1 で返ってきました）。',
+            source:
+              'ANSI/ASHRAE Addendum q to Standard 135-2008（135-2008q-1。Clause 16.10.4 の変更）',
           },
           {
             id: 'bbmd-interp-iam-broadcast',
