@@ -121,6 +121,13 @@ export const steps: StepContent[] = [
         source: 'ANSI/ASHRAE Standard 135 Annex J',
       },
       {
+        id: 'std-clause24-removed',
+        confidence: 'standard',
+        text: '以前の規格には、通信に認証をかける仕組み（Clause 24 Network Security）がありました。しかし普及がごく限られ、BACnet/SC を加えるにあたって混乱のもとになるとして、Addendum 135-2016by で削除されています。いま規格が用意している答えは BACnet/SC のほうです。',
+        source:
+          'ANSI/ASHRAE Addendum by to Standard 135-2016（135-2016by-1。Clause 24 の削除とその理由）',
+      },
+      {
         id: 'std-write-may-fail',
         confidence: 'standard',
         text: 'どんな書き込みでも通るわけではありません。読み取り専用のプロパティや範囲外の値なら Error が返ります。ただしこれは値の決まりによる制限で、送り主を確かめる仕組みではありません。',
