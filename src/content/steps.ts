@@ -30,8 +30,9 @@ export const steps: StepContent[] = [
       {
         id: 'std-device-object',
         confidence: 'standard',
-        text: 'どの BACnet 機器も Device オブジェクトを 1 つ持ち、機器を見分けるデバイスインスタンス番号（0〜4194302）を持ちます。',
-        source: 'ANSI/ASHRAE Standard 135（Device オブジェクト）',
+        text: 'どの BACnet 機器も Device オブジェクトを 1 つ持ち、機器を見分けるデバイスインスタンス番号（0〜4194302）を持ちます。4194303 は「未設定」を表すために取ってあり、どのオブジェクトも使えません。',
+        source:
+          'ANSI/ASHRAE Standard 135（Clause 12.1.1。Addendum 135-2016br が引用している条文で確認）',
       },
     ],
   },
@@ -52,8 +53,9 @@ export const steps: StepContent[] = [
       {
         id: 'std-annex-j',
         confidence: 'standard',
-        text: 'BACnet/IP は規格の Annex J で定められています。UDP 47808（16 進で 0xBAC0）は既定値で、変更もできます。',
-        source: 'ANSI/ASHRAE Standard 135 Annex J',
+        text: 'BACnet/IP は規格の Annex J で定められています。UDP 47808（16 進で 0xBAC0）は BACnet 用に登録されているポート番号で、この教材の実験でも使っています。別の番号に変えることもできます。',
+        source:
+          'ANSI/ASHRAE Standard 135 Annex J（Addendum 135-1995a で追加）/ IANA Service Name and Transport Protocol Port Number Registry（bacnet 47808/udp）',
       },
       {
         id: 'std-bbmd',
@@ -81,15 +83,16 @@ export const steps: StepContent[] = [
       {
         id: 'std-services',
         confidence: 'standard',
-        text: 'Who-Is と I-Am は、届いたことの確認（ACK）を返さない通信です。ReadProperty と WriteProperty は確認を返す決まりで、読むと値入りの ComplexACK、書き込めると SimpleACK が返ります。',
+        text: 'Who-Is と I-Am は、届いたことの確認を返さない通信です（規格の言葉で unconfirmed）。ReadProperty と WriteProperty は確認を返す通信で、成功すれば成功の応答、失敗すれば理由つきの失敗の応答が返ります。実験のキャプチャでは、読み取りの応答が Complex-ACK（値つき）、書き込みの応答が Simple-ACK として見えています。',
         source:
-          'ANSI/ASHRAE Standard 135（Object Access Services / Remote Device Management Services）',
+          'ANSI/ASHRAE Standard 135（Clause 16.10.4 / 15.9.2。Addendum 135-2008q・135-2016br が引用している条文で確認）/ 制作者の実験キャプチャ',
       },
       {
         id: 'std-addressing',
         confidence: 'standard',
-        text: 'ReadProperty などの要求には、相手の機器の番号は入っていません。同じ LAN の中では、届け先は宛先の IP アドレスで決まります。相手の IP は、I-Am が届いたパケットの送信元アドレスから分かります（I-Am の中身に IP は入っていません）。',
-        source: 'ANSI/ASHRAE Standard 135（ReadProperty / I-Am、Annex J）',
+        text: 'ReadProperty などの要求には、相手の機器の番号は入っていません。同じ LAN の中では、届け先は宛先の IP アドレスで決まります。相手の IP は、I-Am が届いたパケットの送信元アドレスから分かります（I-Am の中身に IP は入っていません）。ステップ4 に載せているキャプチャで、実際にそうなっていることを確かめられます。',
+        source:
+          '制作者の実験キャプチャ（ステップ4 の答え合わせに載せている行）',
       },
       {
         id: 'std-iam-broadcast',
@@ -118,7 +121,8 @@ export const steps: StepContent[] = [
         id: 'std-no-auth',
         confidence: 'standard',
         text: 'BACnet/IP（Annex J）そのものには、送り主を確かめる仕組みも、暗号化の仕組みもありません。届いた要求は、送り主を確かめずに処理されます。',
-        source: 'ANSI/ASHRAE Standard 135 Annex J',
+        source:
+          'ANSI/ASHRAE Standard 135 Annex J（BVLC によるカプセル化だけを定める）/ Addendum 135-2016by（通信に認証をかける Clause 24 は削除済み）/ 制作者の実験キャプチャ（中身が平文で読める）',
       },
       {
         id: 'std-clause24-removed',
@@ -130,8 +134,9 @@ export const steps: StepContent[] = [
       {
         id: 'std-write-may-fail',
         confidence: 'standard',
-        text: 'どんな書き込みでも通るわけではありません。読み取り専用のプロパティや範囲外の値なら Error が返ります。ただしこれは値の決まりによる制限で、送り主を確かめる仕組みではありません。',
-        source: 'ANSI/ASHRAE Standard 135（WriteProperty）',
+        text: 'どんな書き込みでも通るわけではありません。規格は「書き換えに成功すれば成功の応答、失敗すれば理由つきの失敗の応答を返す」と定めています（読み取り専用のプロパティ、範囲外の値などが理由になります）。ただしこれは値の決まりによる制限で、送り主を確かめる仕組みではありません。',
+        source:
+          'ANSI/ASHRAE Standard 135（Clause 15.9.2。Addendum 135-2016br が引用している条文で確認）',
       },
       {
         id: 'interp-segmentation',
