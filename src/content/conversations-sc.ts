@@ -32,8 +32,7 @@ export const scConversations: Conversation[] = [
         to: SC_HUB_ID,
         kind: 'request',
         plain: 'ハブに参加させてください（これが私の証明書です）',
-        protocol:
-          'wss 接続を確立（TCP 3way → TLS 1.3 → WebSocket / port 47900）',
+        protocol: 'wss 接続を確立（TCP 3way → TLS 1.3 → WebSocket）',
         transport: 'TCP → ハブ:47900',
         action: 'ハブに接続する',
         explain:
