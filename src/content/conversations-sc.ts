@@ -32,11 +32,12 @@ export const scConversations: Conversation[] = [
         to: SC_HUB_ID,
         kind: 'request',
         plain: 'ハブに参加させてください（これが私の証明書です）',
-        protocol: 'wss 接続を確立（TCP 3way → TLS 1.3 → WebSocket）',
+        protocol:
+          'wss 接続を確立（TCP 3way → TLS 1.3 → WebSocket）→ BVLC Connect-Request',
         transport: 'TCP → ハブ:47900',
         action: 'ハブに接続する',
         explain:
-          '空調コントローラがハブに繋ぎます。TCP で通り道を作ったあと、TLS という暗号化の仕組みで証明書を見せ合います。',
+          '空調コントローラがハブに繋ぎます。TCP で通り道を作り、TLS という暗号化の仕組みで証明書を見せ合い、WebSocket に切り替えたうえで、最後に BACnet/SC として参加を申し込みます。',
       },
       {
         id: 's2',
@@ -44,11 +45,11 @@ export const scConversations: Conversation[] = [
         to: AHU_ID,
         kind: 'response',
         plain: '証明書を確認しました。参加を認めます',
-        protocol: 'TLS 1.3 ハンドシェイク完了（暗号化トンネル確立）',
+        protocol: 'BVLC Connect-Accept（TLS で暗号化）',
         transport: 'TCP（ハブ:47900 → 空調コントローラ）',
         action: '参加を認める',
         explain:
-          'ハブが証明書を確かめ、参加を認めます。照明・電力計・中央監視も、同じように参加しています。',
+          'ハブは TLS で証明書を確かめたうえで、参加の申し込み（Connect-Request）に Connect-Accept を返します。ここで初めて BACnet/SC の仲間として扱われます。照明・電力計・中央監視も、同じように参加しています。',
         annotation: '参加できるかは、証明書で決まる',
       },
       {

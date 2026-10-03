@@ -196,9 +196,9 @@ export const steps: StepContent[] = [
       {
         id: 'sc-std-handshake',
         confidence: 'standard',
-        text: 'ハブへの接続は 3 段階です。① TCP で通り道を作る（3way ハンドシェイク）② TLS で証明書を確かめて暗号化する ③ WebSocket に切り替えて BACnet を流す。①の 3way は TCP の言葉で、②の TLS のあいさつとは別物です。',
+        text: 'ハブへの接続は 4 段階です。① TCP で通り道を作る（3way ハンドシェイク）② TLS で証明書を確かめて暗号化する ③ WebSocket に切り替える ④ BACnet/SC として参加を申し込み（Connect-Request）、ハブが認める（Connect-Accept）。①の 3way は TCP の言葉で、②の TLS のあいさつとは別物です。証明書を出せない機器は②で止まるので、④まで進めません。',
         source:
-          'RFC 9293（TCP）/ RFC 8446（TLS 1.3）/ RFC 6455（WebSocket）4.1',
+          'RFC 9293（TCP）/ RFC 8446（TLS 1.3）/ RFC 6455（WebSocket）4.1 / ANSI/ASHRAE Standard 135-2020 Annex AB（Addendum 135-2016bj の Annex YY.6.2）',
       },
     ],
   },
