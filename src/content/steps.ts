@@ -276,7 +276,7 @@ export const steps: StepContent[] = [
         confidence: 'standard',
         text: 'BACnet ルータは要求を転送するとき、送り主のネットワーク番号とアドレス（SNET / SADR）を書き足します。受け取った機器は送り主を知ることはできますが、旧来の BACnet/IP の側から来た情報が本物かを確かめる仕組みはありません。',
         source:
-          'bacnet.org「BACnet/IP」（SNET / SADR の付加）/ ANSI/ASHRAE Standard 135 Annex J（送り主を確かめる仕組みがないこと）',
+          'ANSI/ASHRAE Standard 135（Clause 6.5.4。Addendum 135-2016bj が引用している条文で確認）/ 同 Annex J（送り主を確かめる仕組みがないこと）',
       },
       {
         id: 'sc-interp-legacy',
