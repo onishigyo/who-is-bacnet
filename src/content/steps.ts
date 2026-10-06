@@ -158,7 +158,7 @@ export const steps: StepContent[] = [
     world: 'sc',
     navLabel: 'BACnet/SC とは',
     title: 'BACnet/SC ── 参加に証明書が要る',
-    lead: '同じ LAN にいるだけでは、もう入れない。証明書を持つ機器だけが、ハブを通して会話する。',
+    lead: '同じ LAN にいるだけでは、もう入れない。認証局（CA）が署名した証明書を持つ機器だけが、ハブを通して会話する。',
     paragraphs: [
       'ここまでで見た「同じ LAN にいれば誰でも操作できて、中身も丸見え」という問題に、規格が出した答えが BACnet/SC（Secure Connect）です。真ん中にハブがあり、証明書を持つ機器が ── 中央監視も含めて ── それぞれハブに繋ぎます。',
       '暗号化には、Web サイトの https と同じ TLS という仕組みを使います。機器はハブに繋ぐときに証明書を見せ合い、そのあとのやり取りはすべて暗号化されます。',
@@ -171,6 +171,13 @@ export const steps: StepContent[] = [
         text: 'BACnet/SC では、各機器がハブに暗号化した接続（wss）で繋ぎ、基本はハブが機器どうしのメッセージを中継します。通信は TLS 1.3 で暗号化され、機器とハブは X.509 証明書で互いを確かめます。',
         source:
           'ANSI/ASHRAE Standard 135-2020 Annex AB（Addendum 135-2016bj の Annex YY.1 / YY.7.4）',
+      },
+      {
+        id: 'sc-std-cert-ca',
+        confidence: 'standard',
+        text: '各機器は、サイトの認証局（CA）が署名した自分の運用証明書と、相手を確かめるための CA の証明書を持ちます。相手の証明書がこの CA に署名されていなければ参加できません（ただ証明書を持っているだけでは足りません）。',
+        source:
+          'ANSI/ASHRAE Standard 135-2020 Annex AB（BACnet/SC の証明書）/ Chipkin・業界資料',
       },
       {
         id: 'sc-std-hub-function',
@@ -304,6 +311,11 @@ export const steps: StepContent[] = [
         text: 'X.509 証明書には有効期限があり、期限を過ぎた証明書は確認に通りません。BACnet/SC はハブとの接続で証明書を確かめ合うので、期限切れの機器は繋がれなくなります。',
         source:
           'RFC 5280（X.509 証明書）/ ANSI/ASHRAE Standard 135-2020 Annex AB',
+      },
+      {
+        id: 'sc-interp-cert-keys',
+        confidence: 'interpretation',
+        text: '正規機器から証明書と秘密鍵を盗まれれば攻撃者も参加でき、CA の鍵が漏れれば誰にでも証明書を発行できてしまう ── 証明書は鍵の守りが肝だと理解しています。失効（取り消し）の扱いも運用課題で、規格での失効確認の詳細は未確認です。',
       },
       {
         id: 'sc-interp-operation',
