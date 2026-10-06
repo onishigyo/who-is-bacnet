@@ -32,7 +32,7 @@ export const steps: StepContent[] = [
         confidence: 'standard',
         text: 'どの BACnet 機器も Device オブジェクトを 1 つ持ち、機器を見分けるデバイスインスタンス番号（0〜4194302）を持ちます。',
         source:
-          'ANSI/ASHRAE Standard 135（Clause 12.1.1。Addendum 135-2016br が引用している条文で確認）',
+          'ANSI/ASHRAE Standard 135（Clause 12.1.1。条文番号は追補 135-2016br の引用で確認）',
       },
     ],
   },
@@ -55,14 +55,14 @@ export const steps: StepContent[] = [
         confidence: 'standard',
         text: 'UDP 47808（16 進で 0xBAC0）が BACnet 用に登録されたポートで、実験でもこれを使っています。別の番号にも変えられます。',
         source:
-          'ANSI/ASHRAE Standard 135 Annex J（Addendum 135-1995a で追加）/ IANA Service Name and Transport Protocol Port Number Registry（bacnet 47808/udp）',
+          'ANSI/ASHRAE Standard 135 Annex J ＝ BACnet/IP の規定（追補 135-1995a で規格に追加）/ IANA ポート番号レジストリ（47808/udp を「bacnet」として登録）',
       },
       {
         id: 'std-bbmd',
         confidence: 'standard',
         text: 'ブロードキャストはサブネットを越えません。越えて届けたいときは、BBMD や Foreign Device 登録という中継の仕組みを使います。',
         source:
-          'ANSI/ASHRAE Standard 135 Annex J（J.4.3。Addendum 135-2012ai が引用している条文で確認）',
+          'ANSI/ASHRAE Standard 135 Annex J（J.4.3。条文番号は追補 135-2012ai の引用で確認）',
       },
     ],
   },
@@ -85,7 +85,7 @@ export const steps: StepContent[] = [
         confidence: 'standard',
         text: 'Who-Is / I-Am は確認を返さない通信、ReadProperty / WriteProperty は確認を返す通信です。実験では読み取りが Complex-ACK、書き込みが Simple-ACK として見えます。',
         source:
-          'ANSI/ASHRAE Standard 135（Clause 16.10.4 / 15.9.2。Addendum 135-2008q・135-2016br が引用している条文で確認）/ 制作者の実験キャプチャ',
+          'ANSI/ASHRAE Standard 135（Clause 16.10.4 / 15.9.2。条文番号は追補 135-2008q・135-2016br の引用で確認）/ 制作者の実験キャプチャ',
       },
       {
         id: 'std-addressing',
@@ -99,7 +99,7 @@ export const steps: StepContent[] = [
         confidence: 'standard',
         text: 'I-Am は以前はブロードキャストで返す決まりでしたが、今はユニキャストでもよくなりました。この図も実験も、尋ねた相手だけに返しています。',
         source:
-          'ANSI/ASHRAE Addendum q to Standard 135-2008（135-2008q-1。Clause 16.10.4 の変更）',
+          'ANSI/ASHRAE Standard 135-2008 追補 q（Clause 16.10.4 の変更。I-Am をユニキャストでもよいとした）',
       },
     ],
   },
@@ -129,14 +129,14 @@ export const steps: StepContent[] = [
         confidence: 'standard',
         text: '以前は通信に認証をかける仕組みが規格にありましたが、普及が限られ、BACnet/SC を加える際に削除されました。いまの答えは BACnet/SC です。',
         source:
-          'ANSI/ASHRAE Addendum by to Standard 135-2016（135-2016by-1。Clause 24 の削除とその理由）',
+          'ANSI/ASHRAE Standard 135-2016 追補 by（Clause 24 Network Security の削除とその理由）',
       },
       {
         id: 'std-write-may-fail',
         confidence: 'standard',
         text: 'どんな書き込みでも通るわけではありません（読み取り専用や範囲外の値は失敗が返る）。ただしこれは値の決まりによる制限で、送り主を確かめる仕組みではありません。',
         source:
-          'ANSI/ASHRAE Standard 135（Clause 15.9.2。Addendum 135-2016br が引用している条文で確認）',
+          'ANSI/ASHRAE Standard 135（Clause 15.9.2。条文番号は追補 135-2016br の引用で確認）',
       },
       {
         id: 'interp-segmentation',
@@ -147,7 +147,8 @@ export const steps: StepContent[] = [
         id: 'std-sc-answer',
         confidence: 'standard',
         text: 'この問題への規格の答えが BACnet/SC です（Addendum 135-2016bj として追加され、135-2020 に収録）。ステップ 5 以降で扱います。',
-        source: 'ANSI/ASHRAE Standard 135-2020（Addendum 135-2016bj）',
+        source:
+          'ANSI/ASHRAE Standard 135-2020（BACnet/SC を加えた追補 135-2016bj を収録）',
       },
     ],
   },
@@ -170,7 +171,7 @@ export const steps: StepContent[] = [
         confidence: 'standard',
         text: 'BACnet/SC では、各機器がハブに暗号化した接続（wss）で繋ぎ、基本はハブが機器どうしのメッセージを中継します。通信は TLS 1.3 で暗号化され、機器とハブは X.509 証明書で互いを確かめます。',
         source:
-          'ANSI/ASHRAE Standard 135-2020 Annex AB（Addendum 135-2016bj の Annex YY.1 / YY.7.4）',
+          'ANSI/ASHRAE Standard 135-2020 Annex AB（BACnet/SC。YY.1 / YY.7.4 は追補 135-2016bj での章番号）',
       },
       {
         id: 'sc-std-cert-ca',
@@ -184,7 +185,7 @@ export const steps: StepContent[] = [
         confidence: 'standard',
         text: 'BACnet/SC のネットワーク 1 つにつき、ハブ機能は 1 つ必要です。',
         source:
-          'ANSI/ASHRAE Standard 135-2020 Annex AB（Addendum 135-2016bj の Annex YY.1.2）',
+          'ANSI/ASHRAE Standard 135-2020 Annex AB（BACnet/SC。YY.1.2 は追補 135-2016bj での章番号）',
       },
       {
         id: 'sc-interp-hub-host',
@@ -196,21 +197,21 @@ export const steps: StepContent[] = [
         confidence: 'standard',
         text: 'ハブへの繋ぎ先は、ポート番号ではなく URI（wss://…）として設定します。BACnet/IP の 47808 のような決まった番号で繋ぎにいく形ではありません。この教材に出てくる 47900 は、制作者の実験環境で使った値です。',
         source:
-          'ANSI/ASHRAE Standard 135-2020 Annex AB（Addendum 135-2016bj の Annex YY.7.5.1。wss 以外のスキームは繋がない）',
+          'ANSI/ASHRAE Standard 135-2020 Annex AB（BACnet/SC YY.7.5.1。wss 以外のスキームは繋がない）',
       },
       {
         id: 'sc-std-no-broadcast',
         confidence: 'standard',
         text: 'IP のブロードキャストや BBMD は要らなくなります。Who-Is のような全員あての呼びかけも、ハブが各機器へ配ります（規格は「ハブ機能はブロードキャストをすべてのハブ接続へ配る」としています）。',
         source:
-          'ANSI/ASHRAE Standard 135-2020 Annex AB（Addendum 135-2016bj の Annex YY.1.2 付近）',
+          'ANSI/ASHRAE Standard 135-2020 Annex AB（BACnet/SC YY.1.2 付近）',
       },
       {
         id: 'sc-std-handshake',
         confidence: 'standard',
         text: 'ハブへの接続は 4 段階です。① TCP で通り道を作る（3way ハンドシェイク）② TLS で証明書を確かめて暗号化する ③ WebSocket に切り替える ④ BACnet/SC として参加を申し込み（Connect-Request）、ハブが認める（Connect-Accept）。①の 3way は TCP の言葉で、②の TLS のあいさつとは別物です。証明書を出せない機器は②で止まるので、④まで進めません。',
         source:
-          'RFC 9293（TCP）/ RFC 8446（TLS 1.3）/ RFC 6455（WebSocket）4.1 / ANSI/ASHRAE Standard 135-2020 Annex AB（Addendum 135-2016bj の Annex YY.6.2）',
+          'RFC 9293（TCP）/ RFC 8446（TLS 1.3）/ RFC 6455（WebSocket）4.1 / ANSI/ASHRAE Standard 135-2020 Annex AB（BACnet/SC YY.6.2）',
       },
       {
         id: 'sc-interp-hop-by-hop',
@@ -237,8 +238,7 @@ export const steps: StepContent[] = [
         id: 'sc-std-cert-gate',
         confidence: 'standard',
         text: 'BACnet/SC では、ハブと機器が互いに証明書を確かめます（相互認証）。証明書を示せない機器は、BACnet の会話までたどり着けません。',
-        source:
-          'ANSI/ASHRAE Standard 135-2020 Annex AB（Addendum 135-2016bj の Annex YY.7.4）',
+        source: 'ANSI/ASHRAE Standard 135-2020 Annex AB（BACnet/SC YY.7.4）',
       },
       {
         id: 'sc-std-tls13',
@@ -293,14 +293,14 @@ export const steps: StepContent[] = [
         confidence: 'standard',
         text: 'ASHRAE の手引きは、旧来の区画に入り込まれると、BACnet ルータで絞っていない限り、すべての BACnet ネットワーク区画にアクセスされる、としています。対策として、ルータで通信を絞ること（例：旧来の区画から来る要求は読み取りだけにする）を勧めています。',
         source:
-          'ASHRAE Managed BACnet Guidance Vol.1（14.4.1 Monitoring/Filtering）',
+          'ASHRAE Managed BACnet Guidance Vol.1（運用手引き。14.4.1 Monitoring/Filtering）',
       },
       {
         id: 'sc-std-snet-sadr',
         confidence: 'standard',
         text: 'BACnet ルータは要求を転送するとき、送り主のネットワーク番号とアドレス（SNET / SADR）を書き足します。受け取った機器は送り主を知ることはできますが、旧来の BACnet/IP の側から来た情報が本物かを確かめる仕組みはありません。',
         source:
-          'ANSI/ASHRAE Standard 135（Clause 6.5.4。Addendum 135-2016bj が引用している条文で確認）/ 同 Annex J（送り主を確かめる仕組みがないこと）',
+          'ANSI/ASHRAE Standard 135（Clause 6.5.4。条文番号は追補 135-2016bj の引用で確認）/ 同 Annex J（送り主を確かめる仕組みがない）',
       },
       {
         id: 'sc-interp-hub-trust',
