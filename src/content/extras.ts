@@ -36,7 +36,7 @@ export const extras: ExtraContent[] = [
           {
             id: 'bbmd-std-no-cross',
             confidence: 'standard',
-            text: 'BACnet/IP のブロードキャストは、IP の仕組み上サブネットを越えません。規格も、2 つ以上のサブネットにまたがる BACnet/IP のネットワークでは、各サブネットに少なくとも 1 台の BBMD を置くことを求めています。',
+            text: 'ブロードキャストはサブネットを越えません。規格は、2 つ以上のサブネットにまたがる BACnet/IP では、各サブネットに最低 1 台の BBMD を置くことを求めています。',
             source: [
               { label: '規格', text: 'ANSI/ASHRAE Standard 135 Annex J J.4.3' },
               { label: '確認', text: '追補 135-2012ai が同条を引用' },
@@ -62,7 +62,7 @@ export const extras: ExtraContent[] = [
           {
             id: 'bbmd-std-forward',
             confidence: 'standard',
-            text: 'BBMD は BDT（Broadcast Distribution Table）に従って、受け取ったブロードキャストを Forwarded-NPDU としてほかの BBMD へ送り、受け取った側がそれを自分のサブネットのブロードキャストとして配り直します。この「2 ホップ方式」への対応は、規格が BBMD に求めているものです。',
+            text: 'BBMD は、受け取ったブロードキャストを BDT に載った相手の BBMD へ送り（Forwarded-NPDU）、受け取った側が自分のサブネットに配り直します。この「2 ホップ方式」への対応は規格が BBMD に求めています。',
             source: [
               {
                 label: '規格',
@@ -77,7 +77,7 @@ export const extras: ExtraContent[] = [
           {
             id: 'bbmd-std-iam',
             confidence: 'standard',
-            text: 'I-Am は以前はブロードキャストで返す決まりでしたが、Addendum 135-2008q で、相手を 1 つ指定したユニキャストでもよくなりました。この図はステップ 3 と同じく、尋ねた相手だけに返す形で描いています（制作者の実験でも 1 対 1 で返ってきました）。',
+            text: 'I-Am は以前はブロードキャストで返す決まりでしたが、今はユニキャストでもよくなりました。この図はステップ 3 と同じく、尋ねた相手だけに返す形です。',
             source: [
               {
                 label: '規格',
@@ -88,7 +88,7 @@ export const extras: ExtraContent[] = [
           {
             id: 'bbmd-std-one-hop',
             confidence: 'standard',
-            text: 'BDT の設定によっては、相手の BBMD を介さず、相手のサブネットへ直接ブロードキャストを届ける「1 ホップ方式」もあります。ただし規格が BBMD に求めているのは 2 ホップ方式への対応で、1 ホップ方式への対応は任意です。',
+            text: 'BDT の設定によっては、相手の BBMD を介さず相手のサブネットへ直接届ける「1 ホップ方式」もあります。ただし規格が求めるのは 2 ホップ対応で、1 ホップ対応は任意です。',
             source: [
               { label: '規格', text: 'ANSI/ASHRAE Standard 135 Annex J J.4.3' },
               { label: '確認', text: '追補 135-2012ai が同条を引用' },

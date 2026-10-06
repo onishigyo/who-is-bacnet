@@ -257,7 +257,7 @@ export const steps: StepContent[] = [
       {
         id: 'sc-std-hub-uri',
         confidence: 'standard',
-        text: 'ハブへの繋ぎ先は、ポート番号ではなく URI（wss://…）として設定します。BACnet/IP の 47808 のような決まった番号で繋ぎにいく形ではありません。この教材に出てくる 47900 は、制作者の実験環境で使った値です。',
+        text: 'ハブへの繋ぎ先は、決まったポート番号ではなく URI（wss://…）で設定します。教材に出てくる 47900 は、制作者の実験環境で使った値です。',
         source: [
           {
             label: '規格',
@@ -280,7 +280,7 @@ export const steps: StepContent[] = [
       {
         id: 'sc-std-handshake',
         confidence: 'standard',
-        text: 'ハブへの接続は 4 段階です。① TCP で通り道を作る（3way ハンドシェイク）② TLS で証明書を確かめて暗号化する ③ WebSocket に切り替える ④ BACnet/SC として参加を申し込み（Connect-Request）、ハブが認める（Connect-Accept）。①の 3way は TCP の言葉で、②の TLS のあいさつとは別物です。証明書を出せない機器は②で止まるので、④まで進めません。',
+        text: 'ハブへの接続は 4 段階 ── ① TCP で通り道を作る → ② TLS で証明書を確かめ暗号化 → ③ WebSocket に切り替え → ④ BACnet/SC として参加を申し込む（Connect-Request / Accept）。証明書を出せない機器は②で止まります。',
         source: [
           {
             label: 'RFC',
@@ -295,7 +295,7 @@ export const steps: StepContent[] = [
       {
         id: 'sc-interp-hop-by-hop',
         confidence: 'interpretation',
-        text: 'TLS は機器とハブのあいだの接続ごとに張られます。宛先を決める情報はその暗号化の中にあるので、ハブは中身をいったん復号し、相手の機器向けに暗号化し直して中継していると理解しています（宛先を読まないと転送できないため）。つまり暗号化は端から端までではなく、区間ごと（機器⇔ハブ、ハブ⇔機器）です。規格の原文では未確認です。',
+        text: 'ハブは宛先を読むために中身をいったん復号し、相手向けに暗号化し直して中継していると理解しています。暗号化は端から端までではなく、区間ごと（機器⇔ハブ、ハブ⇔機器）です。規格の原文では未確認です。',
       },
     ],
   },
@@ -327,13 +327,13 @@ export const steps: StepContent[] = [
       {
         id: 'sc-std-tls13',
         confidence: 'standard',
-        text: 'TLS 1.3 で証明書を求められた側が証明書を持っていなければ、空の証明書を返します。求めた側は、certificate_required の Alert を送って打ち切れます。暗号化されたデータは、中身が Alert でも外からは Application Data に見えます。',
+        text: 'TLS 1.3 では、証明書を求められた側が持っていなければ空の証明書を返し、求めた側は certificate_required の Alert で打ち切れます。暗号化後は、中身が Alert でも外からは Application Data に見えます。',
         source: [{ label: 'RFC', text: 'RFC 8446（TLS 1.3）4.4.2.4 / 5.2' }],
       },
       {
         id: 'sc-std-dummy-ccs',
         confidence: 'standard',
-        text: 'キャプチャの 276 と 278 に見える Change Cipher Spec は、古い中継機器を通りやすくするために TLS 1.3 が送る、形だけのメッセージです。受け取った側は無視する決まりで、暗号化とは関係ありません。中身のあるやり取りは、Server Hello より後はすべて暗号化されています。',
+        text: 'キャプチャの Change Cipher Spec（276・278）は、古い中継機器を通りやすくするため TLS 1.3 が送る形だけのメッセージで、受け取った側は無視します（暗号化とは無関係）。中身のあるやり取りは Server Hello 以降すべて暗号化されています。',
         source: [
           {
             label: 'RFC',
@@ -344,7 +344,7 @@ export const steps: StepContent[] = [
       {
         id: 'sc-interp-rejection',
         confidence: 'interpretation',
-        text: '断りの中身は暗号化されて読めません。ハブの返事（279）が TLS のエラー通知（Alert）1 つ分の大きさ（19 バイト）だったことから、断られたと読んでいます。どの Alert かは、ハブのログで確かめるまで要検証です。',
+        text: '断りの中身は暗号化されて読めません。ハブの返事（279）が TLS の Alert 1 つ分（19 バイト）だったことから断られたと読んでいます。どの Alert かはハブのログで確かめるまで要検証です。',
       },
     ],
   },
@@ -377,7 +377,7 @@ export const steps: StepContent[] = [
       {
         id: 'sc-std-router-forward',
         confidence: 'standard',
-        text: 'BACnet ルータは、繋いだネットワークの間で要求を中継します。中の命令（ReadProperty / WriteProperty）はそのままで、データリンクの殻だけ付け替わるので、旧来の BACnet/IP と SC のあいだもルータでまたげます（BACnet/SC もデータリンクの一種）。',
+        text: 'BACnet ルータは、中の命令（ReadProperty / WriteProperty）はそのままに、データリンクの殻だけ付け替えて中継します。BACnet/SC もデータリンクの一種なので、旧来の BACnet/IP と SC のあいだもまたげます。',
         source: [
           {
             label: '規格',
@@ -389,7 +389,7 @@ export const steps: StepContent[] = [
       {
         id: 'sc-std-router-reach',
         confidence: 'standard',
-        text: 'ASHRAE の手引きは、旧来の区画に入り込まれると、BACnet ルータで絞っていない限り、すべての BACnet ネットワーク区画にアクセスされる、としています。対策として、ルータで通信を絞ること（例：旧来の区画から来る要求は読み取りだけにする）を勧めています。',
+        text: 'ASHRAE の手引きは、旧来の区画に入り込まれると、ルータで絞らない限りすべての区画にアクセスされる、としています。対策はルータで通信を絞ること（例：旧来の区画からは読み取りだけ許す）。',
         source: [
           {
             label: '資料',
@@ -400,7 +400,7 @@ export const steps: StepContent[] = [
       {
         id: 'sc-std-snet-sadr',
         confidence: 'standard',
-        text: 'BACnet ルータは要求を転送するとき、送り主のネットワーク番号とアドレス（SNET / SADR）を書き足します。受け取った機器は送り主を知ることはできますが、旧来の BACnet/IP の側から来た情報が本物かを確かめる仕組みはありません。',
+        text: 'BACnet ルータは転送時に送り主のネットワーク番号とアドレス（SNET / SADR）を書き足します。受け取った機器は送り主を知れますが、旧来の側から来た情報が本物かを確かめる仕組みはありません。',
         source: [
           { label: '規格', text: 'ANSI/ASHRAE Standard 135 Clause 6.5.4' },
           { label: '確認', text: '追補 135-2016bj が同条を引用' },
@@ -410,12 +410,12 @@ export const steps: StepContent[] = [
       {
         id: 'sc-interp-hub-trust',
         confidence: 'interpretation',
-        text: 'ハブは全機器の通信を中継し、その場で中身を扱います（ステップ5 の区間ごとの暗号化の注記と同じ理解）。そのためハブが乗っ取られると、SC の暗号化は意味を失います。ハブを載せる機器の守りが、とりわけ重要になります。規格の原文では未確認です。',
+        text: 'ハブは全機器の通信を中継し、その場で中身を扱います。乗っ取られると SC の暗号化は意味を失うので、ハブを載せる機器の守りがとりわけ重要です。規格の原文では未確認です。',
       },
       {
         id: 'sc-interp-legacy',
         confidence: 'interpretation',
-        text: '通信を絞る機能があるかは、ルータ製品によって違います（手引きの推奨で、規格の必須ではありません）。制作者は実機のルータでは確かめていません。既存機器がどれだけ SC に対応できるかも、製品ごとに確かめが必要です。',
+        text: '通信を絞る機能があるかは製品によります（手引きの推奨で、規格の必須ではありません）。制作者は実機では確かめていません。既存機器の SC 対応度も製品ごとに確認が要ります。',
       },
       {
         id: 'sc-std-cert-expiry',
