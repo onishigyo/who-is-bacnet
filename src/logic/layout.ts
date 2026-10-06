@@ -3,8 +3,6 @@ import type { DiagramEdgeSpec, DiagramNodeSpec, NodeId } from '../domain/types'
 /** ノードの箱の大きさ（CSS と一致させる） */
 export const NODE_WIDTH = 224
 export const NODE_HEIGHT = 96
-/** スイッチ（LAN バー）は背を低く描くので、中心計算も専用の高さを使う（CSS と一致させる） */
-export const SWITCH_HEIGHT = 36
 
 export interface Point {
   x: number
@@ -12,10 +10,9 @@ export interface Point {
 }
 
 export function nodeCenter(spec: DiagramNodeSpec): Point {
-  const height = spec.kind === 'switch' ? SWITCH_HEIGHT : NODE_HEIGHT
   return {
     x: spec.position.x + NODE_WIDTH / 2,
-    y: spec.position.y + height / 2,
+    y: spec.position.y + NODE_HEIGHT / 2,
   }
 }
 

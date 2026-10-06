@@ -575,18 +575,16 @@ button:disabled {
 
 /* スイッチ＝主役の箱ではなく「みんなが乗っている同じ LAN」という土台。
    箱と別カテゴリに見せるため、淡い横バーに落として存在感を下げる。 */
+/* スイッチ＝「みんなが乗っている同じ LAN」という土台。当たり判定の箱は
+   ほかのノードと同じ大きさに保って中心を揃え（横の接続がまっすぐになる）、
+   見えるバーはその中心に浮かべる（ラベルをピルにする）。箱自体は透明。 */
 .node--switch {
-  width: 224px;
-  height: 36px;
-  padding: 6px 14px;
-  flex-direction: row;
+  border: none;
+  background: none;
+  box-shadow: none;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  border-style: dashed;
-  border-color: var(--line-strong);
-  background: var(--line);
-  box-shadow: none;
+  padding: 0;
 }
 
 /* バーの中は「LAN」であることだけ。種別・補足・メタの札は出さない */
@@ -596,7 +594,12 @@ button:disabled {
   display: none;
 }
 
+/* 見えるバー本体。箱は透明なので、このピルだけが LAN バーとして見える */
 .node--switch .node__label {
+  padding: 7px 18px;
+  border: 1px dashed var(--line-strong);
+  border-radius: 999px;
+  background: var(--line);
   font-size: 12px;
   font-weight: 600;
   color: var(--muted);
