@@ -92,7 +92,7 @@ export const steps: StepContent[] = [
         confidence: 'standard',
         text: '届け先は、宛先の IP アドレスで決まります。相手の IP は、I-Am が届いたパケットの送信元から分かります（I-Am の中身に IP は入っていません）。',
         source:
-          '制作者の実験キャプチャ（ステップ4 の答え合わせに載せている行）',
+          'ANSI/ASHRAE Standard 135 Clause 16.10（I-Am の内容。IP は含まれない）/ 同 Annex J（宛先は IP とポートで決まる）/ 制作者の実験キャプチャ（ステップ4）で図示',
       },
       {
         id: 'std-iam-broadcast',
