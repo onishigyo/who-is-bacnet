@@ -35,7 +35,12 @@ function Note({ note }: { note: ContentNote }) {
         {confidenceLabels[note.confidence]}
       </span>
       <p className="note__text">{note.text}</p>
-      {note.source && <p className="note__source">出典: {note.source}</p>}
+      {note.source && (
+        <details className="note__source">
+          <summary className="note__source-summary">出典</summary>
+          <p className="note__source-text">{note.source}</p>
+        </details>
+      )}
     </li>
   )
 }
