@@ -413,6 +413,21 @@ export const steps: StepContent[] = [
         text: 'ハブは全機器の通信を中継し、その場で中身を扱います。乗っ取られると SC の暗号化は意味を失うので、ハブを載せる機器の守りがとりわけ重要です。規格の原文では未確認です。',
       },
       {
+        id: 'sc-std-auth-vs-authz',
+        confidence: 'standard',
+        text: 'SC が確かめるのは「この機器がネットワークに入ってよいか」まで。入った機器が何を読み書きしてよいか（認可）は SC 自体では決まらず、別の追補 135-2020cp（OAuth などに基づく）で規格に加わりました。',
+        source: [
+          {
+            label: '規格',
+            text: 'ANSI/ASHRAE Addendum 135-2020cp（認証・認可を追加。BACnet/SC への変更も含む）',
+          },
+          {
+            label: '資料',
+            text: 'bacnet.org「Addendum 135-2020cp Now Published」',
+          },
+        ],
+      },
+      {
         id: 'sc-interp-legacy',
         confidence: 'interpretation',
         text: '通信を絞る機能があるかは製品によります（手引きの推奨で、規格の必須ではありません）。制作者は実機では確かめていません。既存機器の SC 対応度も製品ごとに確認が要ります。',
