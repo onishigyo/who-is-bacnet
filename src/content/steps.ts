@@ -200,6 +200,11 @@ export const steps: StepContent[] = [
         source:
           'RFC 9293（TCP）/ RFC 8446（TLS 1.3）/ RFC 6455（WebSocket）4.1 / ANSI/ASHRAE Standard 135-2020 Annex AB（Addendum 135-2016bj の Annex YY.6.2）',
       },
+      {
+        id: 'sc-interp-hop-by-hop',
+        confidence: 'interpretation',
+        text: 'TLS は機器とハブのあいだの接続ごとに張られます。宛先を決める情報はその暗号化の中にあるので、ハブは中身をいったん復号し、相手の機器向けに暗号化し直して中継していると理解しています（宛先を読まないと転送できないため）。つまり暗号化は端から端までではなく、区間ごと（機器⇔ハブ、ハブ⇔機器）です。規格の原文では未確認です。',
+      },
     ],
   },
   {
@@ -212,7 +217,7 @@ export const steps: StepContent[] = [
     lead: 'BACnet/IP では割り込めた PC が、SC では会話に入る前に断られる。',
     paragraphs: [
       '同じ「持ち込まれた PC」がハブに繋ごうとします。ハブは証明書を求めますが、PC は出せません。ハブは短い返事を 1 つ返し、接続はそこで終わります。Who-Is も ReadProperty も送れません。',
-      '盗み見も防がれます。最初のあいさつ（Client Hello / Server Hello）より後は暗号化されていて、Wireshark には Application Data としか映りません。',
+      '回線上の盗み見も防がれます。最初のあいさつ（Client Hello / Server Hello）より後は暗号化されていて、Wireshark には Application Data としか映りません。',
       '図の下の「持ち込まれた PC を操作する」を押すと、やり取りと Wireshark の記録が並び、対応する行が光ります。',
     ],
     notes: [
@@ -277,6 +282,11 @@ export const steps: StepContent[] = [
         text: 'BACnet ルータは要求を転送するとき、送り主のネットワーク番号とアドレス（SNET / SADR）を書き足します。受け取った機器は送り主を知ることはできますが、旧来の BACnet/IP の側から来た情報が本物かを確かめる仕組みはありません。',
         source:
           'ANSI/ASHRAE Standard 135（Clause 6.5.4。Addendum 135-2016bj が引用している条文で確認）/ 同 Annex J（送り主を確かめる仕組みがないこと）',
+      },
+      {
+        id: 'sc-interp-hub-trust',
+        confidence: 'interpretation',
+        text: 'ハブは全機器の通信を中継し、その場で中身を扱います（ステップ5 の区間ごとの暗号化の注記と同じ理解）。そのためハブが乗っ取られると、SC の暗号化は意味を失います。ハブを載せる機器の守りが、とりわけ重要になります。規格の原文では未確認です。',
       },
       {
         id: 'sc-interp-legacy',

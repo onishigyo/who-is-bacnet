@@ -63,7 +63,7 @@ export const scConversations: Conversation[] = [
         action: '設定温度を聞く',
         encrypted: true,
         explain:
-          '中央監視が設定温度を尋ねます。中身は BACnet/IP のときと同じ ReadProperty ですが、ハブを通って暗号化されたまま届きます。',
+          '中央監視が設定温度を尋ねます。中身は BACnet/IP のときと同じ ReadProperty です。機器からハブ、ハブから相手の機器まで、区間ごとに暗号化されて届きます。',
       },
       {
         id: 's4',
@@ -77,7 +77,7 @@ export const scConversations: Conversation[] = [
         encrypted: true,
         explain:
           '値も暗号化されて返ります。傍受しても Application Data としか見えません。',
-        annotation: '傍受しても、中身は読めない',
+        annotation: '回線上で傍受しても、中身は読めない',
       },
       {
         id: 's5',
