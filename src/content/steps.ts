@@ -30,7 +30,7 @@ export const steps: StepContent[] = [
       {
         id: 'std-device-object',
         confidence: 'standard',
-        text: 'どの BACnet 機器も Device オブジェクトを 1 つ持ち、機器を見分けるデバイスインスタンス番号（0〜4194302）を持ちます。4194303 は「未設定」を表すために取ってあり、どのオブジェクトも使えません。',
+        text: 'どの BACnet 機器も Device オブジェクトを 1 つ持ち、機器を見分けるデバイスインスタンス番号（0〜4194302）を持ちます。',
         source:
           'ANSI/ASHRAE Standard 135（Clause 12.1.1。Addendum 135-2016br が引用している条文で確認）',
       },
@@ -53,14 +53,14 @@ export const steps: StepContent[] = [
       {
         id: 'std-annex-j',
         confidence: 'standard',
-        text: 'BACnet/IP は規格の Annex J で定められています。UDP 47808（16 進で 0xBAC0）は BACnet 用に登録されているポート番号で、この教材の実験でも使っています。別の番号に変えることもできます。',
+        text: 'UDP 47808（16 進で 0xBAC0）が BACnet 用に登録されたポートで、実験でもこれを使っています。別の番号にも変えられます。',
         source:
           'ANSI/ASHRAE Standard 135 Annex J（Addendum 135-1995a で追加）/ IANA Service Name and Transport Protocol Port Number Registry（bacnet 47808/udp）',
       },
       {
         id: 'std-bbmd',
         confidence: 'standard',
-        text: 'ブロードキャストはサブネットを越えません。越えて届けたいときは、BBMD や Foreign Device 登録という中継の仕組みを使います。規格は、2 つ以上のサブネットにまたがる BACnet/IP のネットワークでは、各サブネットに少なくとも 1 台の BBMD を置くことを求めています。',
+        text: 'ブロードキャストはサブネットを越えません。越えて届けたいときは、BBMD や Foreign Device 登録という中継の仕組みを使います。',
         source:
           'ANSI/ASHRAE Standard 135 Annex J（J.4.3。Addendum 135-2012ai が引用している条文で確認）',
       },
@@ -83,21 +83,21 @@ export const steps: StepContent[] = [
       {
         id: 'std-services',
         confidence: 'standard',
-        text: 'Who-Is と I-Am は、届いたことの確認を返さない通信です（規格の言葉で unconfirmed）。ReadProperty と WriteProperty は確認を返す通信で、成功すれば成功の応答、失敗すれば理由つきの失敗の応答が返ります。実験のキャプチャでは、読み取りの応答が Complex-ACK（値つき）、書き込みの応答が Simple-ACK として見えています。',
+        text: 'Who-Is / I-Am は確認を返さない通信、ReadProperty / WriteProperty は確認を返す通信です。実験では読み取りが Complex-ACK、書き込みが Simple-ACK として見えます。',
         source:
           'ANSI/ASHRAE Standard 135（Clause 16.10.4 / 15.9.2。Addendum 135-2008q・135-2016br が引用している条文で確認）/ 制作者の実験キャプチャ',
       },
       {
         id: 'std-addressing',
         confidence: 'standard',
-        text: 'ReadProperty などの要求には、相手の機器の番号は入っていません。同じ LAN の中では、届け先は宛先の IP アドレスで決まります。相手の IP は、I-Am が届いたパケットの送信元アドレスから分かります（I-Am の中身に IP は入っていません）。ステップ4 に載せているキャプチャで、実際にそうなっていることを確かめられます。',
+        text: '届け先は、宛先の IP アドレスで決まります。相手の IP は、I-Am が届いたパケットの送信元から分かります（I-Am の中身に IP は入っていません）。',
         source:
           '制作者の実験キャプチャ（ステップ4 の答え合わせに載せている行）',
       },
       {
         id: 'std-iam-broadcast',
         confidence: 'standard',
-        text: 'I-Am は以前は全員に向けて（ブロードキャストで）返す決まりでしたが、Addendum 135-2008q で「ブロードキャストでも、相手を 1 つ指定したユニキャストでもよい」に変わりました。ただし Who-Is への返事なら、尋ねた相手に届く形で送る決まりです。この図も制作者の実験も、尋ねた相手だけに返しています。',
+        text: 'I-Am は以前はブロードキャストで返す決まりでしたが、今はユニキャストでもよくなりました。この図も実験も、尋ねた相手だけに返しています。',
         source:
           'ANSI/ASHRAE Addendum q to Standard 135-2008（135-2008q-1。Clause 16.10.4 の変更）',
       },
@@ -127,14 +127,14 @@ export const steps: StepContent[] = [
       {
         id: 'std-clause24-removed',
         confidence: 'standard',
-        text: '以前の規格には、通信に認証をかける仕組み（Clause 24 Network Security）がありました。しかし普及がごく限られ、BACnet/SC を加えるにあたって混乱のもとになるとして、Addendum 135-2016by で削除されています。いま規格が用意している答えは BACnet/SC のほうです。',
+        text: '以前は通信に認証をかける仕組みが規格にありましたが、普及が限られ、BACnet/SC を加える際に削除されました。いまの答えは BACnet/SC です。',
         source:
           'ANSI/ASHRAE Addendum by to Standard 135-2016（135-2016by-1。Clause 24 の削除とその理由）',
       },
       {
         id: 'std-write-may-fail',
         confidence: 'standard',
-        text: 'どんな書き込みでも通るわけではありません。規格は「書き換えに成功すれば成功の応答、失敗すれば理由つきの失敗の応答を返す」と定めています（読み取り専用のプロパティ、範囲外の値などが理由になります）。ただしこれは値の決まりによる制限で、送り主を確かめる仕組みではありません。',
+        text: 'どんな書き込みでも通るわけではありません（読み取り専用や範囲外の値は失敗が返る）。ただしこれは値の決まりによる制限で、送り主を確かめる仕組みではありません。',
         source:
           'ANSI/ASHRAE Standard 135（Clause 15.9.2。Addendum 135-2016br が引用している条文で確認）',
       },
