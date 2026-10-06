@@ -250,6 +250,28 @@ export const steps: StepContent[] = [
         ],
       },
       {
+        id: 'sc-std-failover',
+        confidence: 'standard',
+        text: 'ハブが止まると、そのネットワークの会話は止まります。そのため予備のハブ（failover）を置け、各ノードは primary と failover の両方への接続に対応します。',
+        source: [
+          {
+            label: '規格',
+            text: 'ANSI/ASHRAE Standard 135-2020 Annex AB（BACnet/SC）YY.1.1.2 / YY.1.2',
+          },
+        ],
+      },
+      {
+        id: 'sc-std-direct-connect',
+        confidence: 'standard',
+        text: 'ハブを介さず、同じ BACnet/SC ネットワークのノードどうしが直接つなぐ方法（Direct Connect）もあります。ただしユニキャストに限る任意の機能で、ブロードキャストは必ずハブを通ります。',
+        source: [
+          {
+            label: '規格',
+            text: 'ANSI/ASHRAE Standard 135-2020 Annex AB（BACnet/SC）YY.1.1',
+          },
+        ],
+      },
+      {
         id: 'sc-interp-hub-host',
         confidence: 'interpretation',
         text: 'この図のハブは専用機ですが、専用である必要はなく、中央監視などが兼ねられると理解しています（製品ではソフトウェアの機能として BACnet ルータ等に載ることが多いようです）。「どの機器でもハブ機能を持てる」という規格の明文は未確認です。',
@@ -371,6 +393,21 @@ export const steps: StepContent[] = [
           {
             label: '資料',
             text: 'ASHRAE BACnet/SC ホワイトペーパー（Scenario #3）',
+          },
+        ],
+      },
+      {
+        id: 'sc-std-hub-not-router',
+        confidence: 'standard',
+        text: 'ハブは 1 つの BACnet/SC ネットワークの中で中継する機能です。別の SC ネットワークや BACnet/IP とつなぐのは、ハブではなく BACnet ルータです。',
+        source: [
+          {
+            label: '規格',
+            text: 'ANSI/ASHRAE Standard 135-2020 Annex AB（BACnet/SC）YY.1',
+          },
+          {
+            label: '規格',
+            text: 'ANSI/ASHRAE Standard 135 Clause 6（ルータがネットワーク間を中継）',
           },
         ],
       },
