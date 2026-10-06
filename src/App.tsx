@@ -221,7 +221,9 @@ export default function App() {
         />
 
         <p className="app__disclaimer">
-          ブラウザ内だけで動く再現です。実際の BACnet 通信は発生しません。
+          ブラウザ内だけで動く再現です。実際の BACnet
+          通信は発生しません（本文に出てくる「実験」と答え合わせの Wireshark
+          記録は、制作者が閉域網で実際に BACnet を動かして取ったものです）。
           防御を学ぶための教材であり、許可のないシステムへの操作を推奨するものではありません。
         </p>
       </header>
