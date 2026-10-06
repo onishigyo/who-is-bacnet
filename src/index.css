@@ -1003,10 +1003,35 @@ button:disabled {
   outline: none;
 }
 
-.note__source-text {
-  margin-top: 4px;
-  padding-left: 13px;
+/* 出典は 3 種類（出典元・確認・補足）をラベルで分ける。バッジの凡例と同じく
+   2 列グリッドで、ラベルの右に内容をそろえる。 */
+.note__source-list {
+  list-style: none;
+  margin: 6px 0 0;
+  padding: 0 0 0 13px;
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 4px 8px;
   line-height: 1.5;
+}
+
+.note__source-item {
+  display: contents;
+}
+
+.note__source-label {
+  font-size: 10px;
+  padding: 0 6px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  color: var(--muted);
+  background: var(--bg-soft);
+  white-space: nowrap;
+  align-self: start;
+}
+
+.note__source-ref {
+  color: var(--muted);
 }
 
 /* ---------- 図の下に固定する会話バー ---------- */

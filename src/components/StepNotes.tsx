@@ -35,10 +35,17 @@ function Note({ note }: { note: ContentNote }) {
         {confidenceLabels[note.confidence]}
       </span>
       <p className="note__text">{note.text}</p>
-      {note.source && (
+      {note.source && note.source.length > 0 && (
         <details className="note__source">
           <summary className="note__source-summary">出典</summary>
-          <p className="note__source-text">{note.source}</p>
+          <ul className="note__source-list">
+            {note.source.map((ref, index) => (
+              <li key={index} className="note__source-item">
+                <span className="note__source-label">{ref.label}</span>
+                <span className="note__source-ref">{ref.text}</span>
+              </li>
+            ))}
+          </ul>
         </details>
       )}
     </li>
