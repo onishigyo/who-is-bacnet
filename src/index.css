@@ -573,9 +573,46 @@ button:disabled {
   border-color: var(--ok);
 }
 
+/* スイッチ＝主役の箱ではなく「みんなが乗っている同じ LAN」という土台。
+   箱と別カテゴリに見せるため、淡い横バーに落として存在感を下げる。 */
 .node--switch {
   width: 224px;
+  height: 36px;
+  padding: 6px 14px;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
   border-style: dashed;
+  border-color: var(--line-strong);
+  background: var(--line);
+  box-shadow: none;
+}
+
+/* バーの中は「LAN」であることだけ。種別・補足・メタの札は出さない */
+.node--switch .node__kind,
+.node--switch .node__sub,
+.node--switch .node__meta {
+  display: none;
+}
+
+.node--switch .node__label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+/* ハブ＝SC の主役（信頼点）。箱のまま、枠を太く・色を付けて前に出す。
+   is-speaking の 3px リングと紛れないよう、リングではなく枠と下地で強調する。 */
+.node--hub {
+  border-width: 2px;
+  border-color: var(--accent);
+  background-color: var(--bg-raise);
+  background-image: linear-gradient(
+    180deg,
+    var(--accent-soft),
+    transparent 60%
+  );
 }
 
 .node--bbmd {
