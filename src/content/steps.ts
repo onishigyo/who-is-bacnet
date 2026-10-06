@@ -275,6 +275,13 @@ export const steps: StepContent[] = [
         source: 'ASHRAE BACnet/SC ホワイトペーパー（Scenario #3）',
       },
       {
+        id: 'sc-std-router-forward',
+        confidence: 'standard',
+        text: 'BACnet ルータは、繋いだネットワークの間で要求を中継します。中の命令（ReadProperty / WriteProperty）はそのままで、データリンクの殻だけ付け替わるので、旧来の BACnet/IP と SC のあいだもルータでまたげます（BACnet/SC もデータリンクの一種）。',
+        source:
+          'ANSI/ASHRAE Standard 135 Clause 6（ネットワーク層のルーティング）/ 同 Annex AB（BACnet/SC はデータリンク）',
+      },
+      {
         id: 'sc-std-router-reach',
         confidence: 'standard',
         text: 'ASHRAE の手引きは、旧来の区画に入り込まれると、BACnet ルータで絞っていない限り、すべての BACnet ネットワーク区画にアクセスされる、としています。対策として、ルータで通信を絞ること（例：旧来の区画から来る要求は読み取りだけにする）を勧めています。',
