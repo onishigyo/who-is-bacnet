@@ -36,7 +36,7 @@ export const extras: ExtraContent[] = [
           {
             id: 'bbmd-std-no-cross',
             confidence: 'standard',
-            text: 'ブロードキャストはサブネットを越えません。規格は、2 つ以上のサブネットにまたがる BACnet/IP では、各サブネットに最低 1 台の BBMD を置くことを求めています。',
+            text: 'ブロードキャストは、ふつうサブネットを越えません。規格は、2 つ以上のサブネットにまたがる BACnet/IP では、各サブネットに最低 1 台の BBMD を置くことを求めています。',
             source: [
               { label: '規格', text: 'ANSI/ASHRAE Standard 135 Annex J J.4.3' },
               { label: '確認', text: '追補 135-2012ai が同条を引用' },

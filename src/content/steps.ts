@@ -73,7 +73,7 @@ export const steps: StepContent[] = [
       {
         id: 'std-bbmd',
         confidence: 'standard',
-        text: 'ブロードキャストはサブネットを越えません。越えて届けたいときは、BBMD や Foreign Device 登録という中継の仕組みを使います。',
+        text: 'ブロードキャストは、ふつうサブネットを越えません。越えて届けたいときは、BBMD や Foreign Device 登録という中継の仕組みを使います。',
         source: [
           { label: '規格', text: 'ANSI/ASHRAE Standard 135 Annex J J.4.3' },
           { label: '確認', text: '追補 135-2012ai が同条を引用' },
@@ -91,7 +91,7 @@ export const steps: StepContent[] = [
     lead: 'メーカーの違う機器が同じ LAN に並び、中央監視から一括で読み書きできる。',
     paragraphs: [
       '中央監視装置が加わりました。機器を探し（Who-Is）、名乗ってもらい（I-Am）、値を読み（ReadProperty）、書く（WriteProperty）。これだけで建物中の設備を扱えます。',
-      '特別な準備がなくても、同じ LAN に繋げば会話が成り立つ。この手軽さが BACnet の大きな魅力です。',
+      '会話の手順そのものは、同じ LAN に繋げばそのまま使えます。この手軽さが BACnet の大きな魅力です。',
       '図の下の「会話を始める」を押すと、やり取りが並びます。ひとつ押すと図で再生されます。',
     ],
     notes: [
