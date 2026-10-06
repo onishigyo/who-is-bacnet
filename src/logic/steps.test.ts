@@ -77,7 +77,7 @@ describe('注記の確からしさ', () => {
     )
     expect(standards.length).toBeGreaterThan(0)
     for (const note of standards) {
-      expect(note.source).toBeTruthy()
+      expect(note.source?.length).toBeGreaterThan(0)
     }
   })
 

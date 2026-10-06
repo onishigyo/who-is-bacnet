@@ -37,8 +37,10 @@ export const extras: ExtraContent[] = [
             id: 'bbmd-std-no-cross',
             confidence: 'standard',
             text: 'BACnet/IP のブロードキャストは、IP の仕組み上サブネットを越えません。規格も、2 つ以上のサブネットにまたがる BACnet/IP のネットワークでは、各サブネットに少なくとも 1 台の BBMD を置くことを求めています。',
-            source:
-              'ANSI/ASHRAE Standard 135 Annex J（J.4.3。Addendum 135-2012ai が引用している条文で確認）',
+            source: [
+              { label: '規格', text: 'ANSI/ASHRAE Standard 135 Annex J J.4.3' },
+              { label: '確認', text: '追補 135-2012ai が同条を引用' },
+            ],
           },
         ],
       },
@@ -61,22 +63,36 @@ export const extras: ExtraContent[] = [
             id: 'bbmd-std-forward',
             confidence: 'standard',
             text: 'BBMD は BDT（Broadcast Distribution Table）に従って、受け取ったブロードキャストを Forwarded-NPDU としてほかの BBMD へ送り、受け取った側がそれを自分のサブネットのブロードキャストとして配り直します。この「2 ホップ方式」への対応は、規格が BBMD に求めているものです。',
-            source:
-              'ANSI/ASHRAE Standard 135 Annex J（J.2.5 / J.4.3。Addendum 135-2008o・135-2012ai が引用している条文で確認）',
+            source: [
+              {
+                label: '規格',
+                text: 'ANSI/ASHRAE Standard 135 Annex J J.2.5 / J.4.3',
+              },
+              {
+                label: '確認',
+                text: '追補 135-2008o・135-2012ai が同条を引用',
+              },
+            ],
           },
           {
             id: 'bbmd-std-iam',
             confidence: 'standard',
             text: 'I-Am は以前はブロードキャストで返す決まりでしたが、Addendum 135-2008q で、相手を 1 つ指定したユニキャストでもよくなりました。この図はステップ 3 と同じく、尋ねた相手だけに返す形で描いています（制作者の実験でも 1 対 1 で返ってきました）。',
-            source:
-              'ANSI/ASHRAE Addendum q to Standard 135-2008（135-2008q-1。Clause 16.10.4 の変更）',
+            source: [
+              {
+                label: '規格',
+                text: 'ANSI/ASHRAE Standard 135-2008 追補 q（Clause 16.10.4 の変更。I-Am をユニキャストでもよいとした）',
+              },
+            ],
           },
           {
             id: 'bbmd-std-one-hop',
             confidence: 'standard',
             text: 'BDT の設定によっては、相手の BBMD を介さず、相手のサブネットへ直接ブロードキャストを届ける「1 ホップ方式」もあります。ただし規格が BBMD に求めているのは 2 ホップ方式への対応で、1 ホップ方式への対応は任意です。',
-            source:
-              'ANSI/ASHRAE Standard 135 Annex J（J.4.3。Addendum 135-2012ai が引用している条文で確認）',
+            source: [
+              { label: '規格', text: 'ANSI/ASHRAE Standard 135 Annex J J.4.3' },
+              { label: '確認', text: '追補 135-2012ai が同条を引用' },
+            ],
           },
           {
             id: 'bbmd-interp-iam-broadcast',
@@ -87,8 +103,10 @@ export const extras: ExtraContent[] = [
             id: 'bbmd-std-fdr',
             confidence: 'standard',
             text: 'BBMD として設定できない機器は、BBMD に Foreign Device として登録できなければならない、と規格は定めています。BBMD を置けないサブネットの機器は、この仕組みで配ってもらいます。',
-            source:
-              'ANSI/ASHRAE Standard 135 Annex J（J.4.3。Addendum 135-2012ai が引用している条文で確認）',
+            source: [
+              { label: '規格', text: 'ANSI/ASHRAE Standard 135 Annex J J.4.3' },
+              { label: '確認', text: '追補 135-2012ai が同条を引用' },
+            ],
           },
           {
             id: 'bbmd-interp-ops',
@@ -115,8 +133,10 @@ export const extras: ExtraContent[] = [
             id: 'bbmd-std-sc-broadcast',
             confidence: 'standard',
             text: 'BACnet/SC でも Who-Is のような全員あての呼びかけは使います。IP のブロードキャストとしては流れず、ハブが各機器へ配るので、BBMD は要りません（ステップ 5 の注記と同じ内容です）。',
-            source:
-              'ANSI/ASHRAE Standard 135-2020 Annex AB / ASHRAE BACnet/SC ホワイトペーパー',
+            source: [
+              { label: '規格', text: 'ANSI/ASHRAE Standard 135-2020 Annex AB' },
+              { label: '資料', text: 'ASHRAE BACnet/SC ホワイトペーパー' },
+            ],
           },
         ],
       },

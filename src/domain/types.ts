@@ -29,12 +29,24 @@ export type Confidence =
   /** 制作者の理解・解釈であり、検証が必要なもの */
   | 'interpretation'
 
+/**
+ * 出典の一項目。label で種類を示し、3 種類が一目で区別できるようにする。
+ * - 出典元: 規格 / RFC / 資料 / 登録 / 実験（どの文書のどこか）
+ * - 確認: どう裏取りしたか（制作者が原文を直接読めず追補の引用で確認した等）
+ * - 補足: 何を言っているか・由来など
+ */
+export interface SourceRef {
+  label: string
+  text: string
+}
+
 export interface ContentNote {
   id: string
   confidence: Confidence
   text: string
-  /** 一次情報の参照（規格番号・章など）。断定的な記述には可能な限り付ける */
-  source?: string
+  /** 一次情報の参照。種類（規格・確認・補足など）ごとに分けて示す。
+      断定的な記述には可能な限り付ける */
+  source?: SourceRef[]
 }
 
 export interface StepContent {
