@@ -122,7 +122,7 @@ export const steps: StepContent[] = [
         confidence: 'standard',
         text: 'BACnet/IP（Annex J）そのものには、送り主を確かめる仕組みも、暗号化の仕組みもありません。届いた要求は、送り主を確かめずに処理されます。',
         source:
-          'ANSI/ASHRAE Standard 135 Annex J（BVLC によるカプセル化だけを定める）/ Addendum 135-2016by（通信に認証をかける Clause 24 は削除済み）/ 制作者の実験キャプチャ（中身が平文で読める）',
+          'ANSI/ASHRAE Standard 135 Annex J（BVLC によるカプセル化だけを定める）/ 制作者の実験キャプチャ（中身が平文で読める）',
       },
       {
         id: 'std-clause24-removed',
