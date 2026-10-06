@@ -175,9 +175,14 @@ export const steps: StepContent[] = [
       {
         id: 'sc-std-hub-function',
         confidence: 'standard',
-        text: 'この図では専用のハブを 1 台置いていますが、ハブは専用の機器である必要はありません。規格では、ハブ機能は BACnet/SC の機器が持てる機能の 1 つとされていて、中央監視装置などが兼ねることができます。BACnet/SC のネットワーク 1 つにつき、ハブ機能は 1 つ必要です。',
+        text: 'BACnet/SC のネットワーク 1 つにつき、ハブ機能は 1 つ必要です。',
         source:
-          'ANSI/ASHRAE Standard 135-2020 Annex AB（Addendum 135-2016bj の Annex YY.1 / YY.1.2）',
+          'ANSI/ASHRAE Standard 135-2020 Annex AB（Addendum 135-2016bj の Annex YY.1.2）',
+      },
+      {
+        id: 'sc-interp-hub-host',
+        confidence: 'interpretation',
+        text: 'この図のハブは専用機ですが、専用である必要はなく、中央監視などが兼ねられると理解しています（製品ではソフトウェアの機能として BACnet ルータ等に載ることが多いようです）。「どの機器でもハブ機能を持てる」という規格の明文は未確認です。',
       },
       {
         id: 'sc-std-hub-uri',
