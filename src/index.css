@@ -961,10 +961,52 @@ button:disabled {
   }
 }
 
+/* 出典は技術者向けの裏取り。既定は畳んで、本文をすっきり見せる。
+   確度バッジは常時見えるので「裏取りがある」ことは伝わる。 */
 .note__source {
   margin-top: 6px;
   font-size: 11px;
   color: var(--muted);
+}
+
+.note__source-summary {
+  cursor: pointer;
+  user-select: none;
+  list-style: none;
+  /* 「青＝押せる」の規約に合わせ、トグルだと分かる色にする */
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.note__source-summary::-webkit-details-marker {
+  display: none;
+}
+
+.note__source-summary::before {
+  content: '▸';
+  display: inline-block;
+  margin-right: 5px;
+  transition: transform 0.15s;
+}
+
+.note__source[open] .note__source-summary::before {
+  transform: rotate(90deg);
+}
+
+.note__source-summary:hover {
+  text-decoration: underline;
+}
+
+/* マウスクリックでは枠を出さず、キーボード操作のときだけ出す */
+.note__source-summary:focus:not(:focus-visible) {
+  outline: none;
+}
+
+.note__source-text {
+  margin-top: 4px;
+  padding-left: 13px;
+  line-height: 1.5;
 }
 
 /* ---------- 図の下に固定する会話バー ---------- */
