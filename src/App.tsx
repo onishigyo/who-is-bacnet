@@ -8,6 +8,7 @@ import { NetworkCanvas } from './components/NetworkCanvas'
 import { StepNav } from './components/StepNav'
 import { StepNotes } from './components/StepNotes'
 import { StepPanel } from './components/StepPanel'
+import { HomeScreen } from './components/HomeScreen'
 import { ipCapture, scRejectedCapture } from './content/captures'
 import {
   ATTACK_CONVERSATION_ID,
@@ -28,6 +29,7 @@ import { AHU_ID, ATTACKER_ID } from './content/diagram'
 import { extras } from './content/extras'
 import { steps } from './content/steps'
 import { worlds } from './content/worlds'
+import { DISCLAIMER } from './content/sections'
 import type {
   DeviceState,
   ExtraId,
@@ -52,6 +54,8 @@ import { planFlights, totalFlightMs } from './logic/flight'
 import { buildDiagramState, extraContentById, stepByOrder } from './logic/steps'
 
 export default function App() {
+  /** 入口画面を抜けてコンテンツに入ったか。初回は入口を見せる */
+  const [entered, setEntered] = useState(false)
   const [order, setOrder] = useState<StepOrder>(1)
   const [activeExtra, setActiveExtra] = useState<ExtraId | null>(null)
   /** 読み物を開いているとき、その中の何枚目を見ているか */
@@ -140,6 +144,24 @@ export default function App() {
     setPlayback(playGroup(IDLE_PLAYBACK, 0))
   }, [])
 
+  /** 入口から本編（ステップ 1〜7）に入る */
+  const enterMain = useCallback(() => {
+    goToStep(1)
+    setEntered(true)
+  }, [goToStep])
+
+  /** 入口から読み物に入る */
+  const enterExtra = useCallback(
+    (id: ExtraId) => {
+      selectExtra(id)
+      setEntered(true)
+    },
+    [selectExtra],
+  )
+
+  /** 入口画面にもどる */
+  const goHome = useCallback(() => setEntered(false), [])
+
   const inFlight = useMemo(
     () =>
       activeConversation ? flyingMessages(activeConversation, playback) : [],
@@ -202,10 +224,23 @@ export default function App() {
     (capture) => capture.id === activeCaptureId,
   )
 
+  if (!entered) {
+    return (
+      <HomeScreen
+        extras={extras}
+        onSelectMain={enterMain}
+        onSelectExtra={enterExtra}
+      />
+    )
+  }
+
   return (
     <div className="app">
       <header className="app__header">
         <div className="app__brand">
+          <button type="button" className="app__back" onClick={goHome}>
+            ← 入口にもどる（コンテンツ一覧）
+          </button>
           <h1 className="app__title">Who-Is BACnet?</h1>
           <p className="app__subtitle">
             ビル設備のプロトコル BACnet を、1 枚のネットワーク図の上で理解する
@@ -220,12 +255,7 @@ export default function App() {
           onSelectExtra={selectExtra}
         />
 
-        <p className="app__disclaimer">
-          ブラウザ内だけで動く再現です。実際の BACnet
-          通信は発生しません（本文に出てくる「実験」と答え合わせの Wireshark
-          記録は、制作者が閉域網で実際に BACnet を動かして取ったものです）。
-          防御を学ぶための教材であり、許可のないシステムへの操作を推奨するものではありません。
-        </p>
+        <p className="app__disclaimer">{DISCLAIMER}</p>
       </header>
 
       <main className="app__main">

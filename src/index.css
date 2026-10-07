@@ -113,6 +113,24 @@ button:disabled {
   letter-spacing: 0.02em;
 }
 
+/* 入口（コンテンツ一覧）にもどる、常に見えるボタン */
+.app__back {
+  align-self: flex-start;
+  margin-bottom: 6px;
+  padding: 0;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent);
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.app__back:hover {
+  text-decoration: underline;
+}
+
 .app__subtitle {
   color: var(--muted);
   font-size: 13px;
@@ -1580,5 +1598,116 @@ button:disabled {
 .capture__provenance {
   margin-top: 10px;
   font-size: 11px;
+  color: var(--muted);
+}
+
+/* ---------- 入口画面（コンテンツ選択） ---------- */
+
+.home {
+  min-height: 100vh;
+  box-sizing: border-box;
+  display: flex;
+  justify-content: center;
+  padding: 48px 16px;
+  background: var(--bg);
+}
+
+.home__inner {
+  width: 100%;
+  max-width: 720px;
+}
+
+.home__head {
+  margin-bottom: 8px;
+}
+
+.home__title {
+  margin: 0 0 6px;
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--text-strong);
+}
+
+.home__subtitle {
+  margin: 0;
+  color: var(--muted);
+}
+
+.home__group {
+  margin-top: 24px;
+}
+
+.home__group-title {
+  margin: 0 0 10px;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
+.home__cards {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 12px;
+}
+
+.home__card {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  width: 100%;
+  text-align: left;
+  padding: 16px 18px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: var(--bg-raise);
+  box-shadow: var(--shadow);
+  cursor: pointer;
+  transition:
+    border-color 0.15s,
+    transform 0.05s;
+}
+
+.home__card:hover {
+  border-color: var(--accent);
+}
+
+.home__card:active {
+  transform: translateY(1px);
+}
+
+.home__card--main {
+  border-color: var(--accent);
+  border-width: 2px;
+}
+
+.home__card-badge {
+  align-self: flex-start;
+  margin-bottom: 2px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.home__card-name {
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--text-strong);
+}
+
+.home__card-summary {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.home__disclaimer {
+  margin-top: 28px;
+  font-size: 12px;
+  line-height: 1.6;
   color: var(--muted);
 }
