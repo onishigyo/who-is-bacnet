@@ -138,19 +138,21 @@ button:disabled {
 
 .app__main {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 440px;
+  /* 説明パネルを左、図を右に置く（読んでから図を見る動線） */
+  grid-template-columns: 440px minmax(0, 1fr);
   flex: 1;
   min-height: 0;
 }
 
 .app__stage {
+  grid-column: 2;
+  grid-row: 1;
   display: flex;
   flex-direction: column;
   min-height: 0;
   /* grid 項目の既定 min-width:auto だと、ナビの中身の幅に押し広げられて
      ページ全体が横スクロールしてしまう */
   min-width: 0;
-  border-right: 1px solid var(--line);
 }
 
 .app__canvas {
@@ -161,12 +163,15 @@ button:disabled {
 }
 
 .app__panel {
+  grid-column: 1;
+  grid-row: 1;
   padding: 24px;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 24px;
   background: var(--bg-soft);
+  border-right: 1px solid var(--line);
 }
 
 @media (max-width: 1080px) {
@@ -188,8 +193,13 @@ button:disabled {
   .app__main {
     grid-template-columns: 1fr;
   }
+  /* 縦積みでは DOM 順（図 → 説明）に戻す */
+  .app__stage,
+  .app__panel {
+    grid-column: auto;
+    grid-row: auto;
+  }
   .app__stage {
-    border-right: none;
     border-bottom: 1px solid var(--line);
   }
   .app__canvas {
@@ -201,6 +211,7 @@ button:disabled {
   .app__panel {
     padding: 20px 16px;
     overflow: visible;
+    border-right: none;
   }
 }
 
